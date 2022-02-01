@@ -1,0 +1,5 @@
+# Change these at your peril:
+export PROJECT_OPENNESS=private
+export PROJECT_NAME=ahl-food-reformulation
+export REPO_NAME=ahl_food_reformulation
+export GITHUB_ACCOUNT=djyldyz
