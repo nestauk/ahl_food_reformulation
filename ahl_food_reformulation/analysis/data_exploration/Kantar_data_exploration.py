@@ -403,20 +403,13 @@ combined_demog = panel_demog_coding.merge(
 )
 
 # %%
+combined_demog = combined_demog[["Panel Id", "Demographic_va", ' "Demog Description""']]
+combined_demog.columns = ["Panel Id", "Demog_char", "Demog_val"]
+
+# %%
+combined_demog.to_csv(PROJECT_DIR / "lookups/panel_demog_char.csv", index=False)
+
+# %%
 combined_demog.head()
-
-# %%
-panel_demog_val.columns
-
-# %%
-
-# %%
-len(panel_demog_coding)
-
-# %%
-panel_demog_coding.head(3)
-
-# %%
-len(panel_demog)
 
 # %%
