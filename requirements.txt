@@ -8,3 +8,5 @@ tqdm
 filelock
 typer
 sh
+pandas-profiling
+ipywidgets
