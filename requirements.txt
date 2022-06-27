@@ -10,3 +10,4 @@ typer
 sh
 pandas-profiling
 ipywidgets
+sklearn
