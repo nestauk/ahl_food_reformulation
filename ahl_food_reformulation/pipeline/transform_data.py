@@ -15,15 +15,16 @@
 # ---
 
 # %%
+
 # Import libraries
 import pandas as pd
+import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.preprocessing import MinMaxScaler
 import os.path
 from ahl_food_reformulation import PROJECT_DIR
 
 
-# %%
 def create_subsets(date_period):
     """
     Creates subset of defined month. First checks if files exists before creating.
@@ -39,7 +40,6 @@ def create_subsets(date_period):
         return subset
 
 
-# %%
 def combine_files(val_fields, pur_recs, prod_mast, uom, prod_codes, prod_vals):
     """
     Performs multiple merges and a few cleaning functions to combine the following files into one:
@@ -78,7 +78,6 @@ def combine_files(val_fields, pur_recs, prod_mast, uom, prod_codes, prod_vals):
     return pur_recs
 
 
-# %%
 class GroupByScaler(BaseEstimator, TransformerMixin):
     """
     Scales subsets of a column based on the values in another column.
@@ -104,6 +103,11 @@ class GroupByScaler(BaseEstimator, TransformerMixin):
             X.loc[mask, self.cols] = self.scalers[val].transform(X.loc[mask, self.cols])
 
         return X
+
+
+def norm_variable(data):
+    """normalise variable between 0 and 1"""
+    return (data - np.min(data)) / (np.max(data) - np.min(data))
 
 
 # %%
@@ -135,3 +139,12 @@ def proportion_hh(df):
     Transforms total values of categories into proportions  of the total values for each household
     """
     return df.div(df.sum(axis=1), axis=0)
+
+
+def food_cat_represent(df):
+    return (df.div(df.sum(axis=1), axis=0)).div(
+        list(df.sum() / (df.sum().sum())), axis=1
+    )
+
+
+# %%
