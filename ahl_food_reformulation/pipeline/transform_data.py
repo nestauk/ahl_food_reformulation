@@ -1,21 +1,3 @@
-# ---
-# jupyter:
-#   jupytext:
-#     cell_metadata_filter: -all
-#     comment_magics: true
-#     text_representation:
-#       extension: .py
-#       format_name: percent
-#       format_version: '1.3'
-#       jupytext_version: 1.13.2
-#   kernelspec:
-#     display_name: ahl_food_reformulation
-#     language: python
-#     name: ahl_food_reformulation
-# ---
-
-# %%
-
 # Import libraries
 import pandas as pd
 import numpy as np
@@ -110,7 +92,6 @@ def norm_variable(data):
     return (data - np.min(data)) / (np.max(data) - np.min(data))
 
 
-# %%
 # Groupby to get category totals per household
 def hh_total_categories(df):
     """
@@ -124,7 +105,6 @@ def hh_total_categories(df):
     )
 
 
-# %%
 def scale_hh(df, scaler):
     """
     Applies a scaler to each row of household purchases.
@@ -142,9 +122,45 @@ def proportion_hh(df):
 
 
 def food_cat_represent(df):
+    """
+    Transforms household puchases to show how over / under-represented a category is for a household.
+    """
     return (df.div(df.sum(axis=1), axis=0)).div(
         list(df.sum() / (df.sum().sum())), axis=1
     )
 
 
-# %%
+def total_nutrition_intake(cluster):
+    """
+    Get total nutritional volume per category per cluster.
+    """
+    c_total = cluster.groupby(by=["Attribute Code Description"]).sum()[
+        [
+            "gross_up_vol",
+            "Energy KJ",
+            "Energy KCal",
+            "Protein KG",
+            "Carbohydrate KG",
+            "Sugar KG",
+            "Fat KG",
+            "Saturates KG",
+            "Fibre KG Flag",
+            "Sodium KG",
+        ]
+    ]
+    return c_total.loc[:, c_total.columns != "gross_up_vol"].multiply(
+        c_total["gross_up_vol"], axis="index"
+    )
+
+
+def percent_demog_group(df, col):
+    """
+    Percent of value per demographic group.
+    """
+    df["Percent"] = 1
+    perc_demographic = (df.groupby(["clusters_ss", col])["Percent"].sum()) / (
+        df.groupby(["clusters_ss"])["Percent"].sum()
+    )
+    perc_demographic = perc_demographic.reset_index()
+    perc_demographic["Percent"] = perc_demographic["Percent"] * 100
+    return perc_demographic

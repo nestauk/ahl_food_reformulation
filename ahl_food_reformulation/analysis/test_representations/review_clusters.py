@@ -1,64 +1,37 @@
-# ---
-# jupyter:
-#   jupytext:
-#     cell_metadata_filter: -all
-#     comment_magics: true
-#     text_representation:
-#       extension: .py
-#       format_name: percent
-#       format_version: '1.3'
-#       jupytext_version: 1.13.2
-#   kernelspec:
-#     display_name: ahl_food_reformulation
-#     language: python
-#     name: ahl_food_reformulation
-# ---
-
-# %%
 # Import libraries
 import pandas as pd
 from ahl_food_reformulation.pipeline import transform_data as td
 from matplotlib import pyplot as plt
+import numpy as np
+import seaborn as sns
 
 # Import project libraries and directory
+from ahl_food_reformulation.getters import kantar as get_k
 from ahl_food_reformulation import PROJECT_DIR
 
-# %%
 # Read in files
-pur_recs = td.create_subsets(
-    202108
-)  # Creating one month subset or reads file if exists - 202108
-prod_mast = pd.read_csv(
-    PROJECT_DIR / "inputs/data/product_master.csv", encoding="ISO-8859-1"
-)
-val_fields = pd.read_csv(PROJECT_DIR / "inputs/data/validation_field.csv")
-uom = pd.read_csv(
-    PROJECT_DIR / "inputs/data/uom.csv",
-    header=0,
-    names=["UOM", "Measure Description", "Factor", "Reported Volume"],
-)
-prod_codes = pd.read_csv(PROJECT_DIR / "inputs/data/product_attribute_coding.csv")
-prod_vals = pd.read_csv(
-    PROJECT_DIR / "inputs/data/product_attribute_values.csv", encoding="ISO-8859-1"
-)
+purch_recs = get_k.purchase_subsets(202110)  # Oct 2021 subset
+prod_mast = get_k.product_master()
+val_fields = get_k.val_fields()
+uom = get_k.uom()
+prod_codes = get_k.product_codes()
+prod_vals = get_k.product_values()
+panel_clusters = get_k.panel_clusters()
+nutrition = get_k.nutrition()
+demog_hh = get_k.household_demog()
 
-panel_clusters = pd.read_csv(f"{PROJECT_DIR}/outputs/data/panel_clusters.csv")
-
-nutrition = pd.read_csv(
-    PROJECT_DIR / "inputs/data/nutrition_data.csv", encoding="ISO-8859-1"
-)
-
-# %%
 # Combine and merge files
-pur_recs = td.combine_files(val_fields, pur_recs, prod_mast, uom, prod_codes, prod_vals)
-nut_subset = nutrition[nutrition["Purchase Period"] == 202108].copy()
+purch_recs = td.combine_files(
+    val_fields, purch_recs, prod_mast, uom, prod_codes, prod_vals, 2827
+)
+nut_subset = nutrition[nutrition["Purchase Period"] == 202110].copy()
 nut_subset["pur_id"] = (
     nut_subset["Purchase Number"].astype(str)
     + "_"
     + nut_subset["Purchase Period"].astype(str)
 )
-pur_recs["pur_id"] = (
-    pur_recs["PurchaseId"].astype(str) + "_" + pur_recs["Period"].astype(str)
+purch_recs["pur_id"] = (
+    purch_recs["PurchaseId"].astype(str) + "_" + purch_recs["Period"].astype(str)
 )
 nut_subset = nut_subset[
     [
@@ -74,103 +47,52 @@ nut_subset = nut_subset[
         "Sodium KG",
     ]
 ].copy()
-pur_recs = pur_recs.merge(nut_subset, on="pur_id", how="left")
-pur_recs = pur_recs.merge(panel_clusters, on="Panel Id", how="left")
+purch_recs = purch_recs.merge(nut_subset, on="pur_id", how="left")
+purch_recs = purch_recs.merge(panel_clusters, on="Panel Id", how="left")
 
-# %%
-# Split into clusters
-cluster_mm_1 = pur_recs[pur_recs["clusters_mm"] == 0]
-cluster_mm_2 = pur_recs[pur_recs["clusters_mm"] == 1]
-cluster_mm_3 = pur_recs[pur_recs["clusters_mm"] == 2]
-cluster_mm_4 = pur_recs[pur_recs["clusters_mm"] == 3]
-cluster_mm_5 = pur_recs[pur_recs["clusters_mm"] == 4]
-cluster_mm_6 = pur_recs[pur_recs["clusters_mm"] == 5]
+# Create subset dfs per cluster of total Kcal
+cluster_subsets = [
+    purch_recs[purch_recs["clusters_ss"] == i]
+    for i in range(0, purch_recs["clusters_ss"].nunique())
+]
+cluster_totals = [td.total_nutrition_intake(i) for i in cluster_subsets]
+total_cats = td.total_nutrition_intake(purch_recs)
 
-# %%
-# Split into clusters
-cluster_pp_1 = pur_recs[pur_recs["clusters_pp"] == 0]
-cluster_pp_2 = pur_recs[pur_recs["clusters_pp"] == 1]
-cluster_pp_3 = pur_recs[pur_recs["clusters_pp"] == 2]
-cluster_pp_4 = pur_recs[pur_recs["clusters_pp"] == 3]
-
-
-# %%
-# Get total nutritional volume per category per cluster
-def total_nutrition_intake(cluster):
-    c_total = cluster.groupby(by=["Attribute Code Description"]).sum()[
-        [
-            "gross_up_vol",
-            "Energy KJ",
-            "Energy KCal",
-            "Protein KG",
-            "Carbohydrate KG",
-            "Sugar KG",
-            "Fat KG",
-            "Saturates KG",
-            "Fibre KG Flag",
-            "Sodium KG",
-        ]
-    ]
-    return c_total.loc[:, c_total.columns != "gross_up_vol"].multiply(
-        c_total["gross_up_vol"], axis="index"
-    )
-
-
-# %%
-# Apply function to cluster subsets
-c_1_total = total_nutrition_intake(cluster_pp_1)
-c_2_total = total_nutrition_intake(cluster_pp_2)
-c_3_total = total_nutrition_intake(cluster_pp_3)
-c_4_total = total_nutrition_intake(cluster_pp_4)
-
-# %%
-# Apply function to cluster subsets
-c_1_total = total_nutrition_intake(cluster_mm_1)
-c_2_total = total_nutrition_intake(cluster_mm_2)
-c_3_total = total_nutrition_intake(cluster_mm_3)
-c_4_total = total_nutrition_intake(cluster_mm_4)
-c_5_total = total_nutrition_intake(cluster_mm_5)
-c_6_total = total_nutrition_intake(cluster_mm_6)
-
-# %% [markdown]
-# Looking at the top 10 categories for energy kcal total per cluster group
-
-# %%
-total_cats = total_nutrition_intake(pur_recs)
-
-# %%
-total_cats.head(1)
-
-# %%
 total_cats = pd.concat(
     [
-        total_cats["Energy KJ"],
-        c_1_total["Energy KJ"],
-        c_2_total["Energy KJ"],
-        c_3_total["Energy KJ"],
-        c_4_total["Energy KJ"],
-        c_5_total["Energy KJ"],
-        c_6_total["Energy KJ"],
+        total_cats["Energy KCal"],
+        cluster_totals[0]["Energy KCal"],
+        cluster_totals[1]["Energy KCal"],
+        cluster_totals[2]["Energy KCal"],
+        cluster_totals[3]["Energy KCal"],
+        cluster_totals[4]["Energy KCal"],
+        cluster_totals[5]["Energy KCal"],
+        cluster_totals[6]["Energy KCal"],
+        cluster_totals[7]["Energy KCal"],
     ],
     axis=1,
 )
+total_cats.columns = [
+    "total KCal",
+    "c0 KCal",
+    "c1 KCal",
+    "c2 KCal",
+    "c3 KCal",
+    "c4 KCal",
+    "c5 KCal",
+    "c6 KCal",
+    "c7 KCal",
+]
 
-# %%
-total_cats.columns = ["total KJ", "c1 KJ", "c2 KJ", "c3 KJ", "c4 KJ", "c5 KJ", "c6 KJ"]
-
-# %%
+# Percentage of category contribution per cluster
 for col in total_cats.columns:
-    total_cats[col] / total_cats[col].sum()
+    total_cats[col] = total_cats[col] / total_cats[col].sum()
 
-# %%
-total_cats.sort_values(by="total KJ", ascending=False).head(15)
-
-# %%
-total_cats.sort_values(by="total KJ", ascending=False).head(20).loc[
-    :, total_cats.columns != "total KJ"
-].plot(kind="barh", figsize=(10, 20))
+total_cats.sort_values(by="total KCal", ascending=False).head(10).sort_values(
+    by="total KCal", ascending=True
+).loc[:, total_cats.columns != "total KCal"].plot(kind="barh", figsize=(10, 27))
 plt.title(
-    "Percentage kcal purchased in a cluster per category (top 15 kcal purchased categories)",
+    "Percentage kcal purchased in a cluster per category (top 10 kcal purchased categories)",
     fontsize=14,
     pad=15,
 )
@@ -178,3 +100,244 @@ plt.xlabel("Percentage purchased per cluster", fontsize=12)
 plt.ylabel("Category", fontsize=12)
 plt.savefig(f"{PROJECT_DIR}/outputs/figures/cluster-kcal-purchased per category")
 plt.show()
+
+# Looking at a few example clusters
+total_cats["c6 KCal"].sort_values(ascending=False).head(20).sort_values(
+    ascending=True
+).plot(kind="barh", figsize=(10, 15))
+plt.title(
+    "Percentage kcal purchased in cluster 6 per category (top 20)",
+    fontsize=14,
+    pad=15,
+)
+plt.xlabel("Percentage", fontsize=12)
+plt.ylabel("Category", fontsize=12)
+
+total_cats["c2 KCal"].sort_values(ascending=False).head(20).sort_values(
+    ascending=True
+).plot(kind="barh", figsize=(10, 15))
+plt.title(
+    "Percentage kcal purchased in cluster 2 per category (top 20)",
+    fontsize=14,
+    pad=15,
+)
+plt.xlabel("Percentage", fontsize=12)
+plt.ylabel("Category", fontsize=12)
+
+# ### Demographic information
+
+purch_dem = purch_recs.merge(demog_hh, on="Panel Id", how="left")
+
+# Unique households per cluster
+hh_clusters = purch_dem.drop_duplicates(subset=["Panel Id", "clusters_ss"]).copy()
+
+# Cluster 7
+sns.displot(
+    data=hh_clusters[hh_clusters["clusters_ss"] == 7],
+    x="Main Shopper Age",
+    kind="kde",
+    palette="tab10",
+)
+
+# Cluster 0
+sns.displot(
+    data=hh_clusters[hh_clusters["clusters_ss"] == 0],
+    x="Main Shopper Age",
+    kind="kde",
+    palette="tab10",
+)
+
+# Has high BMI in household and percentage of high BMI
+hh_clusters["BMI high in hh"] = np.where(hh_clusters["high_bmi"] > 0, 1, 0)
+hh_clusters["% high BMI"] = hh_clusters["high_bmi"] / hh_clusters["Household Size"]
+hh_clusters["BMI over 60%"] = np.where(hh_clusters["% high BMI"] > 0.6, 1, 0)
+
+# Number of children
+perc_num_child = td.percent_demog_group(hh_clusters, "Number of Children")
+sns.catplot(
+    data=perc_num_child,
+    col="clusters_ss",
+    x="Number of Children",
+    y="Percent",
+    palette="tab10",
+    col_wrap=3,
+    kind="bar",
+)
+
+# Create main shopper age categories
+bins = [0, 20, 30, 40, 50, 60, 70, 120]
+labels = ["teen", "20s", "30", "40s", "50s", "60s", "70 plus"]
+hh_clusters["Main shopper age group"] = pd.cut(
+    hh_clusters["Main Shopper Age"], bins=bins, labels=labels, right=False
+)
+
+# Main shopper age group
+perc_age_groups = td.percent_demog_group(hh_clusters, "Main shopper age group")
+sns.catplot(
+    data=perc_age_groups,
+    col="clusters_ss",
+    x="Main shopper age group",
+    y="Percent",
+    palette="tab10",
+    col_wrap=3,
+    kind="bar",
+)
+
+# Region
+perc_region = td.percent_demog_group(hh_clusters, "Region")
+sns.catplot(
+    data=perc_region,
+    col="clusters_ss",
+    x="Region",
+    y="Percent",
+    palette="tab10",
+    col_wrap=3,
+    kind="bar",
+)
+
+# Household income
+perc_income = td.percent_demog_group(hh_clusters, "Household Income")
+
+g = sns.relplot(
+    data=perc_income,
+    col="clusters_ss",
+    x="Household Income",
+    y="Percent",
+    palette="tab10",
+    col_wrap=3,
+    kind="line",
+)
+g.set_xticklabels(rotation=90)
+
+# Life stage
+perc_life_stage = td.percent_demog_group(hh_clusters, "Life Stage")
+
+g = sns.catplot(
+    data=perc_life_stage,
+    col="clusters_ss",
+    x="Life Stage",
+    y="Percent",
+    palette="tab10",
+    col_wrap=3,
+    kind="bar",
+)
+g.set_xticklabels(rotation=90)
+
+# Remove cases where BMI is 0 (missing)
+bmi_non_miss = hh_clusters[hh_clusters["bmi_missing"] == 0].copy()
+
+# High BMI (% of household)
+perc_bmi_high = td.percent_demog_group(hh_clusters, "BMI high in hh")
+perc_bmi_high[perc_bmi_high["BMI high in hh"] == 1].set_index("clusters_ss")[
+    "Percent"
+].sort_values().plot(kind="barh")
+plt.title(
+    "Percent of households per cluster with a high BMI member (25 or over)", pad=10
+)
+
+# 60% or higher - high BMI in household
+perc_bmi_60 = td.percent_demog_group(hh_clusters, "BMI over 60%")
+perc_bmi_60[perc_bmi_60["BMI over 60%"] == 1].set_index("clusters_ss")[
+    "Percent"
+].sort_values().plot(kind="barh")
+plt.title(
+    "Percent of households per cluster where more than 60% of the household has high BMI",
+    pad=10,
+)
+
+# Look at highest BMI cluster
+sns.displot(
+    data=bmi_non_miss[bmi_non_miss["clusters_ss"] == 6], x="% high BMI", kde=True
+)
+
+# Compared to the lowest
+sns.displot(
+    data=bmi_non_miss[bmi_non_miss["clusters_ss"] == 3], x="% high BMI", kde=True
+)
+
+# Top food categories of highest BMI clusters
+total_cats["c6 KCal"].sort_values(ascending=False).head(20).sort_values(
+    ascending=True
+).plot(kind="barh", figsize=(10, 15))
+plt.title(
+    "Percentage kcal purchased in cluster 6 per category (top 20)",
+    fontsize=14,
+    pad=15,
+)
+plt.xlabel("Percentage", fontsize=12)
+plt.ylabel("Category", fontsize=12)
+
+# Top food categories of highest BMI clusters
+total_cats["c2 KCal"].sort_values(ascending=False).head(20).sort_values(
+    ascending=True
+).plot(kind="barh", figsize=(10, 15))
+plt.title(
+    "Percentage kcal purchased in cluster 2 per category (top 20)",
+    fontsize=14,
+    pad=15,
+)
+plt.xlabel("Percentage", fontsize=12)
+plt.ylabel("Category", fontsize=12)
+
+# Top food categories of highest BMI clusters
+total_cats["c1 KCal"].sort_values(ascending=False).head(20).sort_values(
+    ascending=True
+).plot(kind="barh", figsize=(10, 15))
+plt.title(
+    "Percentage kcal purchased in cluster 1 per category (top 20)",
+    fontsize=14,
+    pad=15,
+)
+plt.xlabel("Percentage", fontsize=12)
+plt.ylabel("Category", fontsize=12)
+
+# Top food categories of highest BMI clusters
+total_cats["c7 KCal"].sort_values(ascending=False).head(20).sort_values(
+    ascending=True
+).plot(kind="barh", figsize=(10, 15))
+plt.title(
+    "Percentage kcal purchased in cluster 7 per category (top 20)",
+    fontsize=14,
+    pad=15,
+)
+plt.xlabel("Percentage", fontsize=12)
+plt.ylabel("Category", fontsize=12)
+
+# Top food categories of lowest BMI cluster
+total_cats["c5 KCal"].sort_values(ascending=False).head(20).sort_values(
+    ascending=True
+).plot(kind="barh", figsize=(10, 15))
+plt.title(
+    "Percentage kcal purchased in cluster 5 per category (top 20)",
+    fontsize=14,
+    pad=15,
+)
+plt.xlabel("Percentage", fontsize=12)
+plt.ylabel("Category", fontsize=12)
+
+# Remove total column
+total_cats.drop(["total KCal"], axis=1, inplace=True)
+
+# Alcohol content
+alchohol_list = ["Wine", "Beer+Lager", "Spirits"]
+total_cats.loc[total_cats.index.isin(alchohol_list)].T.sort_values(
+    by="Beer+Lager"
+).plot(kind="barh")
+plt.title("Kcal consumed from Alcohol purchased per cluster")
+
+# ### Findings
+# - Clusters 2 & 6 have the largest proportion of households with > 60% high BMI members
+#     - The top 'life stage' category for both are 'empty nesters' with 'retried' as the second for cluster 2 and 'older dependencies for cluster 6.
+#     - The main shopper age is 40s for cluster 6 and 50s for cluster 2
+#     - Alcoholic categories appeared in their top 20 high kcal consumption categories (more so than over categories). Both are the highest consumers of kcal for beer, wine and spirits (this is not to say they consume / purchase the most of these categories - it could be they are buying high kcal products within these.
+# - Cluster 1 was the second highest for having a high BMI person in the household (although was 4th for having 60% or over members with high BMI)
+#     - The life stage distribution is more mixed to clusters 2 and 6 although 'retired' 'empty nesters' was highest
+#
+# - The lowest BMI group (percent of hh with 60% or over high BMI) is cluster 5
+#     - They are made up of young families 0-4 years
+#     - Milk, vegetables and bread are the most kcals they consume
+#
+#
+# #### To note
+# - 40% of BMI data is missing
+# - The households are not currently representative of the UK population (waiting for Kantar to provide these weights)

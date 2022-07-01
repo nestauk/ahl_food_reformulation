@@ -62,3 +62,8 @@ def nutrition():
     return pd.read_csv(
         PROJECT_DIR / "inputs/data/nutrition_data.csv", encoding="ISO-8859-1"
     )
+
+
+def household_demog():
+    """ """
+    return pd.read_csv(PROJECT_DIR / "outputs/data/panel_demographic_table_202110.csv")
