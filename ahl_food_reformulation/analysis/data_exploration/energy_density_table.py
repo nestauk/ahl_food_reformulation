@@ -120,6 +120,9 @@ pur_recs_kilos["bins"] = pd.cut(
 )
 
 # %%
+pur_recs_kilos = pur_recs_kilos[pur_recs_kilos["bins"].notna()]
+
+# %%
 pur_recs_kilos[pur_recs_kilos["energy_density"] == 4]
 
 # %%
