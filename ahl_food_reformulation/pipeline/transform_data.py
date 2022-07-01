@@ -40,16 +40,16 @@ def create_subsets(date_period):
         return subset
 
 
-def combine_files(val_fields, pur_recs, prod_mast, uom, prod_codes, prod_vals):
+def combine_files(val_fields, pur_recs, prod_mast, uom, prod_codes, prod_vals, att_num):
     """
     Performs multiple merges and a few cleaning functions to combine the following files into one:
     val_fields, pur_records, prod_mast, uom, prod_codes, prod_vals
     """
     val_fields.drop_duplicates(inplace=True)  # Remove duplicates
     # Need to confirm with Kantar on the use of the weights
-    pur_recs["gross_up_vol"] = (
-        pur_recs["Volume"] * pur_recs["Gross Up Weight"]
-    )  # Gross up volume (uk)
+    pur_recs["gross_up_vol"] = pur_recs["Volume"]
+    #  pur_recs["Volume"] * pur_recs["Gross Up Weight"]
+    # )  # Gross up volume (uk)
     # Merge files
     pur_recs = pur_recs[
         ["PurchaseId", "Panel Id", "Period", "Product Code", "gross_up_vol"]
@@ -60,7 +60,7 @@ def combine_files(val_fields, pur_recs, prod_mast, uom, prod_codes, prod_vals):
         val_fields[["VF", "UOM"]], left_on="Validation Field", right_on="VF", how="left"
     )
     pur_recs = pur_recs.merge(uom[["UOM", "Reported Volume"]], on="UOM", how="left")
-    rst_4_ext = prod_codes[prod_codes["Attribute Number"] == 2907].copy()
+    rst_4_ext = prod_codes[prod_codes["Attribute Number"] == att_num].copy()
     prod_code_vals = rst_4_ext.merge(
         prod_vals, left_on="Attribute Value", right_on="Attribute Code", how="left"
     )

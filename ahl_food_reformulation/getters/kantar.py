@@ -50,3 +50,15 @@ def product_values():
     return pd.read_csv(
         PROJECT_DIR / "inputs/data/product_attribute_values.csv", encoding="ISO-8859-1"
     )
+
+
+def panel_clusters():
+    """ """
+    return pd.read_csv(PROJECT_DIR / "outputs/data/panel_clusters.csv")
+
+
+def nutrition():
+    """ """
+    return pd.read_csv(
+        PROJECT_DIR / "inputs/data/nutrition_data.csv", encoding="ISO-8859-1"
+    )

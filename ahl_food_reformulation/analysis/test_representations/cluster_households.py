@@ -31,7 +31,7 @@ if __name__ == "__main__":
 
     # Merge files
     purch_recs = td.combine_files(
-        val_fields, purch_recs, prod_mast, uom, prod_codes, prod_vals
+        val_fields, purch_recs, prod_mast, uom, prod_codes, prod_vals, 2907
     )
 
     # Scale measures from 0-1
@@ -69,7 +69,7 @@ if __name__ == "__main__":
     # Create household cluster labels df and save as a csv file in outputs/data
     panel_clusters = pd.DataFrame(
         list(zip(labels_pp, labels_ss, labels_mm, labels_fcr)),
-        columns=["clusters_pp", "clusters_mm", "clusters_ss", "clusters_fcr"],
+        columns=["clusters_pp", "clusters_ss", "clusters_mm", "clusters_fcr"],
         index=hh_totals.index,
     )
 
