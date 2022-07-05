@@ -1,5 +1,3 @@
-<!-- #region -->
-
 # Clustering households using Kantar data
 
 The code in the `test_representations` folder produces a basic workflow which clusters households based on purchasing behaviour, testing different household represenations and parameters and saving the results. It then looks at the top purchases by k-calorie intake for each cluster as well as the demographic differences.
@@ -37,4 +35,7 @@ Download the data from the [ahl-private-data](https://s3.console.aws.amazon.com/
 1. `cd ahl_food_reformulation/analysis/test_representations`
 2. Run `cluster_households.py`
 3. Run `review_clusters.py`
-<!-- #endregion -->
+
+#### Outputs
+
+Running the script `cluster_households.py` produces figures depicting the clusters saved in [outputs/figures](https://github.com/nestauk/ahl_food_reformulation/tree/5_test_hh_representations/outputs/figures). It also produces the file `panel_clusters.csv` which gives the household id and the cluster labels for each household representation.
