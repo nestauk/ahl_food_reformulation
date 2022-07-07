@@ -2,7 +2,7 @@
 # The output is:
 # - Silloutte scores from each cluster
 # - Plots depicting the results from each cluster (silloutte scores and clusters visualised in 2D)
-# - CSV file with the cluster labels for each household
+# - CSV file with the cluster labels for each household (based on optimum clusters from looking at the visuals and the silloutte scores)
 
 # Import libraries
 import pandas as pd
@@ -16,7 +16,7 @@ from ahl_food_reformulation.pipeline import transform_data as td
 from ahl_food_reformulation.pipeline import create_clusters as cc
 
 # k numbers to test
-range_n_clusters = [2, 3, 4, 5, 6, 8, 10, 15, 20]
+range_n_clusters = [2, 4, 6, 10, 15, 20, 25, 30, 35, 40, 50]
 
 if __name__ == "__main__":
     # Read in datasets
@@ -54,26 +54,18 @@ if __name__ == "__main__":
         hh_totals
     )  # How over/under represented a category is for the hh
 
-    # Test k-means and save the optimum labels and scores for each hh representation
-    labels_pp, silh_pp = cc.test_clusters(hh_totals_prop, "prop_hh", range_n_clusters)
-    labels_ss, silh_ss = cc.test_clusters(
-        hh_totals_ss, "standard_scaler", range_n_clusters
-    )
-    labels_mm, silh_mm = cc.test_clusters(
-        hh_totals_mm, "min_max_scale", range_n_clusters
-    )
-    labels_fcr, silh_fcr = cc.test_clusters(
-        hh_totals_fcr, "over_under_rep", range_n_clusters
-    )
+    # Test k-means and save the optimum scores for each hh representation
+    silh_pp = cc.test_clusters(hh_totals_prop, "prop_hh", range_n_clusters)
+    silh_ss = cc.test_clusters(hh_totals_ss, "standard_scaler", range_n_clusters)
+    silh_mm = cc.test_clusters(hh_totals_mm, "min_max_scale", range_n_clusters)
+    silh_fcr = cc.test_clusters(hh_totals_fcr, "over_under_rep", range_n_clusters)
+
+    # Get labels for optimum k and representation
+    labels = cc.k_means(hh_totals_mm, 20)
 
     # Create household cluster labels df and save as a csv file in outputs/data
-    panel_clusters = pd.DataFrame(
-        list(zip(labels_pp, labels_ss, labels_mm, labels_fcr)),
-        columns=["clusters_pp", "clusters_ss", "clusters_mm", "clusters_fcr"],
-        index=hh_totals.index,
-    )
+    panel_clusters = pd.DataFrame(labels, columns=["clusters"], index=hh_totals.index)
 
-    # Create path if doesn't exist
+    # Create path if doesn't exist and save file
     Path(f"{PROJECT_DIR}/outputs/data/").mkdir(parents=True, exist_ok=True)
-
     panel_clusters.to_csv(f"{PROJECT_DIR}/outputs/data/panel_clusters.csv")

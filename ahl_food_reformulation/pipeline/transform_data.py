@@ -60,33 +60,6 @@ def combine_files(val_fields, pur_recs, prod_mast, uom, prod_codes, prod_vals, a
     return pur_recs
 
 
-class GroupByScaler(BaseEstimator, TransformerMixin):
-    """
-    Scales subsets of a column based on the values in another column.
-    Scaling done using MinMaxScaler() (values from 0-1)
-    Taken from: https://stackoverflow.com/questions/68356000/how-to-standardize-scikit-learn-by-group
-    """
-
-    def __init__(self, by=None):
-        self.scalers = dict()
-        self.by = by
-
-    def fit(self, X, y=None):
-        self.cols = X.select_dtypes(exclude=["object"]).columns
-        for val in X[self.by].unique():
-            mask = X[self.by] == val
-            X_sub = X.loc[mask, self.cols]
-            self.scalers[val] = MinMaxScaler().fit(X_sub)
-        return self
-
-    def transform(self, X, y=None):
-        for val in X[self.by].unique():
-            mask = X[self.by] == val
-            X.loc[mask, self.cols] = self.scalers[val].transform(X.loc[mask, self.cols])
-
-        return X
-
-
 def norm_variable(data):
     """normalise variable between 0 and 1"""
     return (data - np.min(data)) / (np.max(data) - np.min(data))
@@ -153,13 +126,13 @@ def total_nutrition_intake(cluster):
     )
 
 
-def percent_demog_group(df, col):
+def percent_demog_group(df, col, clusters):
     """
     Percent of value per demographic group.
     """
     df["Percent"] = 1
-    perc_demographic = (df.groupby(["clusters_ss", col])["Percent"].sum()) / (
-        df.groupby(["clusters_ss"])["Percent"].sum()
+    perc_demographic = (df.groupby([clusters, col])["Percent"].sum()) / (
+        df.groupby([clusters])["Percent"].sum()
     )
     perc_demographic = perc_demographic.reset_index()
     perc_demographic["Percent"] = perc_demographic["Percent"] * 100

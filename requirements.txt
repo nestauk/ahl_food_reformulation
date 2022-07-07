@@ -11,3 +11,4 @@ sh
 pandas-profiling
 ipywidgets
 sklearn
+umap-learn

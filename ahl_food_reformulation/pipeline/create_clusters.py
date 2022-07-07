@@ -1,20 +1,3 @@
-# ---
-# jupyter:
-#   jupytext:
-#     cell_metadata_filter: -all
-#     comment_magics: true
-#     text_representation:
-#       extension: .py
-#       format_name: percent
-#       format_version: '1.3'
-#       jupytext_version: 1.13.2
-#   kernelspec:
-#     display_name: ahl_food_reformulation
-#     language: python
-#     name: ahl_food_reformulation
-# ---
-
-# %%
 # Import libraries
 from sklearn.decomposition import PCA
 from sklearn.cluster import KMeans
@@ -24,12 +7,12 @@ from matplotlib import pyplot as plt
 import matplotlib.cm as cm
 import numpy as np
 from pathlib import Path
+import umap.umap_ as umap
 
 # Import project directory
 from ahl_food_reformulation import PROJECT_DIR
 
 
-# %%
 def pca_variance(pca, filename):
     """
     Plots the sum of the variance explained for all components up to 90% variance explained.
@@ -52,10 +35,9 @@ def pca_variance(pca, filename):
         + ".png",
         bbox_inches="tight",
     )
-    plt.show()
+    plt.show(block=False)
 
 
-# %%
 def k_means_disp(range_n_clusters, X, filename):
     """
     For a given number of k produces silhouette and cluster plots and returns the silhouette scores.
@@ -152,15 +134,27 @@ def k_means_disp(range_n_clusters, X, filename):
             + ".png",
             bbox_inches="tight",
         )
-        plt.show()
+        plt.show(block=False)
     return silhouettes
 
 
-# %%
+def k_means(df, k_num):
+    """
+    Runs k-means on df with set number of k. Returns cluster labels.
+    """
+    pca = PCA(n_components=0.90)
+    X = pca.fit_transform(df)
+    s_reducer = umap.UMAP(n_components=2, random_state=1)
+    X_umap = s_reducer.fit_transform(X)
+    kmeans = KMeans(n_clusters=k_num)
+    labels = kmeans.fit_predict(X_umap)
+    return labels
+
+
 def test_clusters(df, filename, range_n_clusters):
     """
     Produces silhouette and cluster plots using the k_means_disp and then re-runs k-means for the
-    best number of clusters. Returns the labels and silhouette scores.
+    best number of clusters. Returns the silhouette scores.
     """
     pca = PCA(n_components=0.90)
     X = pca.fit_transform(df)
@@ -170,11 +164,29 @@ def test_clusters(df, filename, range_n_clusters):
         + " components."
     )
     pca_variance(pca, filename)
-    silhouettes = k_means_disp(range_n_clusters, X, filename)
+    s_reducer = umap.UMAP(n_components=2, random_state=1)
+    X_umap = s_reducer.fit_transform(X)
+    silhouettes = k_means_disp(range_n_clusters, X_umap, filename)
     optimum_cluster_num = max(silhouettes, key=silhouettes.get)
-    print("Score: " + str(silhouettes[optimum_cluster_num]))
-    print("Optimum number of clusters is " + str(optimum_cluster_num))
-    # Re-assign for best n_clusters
-    kmeans = KMeans(n_clusters=optimum_cluster_num)
-    labels = kmeans.fit_predict(X)
-    return labels, silhouettes
+    print(
+        "Optimum number of clusters is "
+        + str(optimum_cluster_num)
+        + " with the silhouette score "
+        + str(silhouettes[optimum_cluster_num])
+    )
+    plt.plot(
+        range(len(silhouettes)),
+        list(silhouettes.values()),
+        linestyle="dotted",
+        marker="o",
+    )
+    plt.xticks(range(len(silhouettes)), list(silhouettes.keys()))
+    plt.xlabel("k numbers")
+    plt.ylabel("Avg silhouette scores")
+    plt.title("Average Silhouette scores for different k " + filename)
+    plt.savefig(
+        f"{PROJECT_DIR}/outputs/figures/kmeans/silhouette_scores_" + filename + ".png",
+        bbox_inches="tight",
+    )
+    plt.show(block=False)
+    return silhouettes
