@@ -1,4 +1,5 @@
 # Import libraries
+from pyclbr import Function
 import pandas as pd
 import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -7,25 +8,30 @@ import os.path
 from ahl_food_reformulation import PROJECT_DIR
 
 
-def create_subsets(date_period):
-    """
-    Creates subset of defined month. First checks if files exists before creating.
-    """
-    file_path = f"{PROJECT_DIR}/outputs/data/pur_rec_" + str(date_period) + ".csv"
-    # Check if file already exists:
-    if os.path.isfile(file_path):
-        return pd.read_csv(file_path)
-    else:
-        pur_recs = pd.read_csv(f"{PROJECT_DIR}/inputs/data/purchase_records.csv")
-        subset = pur_recs[pur_recs["Period"] == date_period]
-        subset.to_csv(file_path, index=False)
-        return subset
-
-
-def combine_files(val_fields, pur_recs, prod_mast, uom, prod_codes, prod_vals, att_num):
+def combine_files(
+    val_fields: pd.DataFrame,
+    pur_recs: pd.DataFrame,
+    prod_mast: pd.DataFrame,
+    uom: pd.DataFrame,
+    prod_codes: pd.DataFrame,
+    prod_vals: pd.DataFrame,
+    att_num: int,
+):
     """
     Performs multiple merges and a few cleaning functions to combine the following files into one:
     val_fields, pur_records, prod_mast, uom, prod_codes, prod_vals
+
+    Args:
+        val_fields (pd.DataFrame): Pandas dataframe with codes to merge product master and uom dfs
+        pur_recs (pd.DataFrame): Pandas dataframe contains the purchase records of specified data
+        prod_mast (pd.DataFrame): Panadas dataframe unique product list
+        uom (pd.DataFrame): Panadas dataframe contains product measurement information
+        prod_codes (pd.DataFrame): Panadas dataframe contains the codes to link products to category information
+        prod_vals (pd.DataFrame): Panadas dataframe contains the product category information
+        att_num (int): Product category type code number
+
+    Returns:
+        pur_recs (pandas.DateFrame): Merged pandas dataframe
     """
     val_fields.drop_duplicates(inplace=True)  # Remove duplicates
     # Need to confirm with Kantar on the use of the weights
@@ -60,15 +66,27 @@ def combine_files(val_fields, pur_recs, prod_mast, uom, prod_codes, prod_vals, a
     return pur_recs
 
 
-def norm_variable(data):
-    """normalise variable between 0 and 1"""
+def norm_variable(data: pd.Series):
+    """normalise variable between 0 and 1.
+
+    Args:
+        data (pd.Series): Pandas series, volume for different measurements.
+
+    Returns:
+        pd.Series: Normalised column
+    """
     return (data - np.min(data)) / (np.max(data) - np.min(data))
 
 
-# Groupby to get category totals per household
-def hh_total_categories(df):
+def hh_total_categories(df: pd.DataFrame):
     """
-    Groups by the household id and category summing the grossed up volume.
+    Groups by the household id and category summing the volume.
+
+    Args:
+        df (pd.DataFrame): Pandas dataframe of purchase records (noramlised by volume measurement)
+
+    Returns:
+        pd.DateFrame: Household totals per food category
     """
     return (
         df.groupby(["Panel Id", "att_vol"])["gross_up_vol"]
@@ -78,34 +96,59 @@ def hh_total_categories(df):
     )
 
 
-def scale_hh(df, scaler):
+def scale_hh(df: pd.DataFrame, scaler: Function):
     """
     Applies a scaler to each row of household purchases.
+
+    Args:
+        df (pd.DataFrame): Pandas dataframe household purchases by food category
+        scaler (function): Sklearn scaler to apply
+
+    Returns:
+        pd.DateFrame: Household totals scaled by rows.
     """
     return pd.DataFrame(
         scaler.fit_transform(df.T).T, columns=list(df.columns), index=df.index
     )
 
 
-def proportion_hh(df):
+def proportion_hh(df: pd.DataFrame):
     """
     Transforms total values of categories into proportions  of the total values for each household
+
+    Args:
+        df (pd.DataFrame): Pandas dataframe household purchases by food category
+
+    Returns:
+        pd.DateFrame: Household purchases per category as proportions of total purchases
     """
     return df.div(df.sum(axis=1), axis=0)
 
 
-def food_cat_represent(df):
+def food_cat_represent(df: pd.DataFrame):
     """
     Transforms household puchases to show how over / under-represented a category is for a household.
+
+    Args:
+        df (pd.DataFrame): Pandas dataframe household purchases by food category
+
+    Returns:
+        pd.DateFrame: Household purchases per category
     """
     return (df.div(df.sum(axis=1), axis=0)).div(
         list(df.sum() / (df.sum().sum())), axis=1
     )
 
 
-def total_nutrition_intake(cluster):
+def total_nutrition_intake(cluster: pd.DataFrame):
     """
     Get total nutritional volume per category per cluster.
+
+    Args:
+        df (pd.DataFrame): Pandas dataframe of nutritional intake for cluster
+
+    Returns:
+        pd.DateFrame: Total intake per nurtitional group
     """
     c_total = cluster.groupby(by=["Attribute Code Description"]).sum()[
         [
@@ -126,9 +169,17 @@ def total_nutrition_intake(cluster):
     )
 
 
-def percent_demog_group(df, col, clusters):
+def percent_demog_group(df: pd.DataFrame, col: str, clusters: str):
     """
     Percent of value per demographic group.
+
+    Args:
+        df (pd.DataFrame): Pandas dataframe
+        col (str): Name of column to create percentage values
+        clusters (str): Name of column with cluster labels
+
+    Returns:
+        perc_demographic (pd.DateFrame): Table of percentages per value of demographic group
     """
     df["Percent"] = 1
     perc_demographic = (df.groupby([clusters, col])["Percent"].sum()) / (

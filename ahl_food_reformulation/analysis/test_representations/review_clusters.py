@@ -153,7 +153,7 @@ plt.xlabel("Percentage purchased per cluster", fontsize=12)
 plt.ylabel("Category", fontsize=12)
 plt.savefig(f"{PROJECT_DIR}/outputs/figures/cluster-kcal-purchased per category")
 
-plt.show()
+plt.show(block=False)
 
 # Top food categories of highest BMI clusters
 total_cats["c18 KCal"].sort_values(ascending=False).head(20).sort_values(

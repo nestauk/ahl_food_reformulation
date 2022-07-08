@@ -1,4 +1,5 @@
 # Import libraries
+from pyclbr import Function
 from sklearn.decomposition import PCA
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_samples, silhouette_score
@@ -13,9 +14,15 @@ import umap.umap_ as umap
 from ahl_food_reformulation import PROJECT_DIR
 
 
-def pca_variance(pca, filename):
+def pca_variance(pca=Function, filename=str):
     """
     Plots the sum of the variance explained for all components up to 90% variance explained.
+
+    Args:
+        pca (function): Fitted Principal component analysis (PCA). Applied as (PCA(n_components=0.90))
+        filename (str): Name extension for file to be saved in outputs/figures
+
+    Returns: None
     """
     plt.figure(figsize=(5, 5))
     plt.plot(
@@ -38,9 +45,17 @@ def pca_variance(pca, filename):
     plt.show(block=False)
 
 
-def k_means_disp(range_n_clusters, X, filename):
+def k_means_display(range_n_clusters=list, df=pd.DataFrame, filename=str):
     """
     For a given number of k produces silhouette and cluster plots and returns the silhouette scores.
+
+    Args:
+        range_n_clusters (list): Numbers of k to test
+        df (pd.DataFrame): Pandas dataframe of household purchases
+        filename (str): Name extension for file to be saved in outputs/figures
+
+    Returns:
+        silhouettes (dict): Dictionary of avg silhouette score per number of K
     """
     silhouettes = {}
     # Add folder if not already created
@@ -50,15 +65,15 @@ def k_means_disp(range_n_clusters, X, filename):
         fig, (ax1, ax2) = plt.subplots(1, 2)
         fig.set_size_inches(18, 7)
         ax1.set_xlim([-0.6, 1])
-        ax1.set_ylim([0, len(X) + (n_clusters + 1) * 10])
+        ax1.set_ylim([0, len(df) + (n_clusters + 1) * 10])
         # Apply k-means with cluster number
         clusterer = KMeans(n_clusters=n_clusters, random_state=10)
-        cluster_labels = clusterer.fit_predict(X)
+        cluster_labels = clusterer.fit_predict(df)
         # Avg silhouette score
-        silhouette_avg = silhouette_score(X, cluster_labels)
+        silhouette_avg = silhouette_score(df, cluster_labels)
         silhouettes[n_clusters] = silhouette_avg  # add to dict
         # Compute the silhouette scores for each sample
-        sample_silhouette_values = silhouette_samples(X, cluster_labels)
+        sample_silhouette_values = silhouette_samples(df, cluster_labels)
         y_lower = 10
         for i in range(n_clusters):
             # Aggregate the silhouette scores for samples belonging to cluster i, and sort them
@@ -96,7 +111,14 @@ def k_means_disp(range_n_clusters, X, filename):
         # 2nd Plot showing the actual clusters formed
         colors = cm.nipy_spectral(cluster_labels.astype(float) / n_clusters)
         ax2.scatter(
-            X[:, 0], X[:, 1], marker=".", s=30, lw=0, alpha=0.7, c=colors, edgecolor="k"
+            df[:, 0],
+            df[:, 1],
+            marker=".",
+            s=30,
+            lw=0,
+            alpha=0.7,
+            c=colors,
+            edgecolor="k",
         )
 
         # Labeling the clusters
@@ -138,9 +160,16 @@ def k_means_disp(range_n_clusters, X, filename):
     return silhouettes
 
 
-def k_means(df, k_num):
+def k_means(df=pd.DataFrame, k_num=int):
     """
     Runs k-means on df with set number of k. Returns cluster labels.
+
+    Args:
+        df (pd.DataFrame): Dataframe of household purchases
+        k_num (int): k parameter
+
+    Returns:
+        labels (list): List of labels for each household
     """
     pca = PCA(n_components=0.90)
     X = pca.fit_transform(df)
@@ -151,10 +180,18 @@ def k_means(df, k_num):
     return labels
 
 
-def test_clusters(df, filename, range_n_clusters):
+def test_fit_clusters(df=pd.DataFrame, filename=str, range_n_clusters=list):
     """
     Produces silhouette and cluster plots using the k_means_disp and then re-runs k-means for the
     best number of clusters. Returns the silhouette scores.
+
+    Args:
+        df (pd.DataFrame): Dataframe of household purchases
+        filename (str): Name extension for file to be saved in outputs/figures
+        range_n_clusters (list): list of k's to test
+
+    Returns:
+        silhouettes (dict): Dictionary of avg silhouette score per number of K
     """
     pca = PCA(n_components=0.90)
     X = pca.fit_transform(df)
@@ -166,7 +203,7 @@ def test_clusters(df, filename, range_n_clusters):
     pca_variance(pca, filename)
     s_reducer = umap.UMAP(n_components=2, random_state=1)
     X_umap = s_reducer.fit_transform(X)
-    silhouettes = k_means_disp(range_n_clusters, X_umap, filename)
+    silhouettes = k_means_display(range_n_clusters, X_umap, filename)
     optimum_cluster_num = max(silhouettes, key=silhouettes.get)
     print(
         "Optimum number of clusters is "

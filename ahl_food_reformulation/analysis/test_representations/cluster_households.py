@@ -55,10 +55,10 @@ if __name__ == "__main__":
     )  # How over/under represented a category is for the hh
 
     # Test k-means and save the optimum scores for each hh representation
-    silh_pp = cc.test_clusters(hh_totals_prop, "prop_hh", range_n_clusters)
-    silh_ss = cc.test_clusters(hh_totals_ss, "standard_scaler", range_n_clusters)
-    silh_mm = cc.test_clusters(hh_totals_mm, "min_max_scale", range_n_clusters)
-    silh_fcr = cc.test_clusters(hh_totals_fcr, "over_under_rep", range_n_clusters)
+    silh_pp = cc.test_fit_clusters(hh_totals_prop, "prop_hh", range_n_clusters)
+    silh_ss = cc.test_fit_clusters(hh_totals_ss, "standard_scaler", range_n_clusters)
+    silh_mm = cc.test_fit_clusters(hh_totals_mm, "min_max_scale", range_n_clusters)
+    silh_fcr = cc.test_fit_clusters(hh_totals_fcr, "over_under_rep", range_n_clusters)
 
     # Get labels for optimum k and representation
     labels = cc.k_means(hh_totals_mm, 20)
