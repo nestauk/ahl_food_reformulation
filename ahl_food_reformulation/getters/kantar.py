@@ -84,6 +84,13 @@ def product_values():
     )
 
 
+def product_attribute():
+    """ """
+    return pd.read_csv(
+        PROJECT_DIR / "inputs/data/product_attribute.csv", encoding="ISO-8859-1"
+    )
+
+
 def panel_clusters():
     """Reads in dataset containing the cluster labels per household
 
@@ -103,6 +110,52 @@ def nutrition():
     """
     return pd.read_csv(
         PROJECT_DIR / "inputs/data/nutrition_data.csv", encoding="ISO-8859-1"
+    )
+
+
+def household_master():
+    """Reads in dataset of household information
+
+    Args: None
+
+    Returns: pd.DataFrame: household master dataframe
+    """
+    return pd.read_csv(
+        PROJECT_DIR / "inputs/data/panel_household_master.csv", encoding="ISO-8859-1"
+    )
+
+
+def household_ind():
+    """Reads in dataset of information about each household member
+
+    Args: None
+
+    Returns: pd.DataFrame: household individual dataframe
+    """
+    return pd.read_csv(
+        PROJECT_DIR / "inputs/data/panel_individual_master.csv", encoding="ISO-8859-1"
+    )
+
+
+def demog_coding():
+    """Reads in dataset of codes per household that links to demographic information
+
+    Args: None
+
+    Returns: pd.DataFrame: demographic coding dataframe
+    """
+    return pd.read_csv(PROJECT_DIR / "inputs/data/panel_demographic_coding.csv")
+
+
+def demog_val():
+    """Reads in dataset of demographic values per code
+
+    Args: None
+
+    Returns: pd.DataFrame: demographic values dataframe
+    """
+    return pd.read_csv(
+        PROJECT_DIR / "inputs/data/panel_demographic_values.csv", encoding="ISO-8859-1"
     )
 
 
