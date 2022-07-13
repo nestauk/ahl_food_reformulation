@@ -76,10 +76,6 @@ def product_table(
     Creates a dataframe with information for each product
 
     Args:
-        demog_coding (pd.DataFrame): Pandas dataframe codes per household that links to demographic information
-        demog_val (pd.DataFrame): Pandas dataframe demographic values per code
-        pan_mast (pd.DataFrame): Pandas dataframe of household information
-
         val_fields (pd.DataFrame): Pandas dataframe with codes to merge product master and uom dfs
         prod_mast (pd.DataFrame): Panadas dataframe unique product list
         uom (pd.DataFrame): Panadas dataframe contains product measurement information

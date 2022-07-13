@@ -200,11 +200,16 @@ def bmi_households(pan_ind_mast: pd.DataFrame):
     Returns:
         pd.DateFrame: Table of BMI info per household
     """
+    pan_ind_mast["adults"] = np.where(
+        (pan_ind_mast["BMI"] > 0) & (pan_ind_mast["Age"] > 16), 1, 0
+    )
     pan_ind_mast["high_bmi_adult"] = np.where(
         (pan_ind_mast["BMI"] >= 25) & (pan_ind_mast["Age"] > 16), 1, 0
     )
     pan_ind_mast["bmi_missing"] = np.where(pan_ind_mast["BMI"] == 0, 1, 0)
 
-    pan_ind_bmi = pan_ind_mast[["Panel Id", "high_bmi_adult", "bmi_missing"]].copy()
+    pan_ind_bmi = pan_ind_mast[
+        ["Panel Id", "high_bmi_adult", "bmi_missing", "adults"]
+    ].copy()
     pan_ind_bmi["household_size"] = 1
     return pan_ind_bmi.groupby(by=["Panel Id"]).sum()

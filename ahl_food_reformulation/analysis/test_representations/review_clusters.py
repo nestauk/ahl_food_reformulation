@@ -107,6 +107,8 @@ sns.displot(data=bmi_non_miss[bmi_non_miss["clusters"] == 13], x="% high BMI", k
 cluster_totals = [td.total_nutrition_intake(i) for i in cluster_subsets]
 total_cats = td.total_nutrition_intake(purch_recs)
 
+clusters = [18, 12, 5, 0, 15, 13, 8, 14, 17, 2]
+
 total_cats = pd.concat(
     [
         total_cats["Energy KCal"],
@@ -123,19 +125,8 @@ total_cats = pd.concat(
     ],
     axis=1,
 )
-total_cats.columns = [
-    "total KCal",
-    "c18 KCal",
-    "c12 KCal",
-    "c5 KCal",
-    "c0 KCal",
-    "c15 KCal",
-    "c13 KCal",
-    "c8 KCal",
-    "c14 KCal",
-    "c17 KCal",
-    "c2 KCal",
-]
+
+total_cats.columns = [["total KCal"] + [f"c{n} KCal" for n in clusters]]
 
 # Percentage of category contribution per cluster
 for col in total_cats.columns:

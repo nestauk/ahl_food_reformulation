@@ -85,7 +85,12 @@ def product_values():
 
 
 def product_attribute():
-    """ """
+    """Reads in dataset containing information on the product attributes.
+
+    Args: None
+
+    Returns: pd.DataFrame: product values dataframe
+    """
     return pd.read_csv(
         PROJECT_DIR / "inputs/data/product_attribute.csv", encoding="ISO-8859-1"
     )

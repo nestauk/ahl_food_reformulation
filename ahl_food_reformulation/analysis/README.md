@@ -33,8 +33,8 @@ Download the data from the [ahl-private-data](https://s3.console.aws.amazon.com/
 ### Run the code
 
 1. `cd ahl_food_reformulation/analysis/test_representations`
-2. Run `cluster_households.py`
-3. Run `review_clusters.py`
+2. Run `python cluster_households.py`
+3. Run `python review_clusters.py`
 
 #### Outputs
 
