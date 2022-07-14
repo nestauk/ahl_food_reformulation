@@ -10,3 +10,8 @@ typer
 sh
 pandas-profiling
 ipywidgets
+sklearn
+umap-learn
+statsmodels
+altair-saver
+webdriver_manager
