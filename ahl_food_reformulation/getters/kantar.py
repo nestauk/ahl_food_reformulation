@@ -1,7 +1,10 @@
 # Returns the files from the kantar dataset
 import pandas as pd
+import re
 import os.path
 from ahl_food_reformulation import PROJECT_DIR
+from typing import Tuple, Dict
+from ahl_food_reformulation.getters.miscelaneous import postcode_region_lookup
 
 
 def purchase_subsets(date_period):
@@ -172,3 +175,24 @@ def household_demog():
     Returns: pd.DataFrame: household demographic dataframe
     """
     return pd.read_csv(PROJECT_DIR / "outputs/data/panel_demographic_table_202110.csv")
+
+
+def demog_clean() -> Tuple[pd.DataFrame, Dict]:
+    """
+    Reads a cleaned version of the kantar dataset
+    """
+
+    demog = household_demog()
+    demog_col_lookup = {name: re.sub(" ", "_", name.lower()) for name in demog.columns}
+
+    demog.columns = [demog_col_lookup[name] for name in demog.columns]
+
+    demog = demog.rename(columns={"postocde_district": "postcode_district"})
+
+    demog_clean_names = {v: k for k, v in demog_col_lookup.items()}
+
+    return demog.assign(
+        cluster=lambda df: df["panel_id"].map(
+            panel_clusters().set_index("Panel Id")["clusters"].to_dict()
+        )
+    ).assign(region=lambda df: df["postcode_district"].map(postcode_region_lookup()))

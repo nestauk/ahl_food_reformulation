@@ -3,6 +3,7 @@
 
 # %%
 from altair_saver import save
+from altair import Chart
 from selenium import webdriver
 from webdriver_manager.chrome import ChromeDriverManager
 import os
@@ -74,6 +75,21 @@ def save_altair_to_path(
     if save_html:
         # Save html
         fig.save(f"{path}/{name}.html")
+
+
+def altair_text_resize(chart: Chart, sizes: tuple = (12, 14)) -> Chart:
+    """Resizes the text of axis labels and legends in an altair chart
+    Args:
+        chart: chart to resize
+        sizes: label size and title size
+    Returns:
+        An altair chart
+    """
+
+    ch = chart.configure_axis(
+        labelFontSize=sizes[0], titleFontSize=sizes[1], labelLimit=300
+    ).configure_legend(labelFontSize=sizes[0], titleFontSize=sizes[1])
+    return ch
 
 
 # %%
