@@ -58,7 +58,7 @@ def uom():
     return pd.read_csv(
         PROJECT_DIR / "inputs/data/uom.csv",
         header=0,
-        names=["UOM", "Measure Description", "Factor", "Reported Volume"],
+        names=["UOM", "Reported Volume"],
     )
 
 

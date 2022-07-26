@@ -107,11 +107,11 @@ def product_table(
         lambda x: att_dict[x]
     )
     combined_prod_att = prod_codes.merge(
-        prod_vals, left_on="Attribute Value", right_on="Attribute Code", how="left"
+        prod_vals, left_on="Attribute Value", right_on="Attribute Value", how="left"
     )
     combined_prod_att.set_index("Product Code", inplace=True)
     combined_prod_att = combined_prod_att.pivot_table(
-        values="Attribute Code Description",
+        values="Attribute Value Description",
         index=combined_prod_att.index,
         columns="Attribute",
         aggfunc="first",

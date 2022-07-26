@@ -150,7 +150,7 @@ def total_nutrition_intake(cluster: pd.DataFrame):
     Returns:
         pd.DateFrame: Total intake per nurtitional group
     """
-    c_total = cluster.groupby(by=["Attribute Code Description"]).sum()[
+    c_total = cluster.groupby(by=["Attribute Value Description"]).sum()[
         [
             "gross_up_vol",
             "Energy KJ",
