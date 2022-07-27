@@ -49,11 +49,9 @@ def combine_files(
     )
     pur_recs = pur_recs.merge(uom[["UOM", "Reported Volume"]], on="UOM", how="left")
     rst_4_ext = prod_codes[prod_codes["Attribute Number"] == att_num].copy()
-    prod_code_vals = rst_4_ext.merge(
-        prod_vals, left_on="Attribute Value", right_on="Attribute Code", how="left"
-    )
+    prod_code_vals = rst_4_ext.merge(prod_vals, on="Attribute Value", how="left")
     pur_recs = pur_recs.merge(
-        prod_code_vals[["Product Code", "Attribute Code Description"]],
+        prod_code_vals[["Product Code", "Attribute Value Description"]],
         on="Product Code",
         how="left",
     )
@@ -61,7 +59,7 @@ def combine_files(
         pur_recs["Reported Volume"].notna()
     ]  # Remove purchases with no volume
     pur_recs["att_vol"] = (
-        pur_recs["Attribute Code Description"] + "_" + pur_recs["Reported Volume"]
+        pur_recs["Attribute Value Description"] + "_" + pur_recs["Reported Volume"]
     )
     return pur_recs
 
