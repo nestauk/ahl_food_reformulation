@@ -56,6 +56,18 @@ pur_recs["pur_id"] = (
 )
 
 # %%
+pur_recs.head(1)
+
+# %%
+(
+    (
+        (pur_recs.groupby("Reported Volume")["Product Code"].nunique())
+        / (pur_recs["Product Code"].nunique())
+    )
+    * 100
+).reset_index()
+
+# %%
 pur_recs_kilos = pur_recs[pur_recs["Reported Volume"] == "Kilos"].copy()
 
 # %%
