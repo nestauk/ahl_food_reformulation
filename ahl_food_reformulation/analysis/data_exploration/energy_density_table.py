@@ -110,8 +110,26 @@ prod_mast[prod_mast["Product Code"] == 1113]
 # - High energy density foods = more than 4 kcal/g
 
 # %%
-bins = [0, 0.6, 1.5, 4.01, 40]
-labels = ["very low", "low", "medium", "high"]
+# bins = [0, 0.6, 1.5, 4.01, 40]
+# labels = ["very low", "low", "medium", "high"]
+
+bins = [0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 100]
+labels = [
+    "0 to 0.5",
+    "0.5 to 1",
+    "1 to 1.5",
+    "1.5 to 2",
+    "2 to 2.5",
+    "2.5 to 3",
+    "3 to 3.5",
+    "3.5 to 4",
+    "4 to 4.5",
+    "4.5 to 5",
+    "5 to 5.5",
+    "5.5 to 6",
+    "6 or higher",
+]
+
 pur_recs_kilos["bins"] = pd.cut(
     pur_recs_kilos["energy_density"], bins, right=False, labels=labels
 )
@@ -128,10 +146,14 @@ pur_recs_kilos["kcal_gross_up"] = (
 )
 
 # %%
+print("Calories sold")
 (
-    pur_recs_kilos.groupby("bins")["kcal_gross_up"].sum()
-    / pur_recs_kilos["kcal_gross_up"].sum()
-) * 100
+    (
+        pur_recs_kilos.groupby("bins")["kcal_gross_up"].sum()
+        / pur_recs_kilos["kcal_gross_up"].sum()
+    )
+    * 100
+).reset_index().to_csv("calories_sold.csv")
 
 # %%
 # sales weighted average
@@ -144,16 +166,24 @@ pur_recs_kilos["quant_gross_up"] = (
 )
 
 # %%
+print("Sales %")
 (
-    pur_recs_kilos.groupby("bins")["quant_gross_up"].sum()
-    / pur_recs_kilos["quant_gross_up"].sum()
-) * 100
+    (
+        pur_recs_kilos.groupby("bins")["quant_gross_up"].sum()
+        / pur_recs_kilos["quant_gross_up"].sum()
+    )
+    * 100
+).reset_index().to_csv("sales.csv")
 
 # %%
+print("Products")
 (
-    pur_recs_kilos.groupby("bins")["Product Code"].nunique()
-    / (pur_recs_kilos["Product Code"].nunique())
-) * 100
+    (
+        pur_recs_kilos.groupby("bins")["Product Code"].nunique()
+        / (pur_recs_kilos["Product Code"].nunique())
+    )
+    * 100
+).reset_index().to_csv("products_sold.csv")
 
 # %%
 # (0.143887 + 0.244483 + 0.468753 + 0.179540)  # Will be over as some products in both
