@@ -25,10 +25,12 @@ prod_mast = pd.read_csv(
     PROJECT_DIR / "inputs/data/product_master.csv", encoding="ISO-8859-1"
 )
 val_fields = pd.read_csv(PROJECT_DIR / "inputs/data/validation_field.csv")
+
+# %%
 uom = pd.read_csv(
     PROJECT_DIR / "inputs/data/uom.csv",
     header=0,
-    names=["UOM", "Measure Description", "Factor", "Reported Volume"],
+    names=["UOM", "Reported Volume"],
 )
 
 # %%
@@ -41,9 +43,7 @@ pur_recs = pur_recs.merge(
 )
 
 # %%
-pur_recs = pur_recs.merge(
-    uom[["UOM", "Reported Volume", "Measure Description"]], on="UOM", how="left"
-)
+pur_recs = pur_recs.merge(uom[["UOM", "Reported Volume"]], on="UOM", how="left")
 
 # %%
 nut_recs["pur_id"] = (
@@ -95,10 +95,7 @@ pur_recs_kilos[pur_recs_kilos.energy_density > 40].sort_values(
 # %%
 pur_recs_kilos[pur_recs_kilos.energy_density > 40].sort_values(
     by="energy_density", ascending=False
-)["Measure Description"].value_counts()
-
-# %%
-pur_recs_kilos["Measure Description"].value_counts()
+)["Reported Volume"].value_counts()
 
 # %%
 pur_recs_kilos.head(10)
@@ -131,16 +128,34 @@ pur_recs_kilos["kcal_gross_up"] = (
 )
 
 # %%
-pur_recs_kilos.groupby("bins")["kcal_gross_up"].sum() / pur_recs_kilos[
-    "kcal_gross_up"
-].sum()
+(
+    pur_recs_kilos.groupby("bins")["kcal_gross_up"].sum()
+    / pur_recs_kilos["kcal_gross_up"].sum()
+) * 100
 
 # %%
-pur_recs_kilos.groupby("bins")["Product Code"].nunique() / (
-    pur_recs_kilos["Product Code"].nunique()
+# sales weighted average
+# Quantity x gross up weight per row
+# Total quantity per group / total quantity (weighted avg)
+
+# %%
+pur_recs_kilos["quant_gross_up"] = (
+    pur_recs_kilos["Quantity"] * pur_recs_kilos["Gross Up Weight"]
 )
 
 # %%
-(0.143887 + 0.244483 + 0.468753 + 0.179540)  # Will be over as some products in both
+(
+    pur_recs_kilos.groupby("bins")["quant_gross_up"].sum()
+    / pur_recs_kilos["quant_gross_up"].sum()
+) * 100
+
+# %%
+(
+    pur_recs_kilos.groupby("bins")["Product Code"].nunique()
+    / (pur_recs_kilos["Product Code"].nunique())
+) * 100
+
+# %%
+# (0.143887 + 0.244483 + 0.468753 + 0.179540)  # Will be over as some products in both
 
 # %%
