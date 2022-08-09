@@ -34,13 +34,8 @@ def combine_files(
         pur_recs (pandas.DateFrame): Merged pandas dataframe
     """
     val_fields.drop_duplicates(inplace=True)  # Remove duplicates
-    # Need to confirm with Kantar on the use of the weights
-    pur_recs["gross_up_vol"] = pur_recs["Volume"]
-    #  pur_recs["Volume"] * pur_recs["Gross Up Weight"]
-    # )  # Gross up volume (uk)
-    # Merge files
     pur_recs = pur_recs[
-        ["PurchaseId", "Panel Id", "Period", "Product Code", "gross_up_vol"]
+        ["PurchaseId", "Panel Id", "Period", "Product Code", "Volume"]
     ].merge(
         prod_mast[["Product Code", "Validation Field"]], on="Product Code", how="left"
     )
@@ -62,6 +57,50 @@ def combine_files(
         pur_recs["Attribute Value Description"] + "_" + pur_recs["Reported Volume"]
     )
     return pur_recs
+
+
+def nutrition_merge(nutrition: pd.DataFrame, purch_recs: pd.DataFrame, cols: list):
+    """ADD
+
+    Args:
+        nutrition (pd.DataFrame): Pandas dataframe with per purchase nutritional information
+        purch_recs (pd.DataFrame): Pandas dataframe contains the purchase records of specified data
+        cols (list): List of columns names to merge from the nutrition dataset
+
+    Returns:
+        (pandas.DateFrame): Merged pandas dataframe
+    """
+    # Add unique purchase ID
+    nutrition["pur_id"] = (
+        nutrition["Purchase Number"].astype(str)
+        + "_"
+        + nutrition["Purchase Period"].astype(str)
+    )
+    purch_recs["pur_id"] = (
+        purch_recs["PurchaseId"].astype(str) + "_" + purch_recs["Period"].astype(str)
+    )
+    # Merge datasets
+    return purch_recs.merge(nutrition[["pur_id"] + cols], on="pur_id", how="left")
+
+
+def total_product_hh_purchase(purch_recs: pd.DataFrame):
+    """Groups by household, measurement and product and sums the volume and kcal content.
+
+    Args:
+        purch_recs (pd.DataFrame): Pandas dataframe contains the purchase records of specified data
+
+    Returns:
+        (pandas.DateFrame): groupby pandas dataframe
+    """
+    # Remove cases where volume is zero (8 cases)
+    purch_recs = purch_recs[purch_recs["Volume"] != 0].copy()
+    return (
+        purch_recs.groupby(["Panel Id", "Reported Volume", "att_vol"])[
+            ["Volume", "Energy KCal"]
+        ]
+        .sum()
+        .reset_index()
+    )
 
 
 def norm_variable(data: pd.Series):
@@ -87,11 +126,53 @@ def hh_total_categories(df: pd.DataFrame):
         pd.DateFrame: Household totals per food category
     """
     return (
-        df.groupby(["Panel Id", "att_vol"])["gross_up_vol"]
+        df.groupby(["Panel Id", "att_vol"])["Volume"]
         .sum()
         .unstack(["att_vol"])
         .fillna(0)
     )
+
+
+def kcal_contribution(purch_recs: pd.DataFrame):
+    """
+    Calculates the kcal contribution to the volume and normalises by measurement.
+
+    Args:
+        purch_recs (pd.DataFrame): Pandas dataframe contains the purchase records of specified data
+
+    Returns:
+        purch_recs (pd.DateFrame): Kcal / volume ratio per household, scaled by measurement
+    """
+    purch_recs["kcal_vol"] = purch_recs["Energy KCal"] / purch_recs["Volume"]
+    purch_recs["vol_scaled"] = purch_recs.groupby("Reported Volume")["kcal_vol"].apply(
+        norm_variable
+    )
+    purch_recs = (
+        purch_recs.set_index(["Panel Id", "att_vol"])[["vol_scaled"]]
+        .unstack(["att_vol"])
+        .fillna(0)
+    )
+    purch_recs.columns = purch_recs.columns.droplevel()
+    return purch_recs
+
+
+def hh_kcal(purch_recs: pd.DataFrame):
+    """
+    Unstacks df to show total kcal per product per household then normalises by household (rows)
+
+    Args:
+        purch_recs (pd.DataFrame): Pandas dataframe contains the purchase records of specified data
+
+    Returns:
+        (pd.DateFrame): Kcal totals per product per household normalised by total household kcal
+    """
+    purch_recs = (
+        purch_recs.set_index(["Panel Id", "att_vol"])[["Energy KCal"]]
+        .unstack(["att_vol"])
+        .fillna(0)
+    )
+    purch_recs.columns = purch_recs.columns.droplevel()
+    return scale_hh(purch_recs, MinMaxScaler())  # Scale the hh purchases 0 to 1
 
 
 def scale_hh(df: pd.DataFrame, scaler: Function):
@@ -162,8 +243,8 @@ def total_nutrition_intake(cluster: pd.DataFrame):
             "Sodium KG",
         ]
     ]
-    return c_total.loc[:, c_total.columns != "gross_up_vol"].multiply(
-        c_total["gross_up_vol"], axis="index"
+    return c_total.loc[:, c_total.columns != "Volume"].multiply(
+        c_total["Volume"], axis="index"
     )
 
 

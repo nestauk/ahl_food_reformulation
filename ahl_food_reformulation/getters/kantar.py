@@ -26,6 +26,16 @@ def purchase_subsets(date_period):
         return subset
 
 
+def purchase_records():
+    """Reads in dataset of purchase level information
+
+    Args: None
+
+    Returns: pd.DataFrame: purchase records dataframe
+    """
+    return pd.read_csv(PROJECT_DIR / "inputs/data/purchase_records.csv")
+
+
 def product_master():
     """Reads in dataset of unique products used by households.
 
