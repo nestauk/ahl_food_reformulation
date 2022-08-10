@@ -18,6 +18,9 @@ from ahl_food_reformulation.pipeline import create_clusters as cc
 purch_recs = get_k.purchase_subsets(
     202110
 )  # Creating one month subset or reads file if exists - 202108
+nut_subset = get_k.nutrition_subsets(
+    202110
+)  # Creating one month subset or reads file if exists - 202108
 prod_mast = get_k.product_master()
 val_fields = get_k.val_fields()
 uom = get_k.uom()
@@ -31,7 +34,6 @@ purch_recs_year = get_k.purchase_records()
 purch_recs = td.combine_files(
     val_fields, purch_recs, prod_mast, uom, prod_codes, prod_vals, 2907
 )
-nut_subset = nutrition[nutrition["Purchase Period"] == 202110].copy()
 purch_recs_subset = td.nutrition_merge(nut_subset, purch_recs, ["Energy KCal"])
 # Whole time (1 year)
 purch_recs_year = td.combine_files(
