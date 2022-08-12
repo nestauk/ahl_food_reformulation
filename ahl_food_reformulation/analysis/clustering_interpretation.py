@@ -141,7 +141,9 @@ def plot_cluster_comparison_cat(
     return (comp + txt + line).properties(height=height, width=width)
 
 
-def plot_cluster_comparison_non_cat(table: pd.DataFrame, var_name: str) -> alt.Chart:
+def plot_cluster_comparison_non_cat(
+    table: pd.DataFrame, var_name: str, n_cols: int = 5
+) -> alt.Chart:
     """Plots cluster comparison for non-categorical variables
     Args:
         table: table with household level demographic information + clustering
@@ -166,7 +168,7 @@ def plot_cluster_comparison_non_cat(table: pd.DataFrame, var_name: str) -> alt.C
         .mark_line(point=True)
         .encode(
             x=f"{var_name}",
-            y=alt.Y("share", axis=alt.Axis(format="%"), title="Share of households"),
+            y=alt.Y("share", axis=alt.Axis(format="%"), title="Household %"),
             color=alt.Color("cluster:N", scale=alt.Scale(scheme="tableau20")),
         )
         .properties(width=100, height=100)
@@ -179,7 +181,7 @@ def plot_cluster_comparison_non_cat(table: pd.DataFrame, var_name: str) -> alt.C
     )
 
     return alt.layer(clust_chart, avg_chart, data=distr).facet(
-        facet=alt.Facet("cluster:N"), columns=5
+        facet=alt.Facet("cluster:N"), columns=n_cols
     )
 
 
@@ -309,16 +311,16 @@ def plot_regression_coeffs(reg_coeff: pd.DataFrame) -> alt.Chart:
 
     return (
         alt.Chart(reg_coeff)
-        .mark_rect()
+        .mark_rect(stroke="grey", strokeWidth=0.5)
         .encode(
-            x="variable",
+            x=alt.X("variable", title=None),
             y=alt.Y("cluster:O", title="Cluster"),
             tooltip=["cluster", "variable", alt.Tooltip("coefficient", format=".3f")],
             color=alt.Color(
                 "coefficient_top",
                 scale=alt.Scale(scheme="redblue"),
                 sort="descending",
-                title="Regression coefficient",
+                title=["Regression", "coefficient"],
             ),
         )
     )
