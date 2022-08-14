@@ -15,3 +15,5 @@ umap-learn
 statsmodels
 altair-saver
 webdriver_manager
+networkx
+python-louvain
