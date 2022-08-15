@@ -14,6 +14,8 @@ from ahl_food_reformulation.getters import kantar as get_k
 from ahl_food_reformulation.pipeline import transform_data as transform
 from ahl_food_reformulation.pipeline import create_clusters as cluster
 import logging
+from pathlib import Path
+import pandas as pd
 
 # Get data
 logging.info("loading data")
@@ -86,3 +88,14 @@ silh_hh_k_subset, silh_hh_k_year, silh_kv_subset, silh_kv_year, silh_kv_nu = [
         ],
     )
 ]
+
+# Save cluster IDs for chosen representation (kcal contribution to volume - 1 year)
+# Get labels for optimum k and representation
+labels = cluster.k_means(kcal_vol_year, 20)
+
+# Create household cluster labels df and save as a csv file in outputs/data
+panel_clusters = pd.DataFrame(labels, columns=["clusters"], index=kcal_vol_year.index)
+
+# Create path if doesn't exist and save file
+Path(f"{PROJECT_DIR}/outputs/data/").mkdir(parents=True, exist_ok=True)
+panel_clusters.to_csv(f"{PROJECT_DIR}/outputs/data/panel_clusters.csv")
