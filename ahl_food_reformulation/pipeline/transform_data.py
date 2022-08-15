@@ -24,10 +24,10 @@ def combine_files(
     Args:
         val_fields (pd.DataFrame): Pandas dataframe with codes to merge product master and uom dfs
         pur_recs (pd.DataFrame): Pandas dataframe contains the purchase records of specified data
-        prod_mast (pd.DataFrame): Panadas dataframe unique product list
+        prod_mast (pd.DataFrame): Pandas dataframe unique product list
         uom (pd.DataFrame): Panadas dataframe contains product measurement information
-        prod_codes (pd.DataFrame): Panadas dataframe contains the codes to link products to category information
-        prod_vals (pd.DataFrame): Panadas dataframe contains the product category information
+        prod_codes (pd.DataFrame): Pandas dataframe contains the codes to link products to category information
+        prod_vals (pd.DataFrame): Pandas dataframe contains the product category information
         att_num (int): Product category type code number
 
     Returns:
@@ -60,7 +60,7 @@ def combine_files(
 
 
 def nutrition_merge(nutrition: pd.DataFrame, purch_recs: pd.DataFrame, cols: list):
-    """ADD
+    """Merges the purchase records and nutrition file
 
     Args:
         nutrition (pd.DataFrame): Pandas dataframe with per purchase nutritional information
@@ -133,6 +133,38 @@ def hh_total_categories(df: pd.DataFrame):
     )
 
 
+def make_purch_records(
+    purchases: pd.DataFrame,
+    nutrition: pd.DataFrame,
+    val_fields: pd.DataFrame,
+    prod_mast: pd.DataFrame,
+    uom: pd.DataFrame,
+    prod_codes: pd.DataFrame,
+    prod_vals: pd.DataFrame,
+):
+    """
+    Merges dataframes to create purchase records df with food category and nutrition information
+
+    Args:
+        purchases (pd.DataFrame): Pandas dataframe of purchase records (noramlised by volume measurement)
+        nutrition (pd.DataFrame): Pandas dataframe of purchase level nutritional information
+        val_fields (pd.DataFrame): Pandas dataframe with codes to merge product master and uom dfs
+        pur_recs (pd.DataFrame): Pandas dataframe contains the purchase records of specified data
+        prod_mast (pd.DataFrame): Pandas dataframe unique product list
+        uom (pd.DataFrame): Panadas dataframe contains product measurement information
+        prod_codes (pd.DataFrame): Pandas dataframe contains the codes to link products to category information
+        prod_vals (pd.DataFrame): Pandas dataframe contains the product category information
+
+    Returns:
+        pd.DateFrame: Household totals per food category
+    """
+    purchases_comb = combine_files(
+        val_fields, purchases, prod_mast, uom, prod_codes, prod_vals, 2907
+    )
+    purchases_nutrition = nutrition_merge(nutrition, purchases_comb, ["Energy KCal"])
+    return total_product_hh_purchase(purchases_nutrition)
+
+
 def kcal_contribution(purch_recs: pd.DataFrame):
     """
     Calculates the kcal contribution to the volume and normalises by measurement.
@@ -141,22 +173,25 @@ def kcal_contribution(purch_recs: pd.DataFrame):
         purch_recs (pd.DataFrame): Pandas dataframe contains the purchase records of specified data
 
     Returns:
-        purch_recs (pd.DateFrame): Kcal / volume ratio per household, scaled by measurement
+        pd.DateFrame: Kcal / volume ratio per household, scaled by measurement
     """
-    purch_recs["kcal_vol"] = purch_recs["Energy KCal"] / purch_recs["Volume"]
-    purch_recs["vol_scaled"] = purch_recs.groupby("Reported Volume")["kcal_vol"].apply(
-        norm_variable
+    return (
+        purch_recs.pipe(lambda df: df.assign(kcal_vol=df["Energy KCal"] / df["Volume"]))
+        .pipe(
+            lambda df: df.assign(
+                vol_scaled=df.groupby("Reported Volume")["kcal_vol"].apply(
+                    norm_variable
+                )
+            )
+            .set_index(["Panel Id", "att_vol"])[["vol_scaled"]]
+            .unstack(["att_vol"])
+            .fillna(0)
+        )
+        .droplevel(0, axis=1)
     )
-    purch_recs = (
-        purch_recs.set_index(["Panel Id", "att_vol"])[["vol_scaled"]]
-        .unstack(["att_vol"])
-        .fillna(0)
-    )
-    purch_recs.columns = purch_recs.columns.droplevel()
-    return purch_recs
 
 
-def hh_kcal(purch_recs: pd.DataFrame):
+def hh_kcal_per_category(purch_recs: pd.DataFrame):
     """
     Unstacks df to show total kcal per product per household then normalises by household (rows)
 
