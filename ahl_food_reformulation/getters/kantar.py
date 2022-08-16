@@ -26,6 +26,38 @@ def purchase_subsets(date_period):
         return subset
 
 
+def nutrition_subsets(date_period):
+    """
+      Reads in the nutrition.csv and creates subset of by defined month.
+      First checks if files exists before creating.
+
+    Args:
+        date_period (int): Year and month to subset data (must match format in dataset - YYYYMM)
+
+    Returns:
+        subset (pd.DataFrame): Nutrition dataframe sliced by date_period.
+    """
+    file_path = f"{PROJECT_DIR}/outputs/data/nut_" + str(date_period) + ".csv"
+    # Check if file already exists:
+    if os.path.isfile(file_path):
+        return pd.read_csv(file_path)
+    else:
+        pur_recs = pd.read_csv(f"{PROJECT_DIR}/inputs/data/nutrition_data.csv")
+        subset = pur_recs[pur_recs["Purchase Period"] == date_period]
+        subset.to_csv(file_path, index=False)
+        return subset
+
+
+def purchase_records():
+    """Reads in dataset of purchase level information
+
+    Args: None
+
+    Returns: pd.DataFrame: purchase records dataframe
+    """
+    return pd.read_csv(PROJECT_DIR / "inputs/data/purchase_records.csv")
+
+
 def product_master():
     """Reads in dataset of unique products used by households.
 
