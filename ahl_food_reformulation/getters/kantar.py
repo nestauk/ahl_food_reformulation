@@ -1,7 +1,18 @@
 # Returns the files from the kantar dataset
 import pandas as pd
+import re
 import os.path
 from ahl_food_reformulation import PROJECT_DIR
+from typing import Tuple, Dict
+from toolz import pipe
+from ahl_food_reformulation.getters.miscelaneous import postcode_region_lookup
+from ahl_food_reformulation.utils.lookups import product_table
+
+
+def purchase_records():
+    """Reads all the purchase records"""
+
+    return pd.read_csv(f"{PROJECT_DIR}/inputs/data/purchase_records.csv")
 
 
 def purchase_subsets(date_period):
@@ -20,10 +31,9 @@ def purchase_subsets(date_period):
     if os.path.isfile(file_path):
         return pd.read_csv(file_path)
     else:
-        pur_recs = pd.read_csv(f"{PROJECT_DIR}/inputs/data/purchase_records.csv")
-        subset = pur_recs[pur_recs["Period"] == date_period]
-        subset.to_csv(file_path, index=False)
-        return subset
+        subset_records = purchase_records().query(f"Period == {date_period}")
+        subset_records.to_csv(file_path, index=False)
+        return subset_records
 
 
 def nutrition_subsets(date_period):
@@ -204,3 +214,42 @@ def household_demog():
     Returns: pd.DataFrame: household demographic dataframe
     """
     return pd.read_csv(PROJECT_DIR / "outputs/data/panel_demographic_table_202110.csv")
+
+
+def demog_clean() -> Tuple[pd.DataFrame, Dict]:
+    """
+    Reads a cleaned version of the kantar dataset
+    """
+
+    demog = household_demog()
+    demog_col_lookup = {name: re.sub(" ", "_", name.lower()) for name in demog.columns}
+
+    demog.columns = [demog_col_lookup[name] for name in demog.columns]
+
+    demog = demog.rename(columns={"postocde_district": "postcode_district"})
+
+    demog_clean_names = {v: k for k, v in demog_col_lookup.items()}
+
+    return demog.assign(
+        cluster=lambda df: df["panel_id"].map(
+            panel_clusters().set_index("Panel Id")["clusters"].to_dict()
+        )
+    ).assign(region=lambda df: df["postcode_district"].map(postcode_region_lookup()))
+
+
+def product_metadata() -> pd.DataFrame:
+    """Table combining all the product metadata"""
+
+    return pipe(
+        product_table(
+            val_fields(),
+            product_master(),
+            uom(),
+            product_codes(),
+            product_values(),
+            product_attribute(),
+        ),
+        lambda df: df.rename(
+            columns={c: re.sub(" ", "_", c.lower()) for c in df.columns}
+        ),
+    )

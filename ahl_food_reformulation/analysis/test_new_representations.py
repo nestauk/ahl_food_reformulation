@@ -91,10 +91,10 @@ silh_hh_k_subset, silh_hh_k_year, silh_kv_subset, silh_kv_year, silh_kv_nu = [
 
 # Save cluster IDs for chosen representation (kcal contribution to volume - 1 year)
 # Get labels for optimum k and representation
-labels = cluster.k_means(kcal_vol_year, 20)
+labels = cluster.k_means(hh_kcal_subset, 20)
 
 # Create household cluster labels df and save as a csv file in outputs/data
-panel_clusters = pd.DataFrame(labels, columns=["clusters"], index=kcal_vol_year.index)
+panel_clusters = pd.DataFrame(labels, columns=["clusters"], index=hh_kcal_subset.index)
 
 # Create path if doesn't exist and save file
 Path(f"{PROJECT_DIR}/outputs/data/").mkdir(parents=True, exist_ok=True)
