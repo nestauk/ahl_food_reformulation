@@ -35,9 +35,9 @@ if __name__ == "__main__":
     )
 
     # Scale measures from 0-1
-    purch_recs["gross_up_vol"] = purch_recs.groupby("Reported Volume")[
-        "gross_up_vol"
-    ].apply(td.norm_variable)
+    purch_recs["Volume"] = purch_recs.groupby("Reported Volume")["Volume"].apply(
+        td.norm_variable
+    )
 
     # Groupby to get category totals per household
     hh_totals = td.hh_total_categories(purch_recs)

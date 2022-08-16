@@ -24,23 +24,18 @@ def combine_files(
     Args:
         val_fields (pd.DataFrame): Pandas dataframe with codes to merge product master and uom dfs
         pur_recs (pd.DataFrame): Pandas dataframe contains the purchase records of specified data
-        prod_mast (pd.DataFrame): Panadas dataframe unique product list
+        prod_mast (pd.DataFrame): Pandas dataframe unique product list
         uom (pd.DataFrame): Panadas dataframe contains product measurement information
-        prod_codes (pd.DataFrame): Panadas dataframe contains the codes to link products to category information
-        prod_vals (pd.DataFrame): Panadas dataframe contains the product category information
+        prod_codes (pd.DataFrame): Pandas dataframe contains the codes to link products to category information
+        prod_vals (pd.DataFrame): Pandas dataframe contains the product category information
         att_num (int): Product category type code number
 
     Returns:
         pur_recs (pandas.DateFrame): Merged pandas dataframe
     """
     val_fields.drop_duplicates(inplace=True)  # Remove duplicates
-    # Need to confirm with Kantar on the use of the weights
-    pur_recs["gross_up_vol"] = pur_recs["Volume"]
-    #  pur_recs["Volume"] * pur_recs["Gross Up Weight"]
-    # )  # Gross up volume (uk)
-    # Merge files
     pur_recs = pur_recs[
-        ["PurchaseId", "Panel Id", "Period", "Product Code", "gross_up_vol"]
+        ["PurchaseId", "Panel Id", "Period", "Product Code", "Volume"]
     ].merge(
         prod_mast[["Product Code", "Validation Field"]], on="Product Code", how="left"
     )
@@ -49,11 +44,9 @@ def combine_files(
     )
     pur_recs = pur_recs.merge(uom[["UOM", "Reported Volume"]], on="UOM", how="left")
     rst_4_ext = prod_codes[prod_codes["Attribute Number"] == att_num].copy()
-    prod_code_vals = rst_4_ext.merge(
-        prod_vals, left_on="Attribute Value", right_on="Attribute Code", how="left"
-    )
+    prod_code_vals = rst_4_ext.merge(prod_vals, on="Attribute Value", how="left")
     pur_recs = pur_recs.merge(
-        prod_code_vals[["Product Code", "Attribute Code Description"]],
+        prod_code_vals[["Product Code", "Attribute Value Description"]],
         on="Product Code",
         how="left",
     )
@@ -61,9 +54,53 @@ def combine_files(
         pur_recs["Reported Volume"].notna()
     ]  # Remove purchases with no volume
     pur_recs["att_vol"] = (
-        pur_recs["Attribute Code Description"] + "_" + pur_recs["Reported Volume"]
+        pur_recs["Attribute Value Description"] + "_" + pur_recs["Reported Volume"]
     )
     return pur_recs
+
+
+def nutrition_merge(nutrition: pd.DataFrame, purch_recs: pd.DataFrame, cols: list):
+    """Merges the purchase records and nutrition file
+
+    Args:
+        nutrition (pd.DataFrame): Pandas dataframe with per purchase nutritional information
+        purch_recs (pd.DataFrame): Pandas dataframe contains the purchase records of specified data
+        cols (list): List of columns names to merge from the nutrition dataset
+
+    Returns:
+        (pandas.DateFrame): Merged pandas dataframe
+    """
+    # Add unique purchase ID
+    nutrition["pur_id"] = (
+        nutrition["Purchase Number"].astype(str)
+        + "_"
+        + nutrition["Purchase Period"].astype(str)
+    )
+    purch_recs["pur_id"] = (
+        purch_recs["PurchaseId"].astype(str) + "_" + purch_recs["Period"].astype(str)
+    )
+    # Merge datasets
+    return purch_recs.merge(nutrition[["pur_id"] + cols], on="pur_id", how="left")
+
+
+def total_product_hh_purchase(purch_recs: pd.DataFrame):
+    """Groups by household, measurement and product and sums the volume and kcal content.
+
+    Args:
+        purch_recs (pd.DataFrame): Pandas dataframe contains the purchase records of specified data
+
+    Returns:
+        (pandas.DateFrame): groupby pandas dataframe
+    """
+    # Remove cases where volume is zero (8 cases)
+    purch_recs = purch_recs[purch_recs["Volume"] != 0].copy()
+    return (
+        purch_recs.groupby(["Panel Id", "Reported Volume", "att_vol"])[
+            ["Volume", "Energy KCal"]
+        ]
+        .sum()
+        .reset_index()
+    )
 
 
 def norm_variable(data: pd.Series):
@@ -89,11 +126,88 @@ def hh_total_categories(df: pd.DataFrame):
         pd.DateFrame: Household totals per food category
     """
     return (
-        df.groupby(["Panel Id", "att_vol"])["gross_up_vol"]
+        df.groupby(["Panel Id", "att_vol"])["Volume"]
         .sum()
         .unstack(["att_vol"])
         .fillna(0)
     )
+
+
+def make_purch_records(
+    purchases: pd.DataFrame,
+    nutrition: pd.DataFrame,
+    val_fields: pd.DataFrame,
+    prod_mast: pd.DataFrame,
+    uom: pd.DataFrame,
+    prod_codes: pd.DataFrame,
+    prod_vals: pd.DataFrame,
+):
+    """
+    Merges dataframes to create purchase records df with food category and nutrition information
+
+    Args:
+        purchases (pd.DataFrame): Pandas dataframe of purchase records (noramlised by volume measurement)
+        nutrition (pd.DataFrame): Pandas dataframe of purchase level nutritional information
+        val_fields (pd.DataFrame): Pandas dataframe with codes to merge product master and uom dfs
+        pur_recs (pd.DataFrame): Pandas dataframe contains the purchase records of specified data
+        prod_mast (pd.DataFrame): Pandas dataframe unique product list
+        uom (pd.DataFrame): Panadas dataframe contains product measurement information
+        prod_codes (pd.DataFrame): Pandas dataframe contains the codes to link products to category information
+        prod_vals (pd.DataFrame): Pandas dataframe contains the product category information
+
+    Returns:
+        pd.DateFrame: Household totals per food category
+    """
+    purchases_comb = combine_files(
+        val_fields, purchases, prod_mast, uom, prod_codes, prod_vals, 2907
+    )
+    purchases_nutrition = nutrition_merge(nutrition, purchases_comb, ["Energy KCal"])
+    return total_product_hh_purchase(purchases_nutrition)
+
+
+def kcal_contribution(purch_recs: pd.DataFrame):
+    """
+    Calculates the kcal contribution to the volume and normalises by measurement.
+
+    Args:
+        purch_recs (pd.DataFrame): Pandas dataframe contains the purchase records of specified data
+
+    Returns:
+        pd.DateFrame: Kcal / volume ratio per household, scaled by measurement
+    """
+    return (
+        purch_recs.pipe(lambda df: df.assign(kcal_vol=df["Energy KCal"] / df["Volume"]))
+        .pipe(
+            lambda df: df.assign(
+                vol_scaled=df.groupby("Reported Volume")["kcal_vol"].apply(
+                    norm_variable
+                )
+            )
+            .set_index(["Panel Id", "att_vol"])[["vol_scaled"]]
+            .unstack(["att_vol"])
+            .fillna(0)
+        )
+        .droplevel(0, axis=1)
+    )
+
+
+def hh_kcal_per_category(purch_recs: pd.DataFrame):
+    """
+    Unstacks df to show total kcal per product per household then normalises by household (rows)
+
+    Args:
+        purch_recs (pd.DataFrame): Pandas dataframe contains the purchase records of specified data
+
+    Returns:
+        (pd.DateFrame): Kcal totals per product per household normalised by total household kcal
+    """
+    purch_recs = (
+        purch_recs.set_index(["Panel Id", "att_vol"])[["Energy KCal"]]
+        .unstack(["att_vol"])
+        .fillna(0)
+    )
+    purch_recs.columns = purch_recs.columns.droplevel()
+    return scale_hh(purch_recs, MinMaxScaler())  # Scale the hh purchases 0 to 1
 
 
 def scale_hh(df: pd.DataFrame, scaler: Function):
@@ -150,7 +264,7 @@ def total_nutrition_intake(cluster: pd.DataFrame):
     Returns:
         pd.DateFrame: Total intake per nurtitional group
     """
-    c_total = cluster.groupby(by=["Attribute Code Description"]).sum()[
+    c_total = cluster.groupby(by=["Attribute Value Description"]).sum()[
         [
             "gross_up_vol",
             "Energy KJ",
@@ -164,8 +278,8 @@ def total_nutrition_intake(cluster: pd.DataFrame):
             "Sodium KG",
         ]
     ]
-    return c_total.loc[:, c_total.columns != "gross_up_vol"].multiply(
-        c_total["gross_up_vol"], axis="index"
+    return c_total.loc[:, c_total.columns != "Volume"].multiply(
+        c_total["Volume"], axis="index"
     )
 
 
