@@ -31,7 +31,6 @@ def extract_clusters(
     n_runs: int,
     comm_resolution: float,
     clustering_options: dict,
-    cluster_funct,
 ) -> Tuple[pd.DataFrame, Dict]:
     """Function to extract cluster lookups and positions
 
@@ -49,7 +48,9 @@ def extract_clusters(
     print("Reducing features")
     features_reduced = reduce_dim(feature_df, n_components_pca=pca)
 
-    clustering, indices = cluster_funct(features_reduced, clustering_options, n_runs)
+    clustering, indices = build_cluster_graph(
+        features_reduced, clustering_options, n_runs
+    )
 
     cluster_lookup = extract_communities(clustering, comm_resolution, indices)
 
