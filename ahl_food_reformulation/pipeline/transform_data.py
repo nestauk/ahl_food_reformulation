@@ -35,7 +35,7 @@ def combine_files(
     """
     val_fields.drop_duplicates(inplace=True)  # Remove duplicates
     pur_recs = pur_recs[
-        ["PurchaseId", "Panel Id", "Period", "Product Code", "Volume"]
+        ["PurchaseId", "Panel Id", "Period", "Product Code", "Volume", "Quantity"]
     ].merge(
         prod_mast[["Product Code", "Validation Field"]], on="Product Code", how="left"
     )
@@ -44,11 +44,9 @@ def combine_files(
     )
     pur_recs = pur_recs.merge(uom[["UOM", "Reported Volume"]], on="UOM", how="left")
     rst_4_ext = prod_codes[prod_codes["Attribute Number"] == att_num].copy()
-    prod_code_vals = rst_4_ext.merge(
-        prod_vals, left_on="Attribute Value", right_on="Attribute Code", how="left"
-    )
+    prod_code_vals = rst_4_ext.merge(prod_vals, on="Attribute Value", how="left")
     pur_recs = pur_recs.merge(
-        prod_code_vals[["Product Code", "Attribute Code Description"]],
+        prod_code_vals[["Product Code", "Attribute Value Description"]],
         on="Product Code",
         how="left",
     )
@@ -56,7 +54,7 @@ def combine_files(
         pur_recs["Reported Volume"].notna()
     ]  # Remove purchases with no volume
     pur_recs["att_vol"] = (
-        pur_recs["Attribute Code Description"] + "_" + pur_recs["Reported Volume"]
+        pur_recs["Attribute Value Description"] + "_" + pur_recs["Reported Volume"]
     )
     return pur_recs
 
@@ -98,7 +96,7 @@ def total_product_hh_purchase(purch_recs: pd.DataFrame):
     purch_recs = purch_recs[purch_recs["Volume"] != 0].copy()
     return (
         purch_recs.groupby(["Panel Id", "Reported Volume", "att_vol"])[
-            ["Volume", "Energy KCal"]
+            ["Volume", "Energy KCal", "Quantity"]
         ]
         .sum()
         .reset_index()
@@ -178,7 +176,11 @@ def kcal_contribution(purch_recs: pd.DataFrame):
         pd.DateFrame: Kcal / volume ratio per household, scaled by measurement
     """
     return (
-        purch_recs.pipe(lambda df: df.assign(kcal_vol=df["Energy KCal"] / df["Volume"]))
+        purch_recs.pipe(
+            lambda df: df.assign(
+                kcal_vol=(df["Energy KCal"] / df["Volume"]) * df["Quantity"]
+            )
+        )
         .pipe(
             lambda df: df.assign(
                 vol_scaled=df.groupby("Reported Volume")["kcal_vol"].apply(
