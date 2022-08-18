@@ -15,4 +15,6 @@ umap-learn
 statsmodels
 altair-saver
 webdriver_manager
+networkx
+python-louvain
 selenium==4.2.0

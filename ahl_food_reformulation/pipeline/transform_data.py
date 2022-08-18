@@ -35,7 +35,7 @@ def combine_files(
     """
     val_fields.drop_duplicates(inplace=True)  # Remove duplicates
     pur_recs = pur_recs[
-        ["PurchaseId", "Panel Id", "Period", "Product Code", "Volume"]
+        ["PurchaseId", "Panel Id", "Period", "Product Code", "Volume", "Quantity"]
     ].merge(
         prod_mast[["Product Code", "Validation Field"]], on="Product Code", how="left"
     )
@@ -96,7 +96,7 @@ def total_product_hh_purchase(purch_recs: pd.DataFrame):
     purch_recs = purch_recs[purch_recs["Volume"] != 0].copy()
     return (
         purch_recs.groupby(["Panel Id", "Reported Volume", "att_vol"])[
-            ["Volume", "Energy KCal"]
+            ["Volume", "Energy KCal", "Quantity"]
         ]
         .sum()
         .reset_index()
@@ -176,7 +176,11 @@ def kcal_contribution(purch_recs: pd.DataFrame):
         pd.DateFrame: Kcal / volume ratio per household, scaled by measurement
     """
     return (
-        purch_recs.pipe(lambda df: df.assign(kcal_vol=df["Energy KCal"] / df["Volume"]))
+        purch_recs.pipe(
+            lambda df: df.assign(
+                kcal_vol=(df["Energy KCal"] / df["Volume"]) * df["Quantity"]
+            )
+        )
         .pipe(
             lambda df: df.assign(
                 vol_scaled=df.groupby("Reported Volume")["kcal_vol"].apply(

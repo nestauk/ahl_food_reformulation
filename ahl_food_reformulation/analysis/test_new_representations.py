@@ -16,6 +16,7 @@ from ahl_food_reformulation.pipeline import create_clusters as cluster
 import logging
 from pathlib import Path
 import pandas as pd
+from sklearn.preprocessing import MinMaxScaler
 
 # Get data
 logging.info("loading data")
@@ -50,12 +51,26 @@ purch_recs_year_units_rem = purch_recs_year[
     purch_recs_year["Reported Volume"] != "Units"
 ].copy()
 
+purch_recs_sub_units_rem = purch_recs_subset[
+    purch_recs_subset["Reported Volume"] != "Units"
+].copy()
+
 # Get kcal contribution to volume for each time period (and units removed)
 logging.info("Creating representations - kcal contribution to volume")
-kcal_vol_subset, kcal_vol_year, kcal_vol_year_nu = [
+kcal_vol_subset, kcal_vol_year, kcal_vol_year_nu, kcal_vol_sub_nu = [
     transform.kcal_contribution(purch_rec)
-    for purch_rec in [purch_recs_subset, purch_recs_year, purch_recs_year_units_rem]
+    for purch_rec in [
+        purch_recs_subset,
+        purch_recs_year,
+        purch_recs_year_units_rem,
+        purch_recs_sub_units_rem,
+    ]
 ]
+kcal_vol_subset, kcal_vol_year, kcal_vol_year_nu, kcal_vol_sub_nu = [
+    transform.scale_hh(purch_rec, MinMaxScaler())
+    for purch_rec in [kcal_vol_subset, kcal_vol_year, kcal_vol_year_nu, kcal_vol_sub_nu]
+]
+
 
 # Get household kcal for each time period
 logging.info("Creating representations - household kcal")
@@ -78,6 +93,7 @@ silh_hh_k_subset, silh_hh_k_year, silh_kv_subset, silh_kv_year, silh_kv_nu = [
             kcal_vol_subset,
             kcal_vol_year,
             kcal_vol_year_nu,
+            kcal_vol_sub_nu,
         ],
         [
             "hh_kcal_sub",
@@ -85,6 +101,7 @@ silh_hh_k_subset, silh_hh_k_year, silh_kv_subset, silh_kv_year, silh_kv_nu = [
             "kcal_vol_sub",
             "kcal_vol_year",
             "kcal_vol_year_nu",
+            "kcal_vol_sub_nu",
         ],
     )
 ]
