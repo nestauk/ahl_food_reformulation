@@ -55,7 +55,7 @@ def extract_clusters(
     cluster_lookup = extract_communities(clustering, comm_resolution, indices)
 
     umap_df = features_reduced.assign(
-        cluster=lambda df: df.index.map(cluster_lookup)
+        clusters=lambda df: df.index.map(cluster_lookup)
     ).reset_index(drop=False)
 
     return umap_df, cluster_lookup
