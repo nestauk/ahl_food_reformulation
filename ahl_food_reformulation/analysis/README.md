@@ -24,6 +24,9 @@ Download the data from the [ahl-private-data](https://s3.console.aws.amazon.com/
 
 ### Test cluster pipeline
 
+
+Download the latest data from the [ahl-private-data](https://s3.console.aws.amazon.com/s3/buckets/ahl-private-data?region=eu-west-2&prefix=kantar/latest_data/&showversions=false) s3 bucket and save to the `inputs/data` folder. This part is important for the code to run correctly.
+
 1. [Run robust clustering](https://github.com/nestauk/ahl_food_reformulation/blob/31_consolidate_pipeline/ahl_food_reformulation/pipeline/robust_clustering.py) (with reduced parameters), save the panel_clusters.csv file. Also checks the number of households per cluster (weighted and un-weighted) incase you need to remove a cluster for step 2.
   `python ahl_food_reformulation/analysis/run_cluster_pipeline.py`
 2. Run the below file to create a save demographic and product analysis plots.
