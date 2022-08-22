@@ -14,18 +14,19 @@ from ahl_food_reformulation.getters import kantar as get_k
 from ahl_food_reformulation.pipeline import transform_data as transform
 from ahl_food_reformulation.pipeline import create_clusters as cluster
 import logging
-from pathlib import Path
-import pandas as pd
+
+# from pathlib import Path
+# import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
 
 # Get data
 logging.info("loading data")
 purch_recs_subset = get_k.purchase_subsets(
-    202110
-)  # Creating one month subset or reads file if exists - 202108
+    202111
+)  # Creating one month subset or reads file if exists - 202111
 nut_subset = get_k.nutrition_subsets(
-    202110
-)  # Creating one month subset or reads file if exists - 202108
+    202111
+)  # Creating one month subset or reads file if exists - 202111
 prod_mast = get_k.product_master()
 val_fields = get_k.val_fields()
 uom = get_k.uom()
@@ -83,8 +84,15 @@ hh_kcal_subset, hh_kcal_year = [
 logging.info(
     "Running clustering algorthm on representations - testing different numbers of k"
 )
-k_numbers = [2, 4, 6, 10, 15, 20, 25, 30, 35, 40, 50]
-silh_hh_k_subset, silh_hh_k_year, silh_kv_subset, silh_kv_year, silh_kv_nu = [
+k_numbers = [10, 15, 20, 25, 30, 35, 40, 50]
+(
+    silh_hh_k_subset,
+    silh_hh_k_year,
+    silh_kv_subset,
+    silh_kv_year,
+    silh_kv_year_nu,
+    silh_kv_sub_nu,
+) = [
     cluster.test_fit_clusters(hh_rep, file_name, k_numbers)
     for hh_rep, file_name in zip(
         [
@@ -108,11 +116,11 @@ silh_hh_k_subset, silh_hh_k_year, silh_kv_subset, silh_kv_year, silh_kv_nu = [
 
 # Save cluster IDs for chosen representation (kcal contribution to volume - 1 year)
 # Get labels for optimum k and representation
-labels = cluster.k_means(hh_kcal_subset, 20)
+# labels = cluster.k_means(hh_kcal_subset, 20)
 
 # Create household cluster labels df and save as a csv file in outputs/data
-panel_clusters = pd.DataFrame(labels, columns=["clusters"], index=hh_kcal_subset.index)
+# panel_clusters = pd.DataFrame(labels, columns=["clusters"], index=hh_kcal_subset.index)
 
 # Create path if doesn't exist and save file
-Path(f"{PROJECT_DIR}/outputs/data/").mkdir(parents=True, exist_ok=True)
-panel_clusters.to_csv(f"{PROJECT_DIR}/outputs/data/panel_clusters.csv")
+# Path(f"{PROJECT_DIR}/outputs/data/").mkdir(parents=True, exist_ok=True)
+# panel_clusters.to_csv(f"{PROJECT_DIR}/outputs/data/panel_clusters.csv")

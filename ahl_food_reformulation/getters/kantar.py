@@ -253,3 +253,10 @@ def product_metadata() -> pd.DataFrame:
             columns={c: re.sub(" ", "_", c.lower()) for c in df.columns}
         ),
     )
+
+
+def panel_weights():
+    """DF of weights per household and period"""
+    return pd.read_csv(
+        f"{PROJECT_DIR}/inputs/data/panel_demographic_weights_period.csv"
+    )

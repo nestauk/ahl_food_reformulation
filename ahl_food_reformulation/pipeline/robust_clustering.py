@@ -16,11 +16,13 @@ from sklearn.mixture import GaussianMixture
 from toolz import pipe
 from umap import UMAP
 
-
+# Adjusted temporarily reducing no-of-parameters
 clustering_params = [
-    [KMeans, ["n_clusters", range(20, 50, 3)]],
-    # [AffinityPropagation, ["damping", np.arange(0.5, 0.91, 0.1), "max_iter", [1000]]],
-    [GaussianMixture, ["n_components", range(20, 50, 5)]],
+    [KMeans, ["n_clusters", range(20, 60, 10)]],
+    [GaussianMixture, ["n_components", range(20, 60, 10)]],
+    # [KMeans, ["n_clusters", range(20, 50, 3)]],
+    # [AffinityPropagation, ["damping", np.arange(0.5, 0.91, 0.1), "max_iter", [1000]]], # Already commented out
+    # [GaussianMixture, ["n_components", range(20, 50, 5)]],
 ]
 search_params = product(range(5, 55, 5), np.arange(0.4, 1.1, 0.1))
 
