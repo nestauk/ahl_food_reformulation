@@ -122,3 +122,39 @@ def product_table(
         left_index=True,
         right_index=True,
     ).reset_index()
+
+
+def products_per_100g(nut_list, pur_recs, nut_recs):
+    """
+    Creates a dataframe of unique products and selected per 100g nutritional information
+
+    Args:
+        nut_list (list): List of nutritional columns to convert
+        pur_recs (pd.DataFrame): Pandas dataframe contains the purchase records of specified data
+        nut_recs (pd.DataFrame): Pandas dataframe with per purchase nutritional information
+
+    Returns:
+        pd.DateFrame: Dataframe with per 100g nutritional info for each product
+    """
+    # Convert to datetime format
+    pur_recs["Purchase Date"] = pd.to_datetime(
+        pur_recs["Purchase Date"], format="%d/%m/%Y"
+    )
+    # Get unique and most recent products
+    pur_recs_latest = (
+        pur_recs.sort_values(by=["Purchase Date"], ascending=False)
+        .drop_duplicates(subset="Product Code", keep="first")
+        .merge(
+            nut_recs[["Purchase Number", "Purchase Period"] + nut_list],
+            how="left",
+            left_on=["PurchaseId", "Period"],
+            right_on=["Purchase Number", "Purchase Period"],
+        )
+        .drop(["Purchase Number", "Purchase Period"], axis=1)
+    )
+    # Add per 100g info for selected nutrients
+    for nut in nut_list:
+        pur_recs_latest[nut + "_100g"] = pur_recs_latest[nut] / (
+            pur_recs_latest["Volume"] * 10
+        )
+    return pur_recs_latest[["Product Code"] + [sub + "_100g" for sub in nut_list]]
