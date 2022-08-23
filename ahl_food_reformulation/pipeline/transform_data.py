@@ -59,6 +59,41 @@ def combine_files(
     return pur_recs
 
 
+def vol_for_purch(
+    pur_recs: pd.DataFrame,
+    val_fields: pd.DataFrame,
+    prod_mast: pd.DataFrame,
+    uom: pd.DataFrame,
+):
+    """Adds volume meausrement to purchase records
+
+    Args:
+        val_fields (pd.DataFrame): Pandas dataframe with codes to merge product master and uom dfs
+        pur_recs (pd.DataFrame): Pandas dataframe contains the purchase records of specified data
+        prod_mast (pd.DataFrame): Pandas dataframe unique product list
+        uom (pd.DataFrame): Panadas dataframe contains product measurement information
+
+    Returns:
+        (pandas.DateFrame): Merged pandas dataframe
+    """
+    val_fields.drop_duplicates(inplace=True)  # Remove duplicates
+    return (
+        pur_recs.merge(
+            prod_mast[["Product Code", "Validation Field"]],
+            on="Product Code",
+            how="left",
+        )
+        .merge(
+            val_fields[["VF", "UOM"]],
+            left_on="Validation Field",
+            right_on="VF",
+            how="left",
+        )
+        .merge(uom[["UOM", "Reported Volume"]], on="UOM", how="left")
+        .drop(["Validation Field", "VF", "UOM"], axis=1)
+    )
+
+
 def nutrition_merge(nutrition: pd.DataFrame, purch_recs: pd.DataFrame, cols: list):
     """Merges the purchase records and nutrition file
 
