@@ -67,9 +67,7 @@ if __name__ == "__main__":
         )
     # Various charts
     house_plot = cluster_interp.plot_demog_pipeline(
-        demog,
-        "household_income",
-        HOUSEHOLD_INCOME,
+        demog, "household_income", HOUSEHOLD_INCOME, clust_n=12
     )
 
     save_altair(
@@ -79,9 +77,7 @@ if __name__ == "__main__":
     )
 
     edu_plot = cluster_interp.plot_demog_pipeline(
-        demog,
-        "education_level",
-        EDUCATION_LEVEL,
+        demog, "education_level", EDUCATION_LEVEL, clust_n=12
     )
 
     save_altair(
@@ -181,7 +177,7 @@ if __name__ == "__main__":
     # Shares normalised
     food_volumes = cluster_interp.plot_shares_normalised(
         cluster_interp.make_purchase_shares_normalised(
-            purchase_recs_may, "rst_4_market_sector", top_n=2
+            purchase_recs_may, "rst_4_market_sector", top_n=2, num_clust=12
         ),
         "rst_4_market_sector",
     )

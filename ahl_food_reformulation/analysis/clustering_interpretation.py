@@ -80,6 +80,7 @@ def plot_cluster_comparison_cat(
     width: int = 500,
     var_order: Union[None, List] = None,
     pos_text: int = 5,
+    clust_n: int = 18,
 ) -> alt.Chart:
     """Plot distribution in categorical variable by cluster
     Args:
@@ -97,7 +98,7 @@ def plot_cluster_comparison_cat(
         .apply(
             lambda df: df.assign(
                 text=lambda df_2: [
-                    cl if (rank < pos_text) | (rank > 20 - pos_text) else ""
+                    cl if (rank <= pos_text) | (rank > clust_n - pos_text) else ""
                     for cl, rank in zip(df_2["cluster"], df_2["share_norm"].rank())
                 ]
             )
@@ -339,6 +340,7 @@ def plot_demog_pipeline(
     comp_variable: str,
     order_vars: List,
     drops: List = ["Unknown", "Did not want to answer", "Other"],
+    clust_n: int = 18,
 ) -> alt.Chart:
     """Pipeline to generate demographic plots
     Args:
@@ -358,6 +360,7 @@ def plot_demog_pipeline(
             plot_cluster_comparison_cat,
             drop=drops,
             pos_text=3,
+            clust_n=clust_n,
             var_order=order_vars,
             var_name=comp_variable,
         ),
@@ -458,7 +461,7 @@ def make_purchase_shares_normalised(
         .apply(
             lambda df: df.assign(
                 add_label=[
-                    text if (rank < top_n) | (rank > num_clust - top_n) else ""
+                    str(text) if (rank < top_n) | (rank > num_clust - top_n) else " "
                     for text, rank in zip(df["clust"], df["share_normalised"].rank())
                 ]
             )
