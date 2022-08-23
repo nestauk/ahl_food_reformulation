@@ -98,7 +98,7 @@ def plot_cluster_comparison_cat(
         .apply(
             lambda df: df.assign(
                 text=lambda df_2: [
-                    cl if (rank <= pos_text) | (rank > clust_n - pos_text) else ""
+                    cl if (rank < pos_text) | (rank > clust_n - pos_text) else ""
                     for cl, rank in zip(df_2["cluster"], df_2["share_norm"].rank())
                 ]
             )
@@ -306,7 +306,7 @@ def get_regression_coefficients(
             .assign(cluster=k)
             .assign(
                 coefficient_top=lambda df: [
-                    x if (r < top_keep) | (r > number_columns - top_keep) else np.nan
+                    x if (r <= top_keep) | (r > number_columns - top_keep) else np.nan
                     for x, r in zip(df["coefficient"], df["coefficient"].rank())
                 ]
             )
@@ -461,7 +461,7 @@ def make_purchase_shares_normalised(
         .apply(
             lambda df: df.assign(
                 add_label=[
-                    str(text) if (rank < top_n) | (rank > num_clust - top_n) else " "
+                    str(text) if (rank <= top_n) | (rank > num_clust - top_n) else " "
                     for text, rank in zip(df["clust"], df["share_normalised"].rank())
                 ]
             )
