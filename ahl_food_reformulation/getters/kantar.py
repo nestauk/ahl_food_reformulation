@@ -260,3 +260,17 @@ def panel_weights():
     return pd.read_csv(
         f"{PROJECT_DIR}/inputs/data/panel_demographic_weights_period.csv"
     )
+
+
+def product_measurement():
+    """File containing all available measurements per product
+
+    Args: None
+
+    Returns: pd.DataFrame: list of product measurements
+    """
+
+    return pd.read_csv(
+        f"{PROJECT_DIR}/inputs/data/Nesta - Units, Grams, Millilitres, Servings All Products.txt",
+        encoding="ISO-8859-1",
+    )
