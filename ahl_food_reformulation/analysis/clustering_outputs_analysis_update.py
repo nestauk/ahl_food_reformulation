@@ -4,7 +4,6 @@ import logging
 import re
 from typing import Dict, Any, List, Union, Tuple
 from functools import partial
-
 import altair as alt
 import pandas as pd
 import numpy as np
