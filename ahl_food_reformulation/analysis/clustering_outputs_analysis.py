@@ -4,13 +4,10 @@ import logging
 import re
 from typing import Dict, Any, List, Union, Tuple
 from functools import partial
-
 import altair as alt
 import pandas as pd
 import numpy as np
 
-
-# %%
 from ahl_food_reformulation import PROJECT_DIR
 import ahl_food_reformulation.getters.kantar as kantar
 import ahl_food_reformulation.analysis.clustering_interpretation as cluster_interp
@@ -41,11 +38,19 @@ if __name__ == "__main__":
 
     # Cluster assignments
     clust = kantar.panel_clusters()
-
+    # clust = clust.query("cluster!=xxx") Uncomment if want to exlcude a cluster
     clust_lu = clust.set_index("Panel Id")["clusters"].to_dict()
+    # Demographic info
+    demog = kantar.demog_clean()
+    # Products abnd purchases
+    prod_info = kantar.product_metadata()
+    purchase_recs = kantar.purchase_records()
+    # Weights
+    panel_weights = kantar.panel_weights().query("purchase_period==202111")
 
-    # NB we are dropping the weird cluster 18
-    demog = kantar.demog_clean().query("cluster!=18")
+    logging.info("Cluster sizes")
+    # Plot cluster sizes (weighted and un-weighted)
+    cluster_interp.plot_cluster_counts(clust, panel_weights)
 
     logging.info("Descriptive analysis: categorical")
     # Descriptive analysis: categorical variables
@@ -61,9 +66,7 @@ if __name__ == "__main__":
         )
     # Various charts
     house_plot = cluster_interp.plot_demog_pipeline(
-        demog,
-        "household_income",
-        HOUSEHOLD_INCOME,
+        demog, "household_income", HOUSEHOLD_INCOME, clust_n=12
     )
 
     save_altair(
@@ -73,9 +76,7 @@ if __name__ == "__main__":
     )
 
     edu_plot = cluster_interp.plot_demog_pipeline(
-        demog,
-        "education_level",
-        EDUCATION_LEVEL,
+        demog, "education_level", EDUCATION_LEVEL, clust_n=12
     )
 
     save_altair(
@@ -95,17 +96,13 @@ if __name__ == "__main__":
 
     # Age
     ageplot = altair_text_resize(
-        cluster_interp.plot_cluster_comparison_non_cat(
-            demog.query("cluster!=18"), "main_shopper_age"
-        )
+        cluster_interp.plot_cluster_comparison_non_cat(demog, "main_shopper_age")
     )
 
     save_altair(ageplot, "age_cluster_comp", driver=driver)
 
     # Household size
-    cluster_interp.plot_cluster_comparison_non_cat(
-        demog.query("cluster!=18"), "household_size"
-    )
+    cluster_interp.plot_cluster_comparison_non_cat(demog, "household_size")
 
     logging.info("Cluster predictive analysis")
     # What determines cluster membership?
@@ -126,9 +123,9 @@ if __name__ == "__main__":
     # NB we are choosing C=0.005 (a lot of regularization) as the best model
     regression_coefficients = cluster_interp.get_regression_coefficients(
         all_X, all_y, 0.005, top_keep=10
-    ).assign(
-        cluster=lambda df: df["cluster"].astype(str).replace("18", "19").astype(int)
-    )
+    )  # .assign(
+    #  cluster=lambda df: df["cluster"].astype(str).replace("18", "19").astype(int)
+    # )
 
     # Plot regression coefficients
     demog_regression = cluster_interp.plot_regression_coeffs(
@@ -145,16 +142,12 @@ if __name__ == "__main__":
 
     logging.info("Differences in purchasing patterns across clusters")
 
-    logging.info("Reading data")
-    prod_info = kantar.product_metadata()
-    purchase_recs = kantar.purchase_records()
-
-    # Focus on May, a boring month
+    # Focus on Oct (clusters built off that month)
     purchase_recs_may = (
         purchase_recs.rename(
             columns={c: re.sub(" ", "_", c.lower()) for c in purchase_recs.columns}
         )
-        .query("period==202106")
+        .query("period==202111")
         .reset_index(drop=True)
         .merge(
             prod_info[
@@ -171,7 +164,6 @@ if __name__ == "__main__":
             how="left",
         )
         .assign(clust=lambda df: df["panel_id"].map(clust_lu))
-        .query("clust!=18")
     )
 
     share_distro = cluster_interp.plot_item_share(
@@ -184,7 +176,7 @@ if __name__ == "__main__":
     # Shares normalised
     food_volumes = cluster_interp.plot_shares_normalised(
         cluster_interp.make_purchase_shares_normalised(
-            purchase_recs_may, "rst_4_market_sector", top_n=2
+            purchase_recs_may, "rst_4_market_sector", top_n=2, num_clust=12
         ),
         "rst_4_market_sector",
     )
