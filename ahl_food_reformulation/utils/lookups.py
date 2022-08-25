@@ -1,4 +1,5 @@
 # Import modules
+from typing import List
 import pandas as pd
 import numpy as np
 from ahl_food_reformulation import PROJECT_DIR
@@ -124,7 +125,7 @@ def product_table(
     ).reset_index()
 
 
-def products_per_100g(nut_list, pur_recs, nut_recs):
+def products_per_100g(nut_list: list, pur_recs: pd.DataFrame, nut_recs: pd.DataFrame):
     """
     Creates a dataframe of unique products and selected per 100g nutritional information
 
@@ -158,3 +159,61 @@ def products_per_100g(nut_list, pur_recs, nut_recs):
             pur_recs_latest["Volume"] * 10
         )
     return pur_recs_latest[["Product Code"] + [sub + "_100g" for sub in nut_list]]
+
+
+def measure_table(conv: pd.DataFrame):
+    """
+    Creates a table of products and measurements
+
+    Args:
+        conv (pd.DataFrame): Pandas dataframe with product measurements
+
+    Returns:
+        pd.DateFrame: Dataframe with table of products and measurements
+    """
+    conv.set_index("PRODUCT", inplace=True)
+    conv_meas = (
+        conv.groupby([conv.index, "VOLUME TYPE"])["VALUE"]
+        .first()
+        .unstack()
+        .reset_index()
+    )
+    conv_meas.columns = ["Product Code", "Grams", "Millilitres", "Servings", "Units"]
+    conv_meas["Litres"] = conv_meas["Millilitres"] / 1000
+    return conv_meas
+
+
+def conv_kilos(pur_rec_vol: pd.DataFrame, conv_meas: pd.DataFrame, measures: list):
+    """
+    Converts selected measurements into kilos
+
+    Args:
+        pur_rec_vol (pd.DataFrame): Pandas dataframe of purchase records (with volume measurement field)
+        conv_meas (pd.DataFrame): Pandas dataframe of product measurements
+        measures (list): List of measurements to convert
+
+    Returns:
+        pd.DateFrame: Dataframe with kilo products for selected measurements (and existing kilos)
+    """
+    meas_dfs = []
+    for measure in measures:
+        pur_rec_meas = (
+            pur_rec_vol[pur_rec_vol["Reported Volume"] == measure]
+            .copy()
+            .merge(
+                conv_meas[["Product Code", measure, "Grams"]],
+                how="left",
+                on="Product Code",
+            )
+        )
+        pur_rec_meas["Volume"] = (
+            (pur_rec_meas["Volume"] / pur_rec_meas[measure]) * pur_rec_meas["Grams"]
+        ) / 1000
+        pur_rec_meas.dropna(subset=["Grams", measure], inplace=True)
+        pur_rec_meas["Reported Volume"] = "Kilos"
+        meas_dfs.append(pur_rec_meas)
+
+    pur_rec_kilos = pur_rec_vol[pur_rec_vol["Reported Volume"] == "Kilos"].copy()
+    meas_dfs.append(pur_rec_kilos)
+    kilo_df = pd.concat(meas_dfs, ignore_index=True)
+    return kilo_df.drop(["Grams", "Litres", "Servings", "Units"], axis=1)
