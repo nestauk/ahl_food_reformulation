@@ -13,6 +13,13 @@ from matplotlib.pyplot import figure
 from pylab import rcParams
 import numpy as np
 from cmath import nan
+from ahl_food_reformulation.utils.altair_save_utils import (
+    save_altair,
+    google_chrome_driver_setup,
+    altair_text_resize,
+)
+
+driver = google_chrome_driver_setup()
 
 logging.info("loading data")
 # Read in data
@@ -201,25 +208,39 @@ source = cat_density_clusters_all_high[
     cat_density_clusters_all_high["prop_purchases"] != 0
 ].copy()
 order = list(source["rst_4_market_sector"].value_counts().index)
-alt.Chart(source).mark_circle().encode(
-    x="clusters:O",
-    y=alt.Y("rst_4_extended:O", sort=order, axis=alt.Axis(labelLimit=300, title=None)),
-    size="prop_purchases:Q",
-    color=alt.Color(
-        "rst_4_market_sector",
-        scale=alt.Scale(
-            domain=order,
-            range=[
-                "#ff6e47ff",
-                "#18a48cff",
-                "#9a1bbeff",
-                "#eb003bff",
-                "#0000ffff",
-                "#97d9e3ff",
-            ],
+plot_high_dens_clust = (
+    alt.Chart(source)
+    .mark_circle()
+    .encode(
+        x="clusters:O",
+        y=alt.Y(
+            "rst_4_extended:O", sort=order, axis=alt.Axis(labelLimit=300, title=None)
         ),
-    ),
-).properties(height=800, width=650).configure_axis(labelFontSize=15)
+        size="prop_purchases:Q",
+        color=alt.Color(
+            "rst_4_market_sector",
+            scale=alt.Scale(
+                domain=order,
+                range=[
+                    "#ff6e47ff",
+                    "#18a48cff",
+                    "#9a1bbeff",
+                    "#eb003bff",
+                    "#0000ffff",
+                    "#97d9e3ff",
+                ],
+            ),
+        ),
+    )
+    .properties(height=800, width=650)
+    .configure_axis(labelFontSize=15)
+)
+
+save_altair(
+    altair_text_resize(plot_high_dens_clust).properties(width=600),
+    "plot_high_dens_clust",
+    driver=driver,
+)
 
 logging.info("Plotting monthly share of high energy density purchases across clusters")
 ### Monthly share of high energy density purchase volume across clusters (select clusters highlighted)
@@ -291,9 +312,16 @@ background = (
     .properties(height=500, width=550)
 )
 
-main = background + foreground
+month_share_clust = background + foreground
 
-main.configure_axis(grid=False, domain=False)
+month_share_clust.configure_axis(grid=False, domain=False)
+
+save_altair(
+    altair_text_resize(month_share_clust).properties(width=600),
+    "month_share_clust",
+    driver=driver,
+)
+
 
 logging.info(
     "Plotting variation in purhcases of high energy density across clusters and categories"
@@ -389,7 +417,11 @@ g = sns.relplot(
 g._legend.remove()
 g.fig.set_size_inches(14, 9)
 
-plt.show()
+plt.savefig(
+    f"{PROJECT_DIR}/outputs/figures/png/scatter_clusters_cat_kcal_dens.png",
+    bbox_inches="tight",
+)
+plt.show(block=False)
 
 source = energy_kcal_clusters[energy_kcal_clusters["prop_purchases"] != 0].copy()
 c = [0, 14, 2, 7, 3]
@@ -409,8 +441,12 @@ g.fig.set_size_inches(17, 5)
 plt.xticks(rotation=90)
 plt.ylabel("percent of purchases", fontsize=14)
 plt.xlabel("")
-plt.show()
-g.savefig("test.png", dpi=500)
+plt.savefig(
+    f"{PROJECT_DIR}/outputs/figures/png/purchases_clusters_range.png",
+    bbox_inches="tight",
+)
+plt.show(block=False)
+
 
 cluster_kcal = (
     pur_recs_kcal.groupby(["clusters", "RST 4 Market Sector", "RST 4 Market"])[
@@ -468,6 +504,7 @@ ax = sns.pointplot(
 plt.xlabel("Percent of kcal purchased")
 plt.ylabel("Dairy Products")
 
+
 logging.info("Plotting top 20 categories on total kcal purchased")
 ### Total kcal purchased
 total_kcal = (
@@ -495,7 +532,11 @@ plt.xticks(rotation=90)
 plt.xlabel("Food category", fontsize=14)
 plt.ylabel("Total kcal", fontsize=14)
 
-plt.show()
+plt.savefig(
+    f"{PROJECT_DIR}/outputs/figures/png/top20_totalkcal.png",
+    bbox_inches="tight",
+)
+plt.show(block=False)
 
 logging.info("Plotting kcal share vs high energy density share across catgeories")
 ### Kcal share vs High density share across categories
@@ -572,4 +613,9 @@ plt.ylabel("")
 plt.xlabel("")
 plt.xticks(fontsize=20)
 plt.yticks(fontsize=20)
-plt.show()
+
+plt.savefig(
+    f"{PROJECT_DIR}/outputs/figures/png/scatter_cats_kcal_dens.png",
+    bbox_inches="tight",
+)
+plt.show(block=False)
