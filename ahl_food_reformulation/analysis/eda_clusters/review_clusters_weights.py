@@ -1,3 +1,20 @@
+# ---
+# jupyter:
+#   jupytext:
+#     cell_metadata_filter: -all
+#     comment_magics: true
+#     text_representation:
+#       extension: .py
+#       format_name: percent
+#       format_version: '1.3'
+#       jupytext_version: 1.13.2
+#   kernelspec:
+#     display_name: ahl_food_reformulation
+#     language: python
+#     name: ahl_food_reformulation
+# ---
+
+# %%
 # Import libraries
 import pandas as pd
 from ahl_food_reformulation.pipeline import transform_data as td
@@ -7,8 +24,10 @@ import seaborn as sns
 
 # Import project libraries and directory
 from ahl_food_reformulation.getters import kantar as get_k
+from ahl_food_reformulation.utils import lookups as lps
 from ahl_food_reformulation import PROJECT_DIR
 
+# %%
 # Read in files
 purch_recs = get_k.purchase_subsets(202110)  # Oct 2021 subset
 prod_mast = get_k.product_master()
@@ -16,15 +35,16 @@ val_fields = get_k.val_fields()
 uom = get_k.uom()
 prod_codes = get_k.product_codes()
 prod_vals = get_k.product_values()
-panel_clusters = pd.read_csv(f"{PROJECT_DIR}/outputs/data/panel_clusters_v2.csv")
-panel_clusters_prev = pd.read_csv(f"{PROJECT_DIR}/outputs/data/panel_clusters.csv")
+# panel_clusters = pd.read_csv(f"{PROJECT_DIR}/outputs/data/panel_clusters_v2.csv")
+panel_clusters = pd.read_csv(f"{PROJECT_DIR}/outputs/data/panel_clusters.csv")
 nutrition = get_k.nutrition()
 demog_hh = get_k.household_demog()
 panel_weights = pd.read_csv(
     f"{PROJECT_DIR}/inputs/data/panel_demographic_weights_period.csv"
 )
 
-panel_weights = panel_weights[panel_weights["purchase_period"] == 202110].copy()
+# %%
+panel_weights = panel_weights[panel_weights["purchase_period"] == 202111].copy()
 cluster_weights = panel_clusters.merge(
     panel_weights, left_on="Panel Id", right_on="panel_id", how="left"
 )
@@ -32,6 +52,27 @@ cluster_weights.drop(["panel_id"], axis=1, inplace=True)
 cluster_weights_size = (
     cluster_weights.groupby(["clusters"])["demographic_weight"].sum().reset_index()
 )
+
+# %%
+pan_mast = get_k.household_master()
+demog_coding = get_k.demog_coding()
+demog_val = get_k.demog_val()
+
+# %%
+cluster_weights_size.demographic_weight.sum()
+
+# %%
+c = [0, 14, 2, 7, 3]
+select_clusters = cluster_weights_size[cluster_weights_size.clusters.isin(c)].copy()
+
+# %%
+select_clusters.demographic_weight.sum()
+
+# %%
+select_clusters
+
+# %%
+
 
 # Plot total households per cluster (unweighted)
 sns.set(rc={"figure.figsize": (20, 3)}, style="white")
@@ -107,3 +148,87 @@ plt.title(
 )
 plt.xlabel("Percentage", fontsize=14)
 plt.ylabel("Cluster", fontsize=14)
+
+# %%
+hh_demographics = lps.hh_demographic_table(demog_coding, demog_val, pan_mast)
+
+# %%
+demog = get_k.demog_clean()
+
+# %%
+demog.head(1)
+
+# %%
+hh_demographics.head(1)
+
+# %%
+cluster_weights.head(1)
+
+# %%
+# cluster_demog = cluster_weights[['Panel Id', 'clusters', 'demographic_weight']].copy().merge(hh_demographics.reset_index(), how='left',
+#                                                                           on='Panel Id')
+
+# %%
+cluster_demog = (
+    cluster_weights[["Panel Id", "clusters", "demographic_weight"]]
+    .copy()
+    .merge(demog, how="left", left_on="Panel Id", right_on="panel_id")
+)
+
+# %%
+cluster_demog.head(1)
+
+# %%
+cluster_7 = cluster_demog[cluster_demog.clusters == 7].copy()
+cluster_14 = cluster_demog[cluster_demog.clusters == 14].copy()
+
+# %%
+region_14 = (
+    (cluster_14.region.value_counts() / cluster_14.region.value_counts().sum()) * 100
+).reset_index()
+region_14.columns = ["Region", "Percent cluster 14"]
+
+# %%
+region_all = (
+    (cluster_demog.region.value_counts() / cluster_demog.region.value_counts().sum())
+    * 100
+).reset_index()
+region_all.columns = ["Region", "Percent total"]
+
+# %%
+region_all.merge(region_14, how="left", on="Region").set_index("Region").sort_values(
+    by="Percent cluster 14", ascending=True
+).plot(kind="barh", color=["#18a48cff", "#0000ffff"])
+plt.xlabel("Percent")
+plt.title("Percent of households per Region compared to total", fontsize=14)
+
+# %%
+region_14 = (
+    (
+        cluster_7.household_income.value_counts()
+        / cluster_7.household_income.value_counts().sum()
+    )
+    * 100
+).reset_index()
+region_14.columns = ["Household income", "Percent cluster 7"]
+
+# %%
+region_all = (
+    (
+        cluster_demog.household_income.value_counts()
+        / cluster_demog.household_income.value_counts().sum()
+    )
+    * 100
+).reset_index()
+region_all.columns = ["Household income", "Percent total"]
+
+# %%
+region_all = region_all.merge(region_14, how="left", on="Household income")
+region_all = region_all[region_all["Household income"] != "Unknown"].copy()
+region_all.set_index("Household income").sort_values(
+    by="Percent cluster 7", ascending=True
+).plot(kind="barh", color=["#18a48cff", "#0000ffff"])
+plt.xlabel("Percent")
+plt.title("Percent of households per income bracket compared to total", fontsize=14)
+
+# %%

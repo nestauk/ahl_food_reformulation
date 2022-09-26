@@ -3,6 +3,7 @@ from pyclbr import Function
 import pandas as pd
 import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
+from ahl_food_reformulation.utils import lookups as lps
 from sklearn.preprocessing import MinMaxScaler
 import os.path
 from ahl_food_reformulation import PROJECT_DIR
@@ -366,3 +367,49 @@ def bmi_households(pan_ind_mast: pd.DataFrame):
     ].copy()
     pan_ind_bmi["household_size"] = 1
     return pan_ind_bmi.groupby(by=["Panel Id"]).sum()
+
+
+def add_energy_density(pur_rec_kilos: pd.DataFrame, nut_recs: pd.DataFrame):
+    """
+    Adds four columns to the purchase record:  energy_density (kcal per 1g),  energy_density_cat ('very_low', 'low', 'medium', 'high' based on thresholds), Reported Volume, kcal per 100g
+    Args:
+        pur_recs (pd.DataFrame): Pandas dataframe contains the purchase records of specified data
+        nut_recs (pd.DataFrame): Pandas dataframe contains the nutritional information of specified data
+    Returns:
+        pd.DateFrame: Dataframe that is a copy of pur_rec with two additional columns with energy density info
+    """
+    # Convert to datetime format
+    pur_rec_kilos["Purchase Date"] = pd.to_datetime(
+        pur_rec_kilos["Purchase Date"], format="%d/%m/%Y"
+    )
+
+    # generate unique list of products
+    unique_prods_nut = lps.products_per_100g(["Energy KCal"], pur_rec_kilos, nut_recs)
+
+    # generate energy density variable
+    unique_prods_nut["energy_density"] = unique_prods_nut["Energy KCal_100g"] / 100
+
+    # generate energy density category variable based on standard thresholds
+    unique_prods_nut["energy_density_cat"] = pd.cut(
+        unique_prods_nut["energy_density"],
+        bins=[0, 0.6, 1.5, 4, float("Inf")],
+        labels=["very_low", "low", "medium", "high"],
+    )
+
+    # remove implausible values
+    unique_prods_nut = unique_prods_nut[unique_prods_nut["energy_density"] < 20]
+
+    # merge with purchase record
+    return pur_rec_kilos.merge(unique_prods_nut, on="Product Code", how="left")
+
+
+def perc_variable(data: pd.Series):
+    """normalise variable between 0 and 1.
+
+    Args:
+        data (pd.Series): Pandas series, volume for different measurements.
+
+    Returns:
+        pd.Series: Normalised column
+    """
+    return (data / data.sum()) * 100

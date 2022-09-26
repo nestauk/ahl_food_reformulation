@@ -253,3 +253,17 @@ def product_metadata() -> pd.DataFrame:
             columns={c: re.sub(" ", "_", c.lower()) for c in df.columns}
         ),
     )
+
+
+def product_measurement():
+    """File containing all available measurements per product
+
+    Args: None
+
+    Returns: pd.DataFrame: list of product measurements
+    """
+
+    return pd.read_csv(
+        f"{PROJECT_DIR}/inputs/data/Nesta - Units, Grams, Millilitres, Servings All Products.txt",
+        encoding="ISO-8859-1",
+    )
