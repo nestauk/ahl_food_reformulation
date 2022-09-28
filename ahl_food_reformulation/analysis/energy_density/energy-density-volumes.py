@@ -1,3 +1,4 @@
+# %%
 from ahl_food_reformulation.getters import kantar
 from ahl_food_reformulation.pipeline import transform_data as transform
 from ahl_food_reformulation.utils import lookups as lps
@@ -10,7 +11,7 @@ from matplotlib.pyplot import figure
 import numpy as np
 from cmath import nan
 
-
+# %%
 # read data
 pur_recs = kantar.purchase_records()
 nut_recs = kantar.nutrition()
@@ -20,6 +21,7 @@ uom = kantar.uom()
 prod_meta = kantar.product_metadata()
 
 
+# %%
 def add_energy_density(pur_rec_kilos):
     """
     Adds four columns to the purchase record:  energy_density (kcal per 1g),  energy_density_cat ('very_low', 'low', 'medium', 'high' based on thresholds), Reported Volume, kcal per 100g
@@ -55,6 +57,7 @@ def add_energy_density(pur_rec_kilos):
     return out
 
 
+# %%
 # add standardised volume measurement
 pur_rec_vol = transform.vol_for_purch(pur_recs, val_fields, prod_mast, uom)
 
@@ -66,16 +69,16 @@ measures = ["Units", "Litres", "Servings"]
 # Convert selected measures and combine with existing kilos
 pur_rec_kilos = lps.conv_kilos(pur_rec_vol, conv_meas, measures)
 
-
+# %%
 pur_recs_energy = add_energy_density(pur_rec_kilos)
 
-
+# %%
 # at the moment I am only looking at products with reported volume of kilos
 pur_recs_energy["product_weight"] = np.where(
     pur_recs_energy["Reported Volume"] == "Kilos", pur_recs_energy["Volume"], nan
 )
 
-
+# %%
 # subset to products with non-missing energy density
 pur_recs_energy.dropna(inplace=True, subset=["energy_density_cat"])
 
@@ -84,11 +87,11 @@ pur_recs_energy["scaled_gross_up_factor"] = (
     pur_recs_energy["Gross Up Weight"] * pur_recs_energy["product_weight"]
 )
 
-
+# %%
 print(pur_recs_energy.shape)
 pur_recs_energy.head()
 
-
+# %%
 # distribution of energy density of all purchases (population)
 grouped_pop = pur_recs_energy.groupby("energy_density_cat")
 column_pop = grouped_pop["scaled_gross_up_factor"]
@@ -96,7 +99,7 @@ tbl_pop = column_pop.agg(["sum"])
 sum_pop = tbl_pop["sum"].sum()
 tbl_pop / sum_pop
 
-
+# %%
 # distribution of energy density of all purchases (sample)
 grouped_sam = pur_recs_energy.groupby("energy_density_cat")
 column_sam = grouped_sam["product_weight"]
@@ -104,7 +107,7 @@ tbl_sam = column_sam.agg(["sum"])
 sum_sam = tbl_sam["sum"].sum()
 tbl_sam / sum_sam
 
-
+# %%
 # variation by month
 # distribution of energy density of all purchases (population)
 pur_recs_energy["month"] = pur_recs_energy["Purchase Date"].dt.month
@@ -148,7 +151,7 @@ prod_all = prod_meta.merge(
 
 prod_all.head()
 
-
+# %%
 month_cat_density = (
     prod_all.groupby(["month", "energy_density_cat", "rst_4_market_sector"])[
         ["scaled_gross_up_factor"]
@@ -157,16 +160,16 @@ month_cat_density = (
     .reset_index()
 )
 
-
+# %%
 month_cat_density[month_cat_density["energy_density_cat"] == "high"]
 
-
+# %%
 source = month_cat_density[month_cat_density["energy_density_cat"] == "high"][
     ["month", "scaled_gross_up_factor", "rst_4_market_sector"]
 ]
 source.columns = ["Month", "Scaled volume", "Category"]
 
-
+# %%
 # Create a selection that chooses the nearest point & selects based on x-value
 nearest = alt.selection(
     type="single", nearest=True, on="mouseover", fields=["Month"], empty="none"
@@ -216,7 +219,7 @@ alt.layer(line, selectors, points, rules, text).properties(
     width=600, height=550
 ).configure_axis(grid=False, domain=False)
 
-
+# %%
 # distribution across product groups - weighted by sale volume and weights
 
 total = (
@@ -304,7 +307,7 @@ plt.xticks(rotation=90)
 
 plt.show()
 
-
+# %%
 # most bought products categories in the high density category
 high_den = prod_all[prod_all.energy_density_cat == "high"]
 
@@ -328,7 +331,7 @@ plt.title("Top 20 purchased high energy density categories", fontsize=17, pad=20
 
 plt.show()
 
-
+# %%
 # add product names
 
 high_den_prod = high_den.merge(prod_mast, on="Product Code", how="left")
@@ -347,3 +350,5 @@ high_den_prod_tbl = (
 )
 
 high_den_prod_tbl.head(20)
+
+# %%

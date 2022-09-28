@@ -1,3 +1,4 @@
+# %%
 from ahl_food_reformulation.getters import kantar
 from ahl_food_reformulation.pipeline import transform_data as transform
 from ahl_food_reformulation.utils import lookups as lps
@@ -9,6 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
+# %%
 # function to create percentiles
 def percentile(n):
     def percentile_(x):
@@ -18,6 +20,7 @@ def percentile(n):
     return percentile_
 
 
+# %%
 # This script produces descriptive statistics for energy density for a unique set of products in the Kantar take home panel
 
 # read data
@@ -28,11 +31,11 @@ val_fields = kantar.val_fields()
 uom = kantar.uom()
 prod_meta = kantar.product_metadata()
 
-
+# %%
 # add standardised volume measurement
 pur_rec_vol = transform.vol_for_purch(pur_recs, val_fields, prod_mast, uom)
 
-
+# %%
 # Conversion table
 conv_meas = lps.measure_table(kantar.product_measurement())
 # Measurements to convert
@@ -41,7 +44,7 @@ measures = ["Units", "Litres", "Servings"]
 # Convert selected measures and combine with existing kilos
 pur_rec_kilos = lps.conv_kilos(pur_rec_vol, conv_meas, measures)
 
-
+# %%
 # generate unique list of products and remove infinite and missing values
 unique_prods_nut = (
     lps.products_per_100g(["Energy KCal"], pur_rec_kilos, nut_recs)
@@ -52,7 +55,7 @@ unique_prods_nut = (
     .dropna()
 )
 
-
+# %%
 # generate energy density variable
 unique_prods_nut["energy_density"] = unique_prods_nut["Energy KCal_100g"] / 100
 
@@ -64,29 +67,30 @@ unique_prods_nut["energy_density_cat"] = pd.cut(
 )
 
 
+# %%
 # merge in product info
 prod_all = prod_meta.merge(
     unique_prods_nut, left_on=["product_code"], right_on=["Product Code"], how="inner"
 ).dropna(subset=["Energy KCal_100g"])
 
-
+# %%
 prod_all.head()
 
-
+# %%
 # describe variables in prod_all
 prod_all.describe()
 
-
+# %%
 # there are some inplausibla values for energy desnity - drop any value above 20
 print(len(prod_all[prod_all["energy_density"] >= 20].index))
 prod_all_clean = prod_all[prod_all["energy_density"] < 20]
 
-
+# %%
 # distribution of energy density across all products
 prod_all_clean.energy_density.plot.density(color="black")
 plt.show()
 
-
+# %%
 # distribution across product groups
 grouped = prod_all_clean.groupby("rst_4_market_sector")
 column = grouped["energy_density"]
@@ -106,7 +110,7 @@ sector_tbl = column.agg(
 
 sector_tbl
 
-
+# %%
 # average energy density for product groups with reference for high density threshold (4)
 sector_tbl_sort = sector_tbl.sort_values("mean")
 
@@ -121,7 +125,7 @@ plt.axhline(y=4)
 
 plt.show()
 
-
+# %%
 sns.set(rc={"figure.figsize": (10, 5)})
 
 # share of products by energy density category
@@ -144,10 +148,11 @@ plt.ylabel("Energy density group", fontsize=15)
 plt.title("Energy density group share per food category", fontsize=17, pad=20)
 plt.show()
 
-
+# %%
 prod_all_clean.head(1)
 
 
+# %%
 def product_sub_share(category, prod_all_clean):
     df_sub = (
         prod_all_clean[prod_all_clean["rst_4_market_sector"] == category]
@@ -161,9 +166,10 @@ def product_sub_share(category, prod_all_clean):
     return df_sub[df_sub["level_1"] == "high"]
 
 
+# %%
 biscuits = product_sub_share("Biscuits", prod_all_clean)
 
-
+# %%
 fig = plt.Figure(figsize=(5, 4), dpi=100)
 data = pd.DataFrame(biscuits.set_index("rst_4_market")["energy_density_cat"]).T
 
@@ -175,3 +181,5 @@ ax.spines["left"].set_visible(False)
 ax.legend(bbox_to_anchor=(1, 0.7), facecolor="white")
 fig.set_facecolor("white")
 ax.set_facecolor("white")
+
+# %%
