@@ -66,8 +66,8 @@ def cat_energy_100(
 
     choice_volume = [
         pur_rec_vol["Volume"],
-        pur_rec_vol["Grams"] / 1000,
-        pur_rec_vol["Litres"],
+        pur_rec_vol["Quantity"] * pur_rec_vol["Grams"] / 1000,
+        pur_rec_vol["Quantity"] * pur_rec_vol["Litres"],
     ]
 
     # Updated volume label
@@ -186,6 +186,4 @@ def cat_energy_100(
     )  # weighted mean
 
     # generate final output
-    out = s_mean.merge(w_mean[[cat, "kcal_100_w"]], on=cat)
-
-    return out
+    return s_mean.merge(w_mean[[cat, "kcal_100_w"]], on=cat)
