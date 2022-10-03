@@ -213,7 +213,7 @@ def household_demog():
 
     Returns: pd.DataFrame: household demographic dataframe
     """
-    return pd.read_csv(PROJECT_DIR / "outputs/data/panel_demographic_table_202110.csv")
+    return pd.read_csv(PROJECT_DIR / "outputs/data/panel_demographic_table.csv")
 
 
 def demog_clean() -> Tuple[pd.DataFrame, Dict]:
@@ -266,4 +266,12 @@ def product_measurement():
     return pd.read_csv(
         f"{PROJECT_DIR}/inputs/data/Nesta - Units, Grams, Millilitres, Servings All Products.txt",
         encoding="ISO-8859-1",
+    )
+
+
+def panel_weights():
+    """Reads the panel weights file"""
+
+    return pd.read_csv(
+        f"{PROJECT_DIR}/inputs/data/panel_demographic_weights_period.csv"
     )
