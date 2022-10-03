@@ -1,13 +1,7 @@
 from ahl_food_reformulation.getters import kantar
-from ahl_food_reformulation.pipeline import transform_data as transform
 from ahl_food_reformulation.pipeline import energy_density as energy
-from ahl_food_reformulation.utils import lookups as lps
-from ahl_food_reformulation import PROJECT_DIR
-import logging
 import pandas as pd
-import seaborn as sns
 import matplotlib.pyplot as plt
-import numpy as np
 
 
 # read data
