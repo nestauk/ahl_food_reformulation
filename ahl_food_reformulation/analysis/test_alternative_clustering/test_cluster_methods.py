@@ -173,7 +173,7 @@ if __name__ == "__main__":
     no_clusters = [10, 20, 30, 40, 50, 60, 70]
     logging.info("Getting silhoutte scores across methods and number of k")
     kmeans_scores, fclust_scores = cluster.get_s_scores(
-        no_clusters, X_umap_sub, methods
+        no_clusters, umap_share_sub[0], methods
     )
 
     # Print results

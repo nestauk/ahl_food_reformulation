@@ -179,6 +179,8 @@ def plot_clusters(n_clusters: int, df: array, cluster_labels: list, filename: st
         fontsize=14,
         fontweight="bold",
     )
+    # Create path if doesn't exist and save file
+    Path(f"{PROJECT_DIR}/outputs/figures/kmeans/").mkdir(parents=True, exist_ok=True)
     plt.savefig(
         f"{PROJECT_DIR}/outputs/figures/kmeans/kmeans_"
         + str(n_clusters)
@@ -250,6 +252,14 @@ def test_methods(methods: list, X_umap: array, k: int):
             leaf_font_size=12.0,
             show_contracted=True,  # to get a distribution impression in truncated branches
         )
-        plt.show()
+        # Create path if doesn't exist and save file
+        Path(f"{PROJECT_DIR}/outputs/figures/hierarchical/").mkdir(
+            parents=True, exist_ok=True
+        )
+        plt.savefig(
+            f"{PROJECT_DIR}/outputs/figures/hierarchical/dendrogram_" + method + ".png",
+            bbox_inches="tight",
+        )
+        plt.show(block=False)
 
     return s_scores, c_coef
