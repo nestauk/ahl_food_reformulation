@@ -42,7 +42,7 @@ if __name__ == "__main__":
     )
     df_prod_ed_reduce = df_prod_ed[df_prod_ed[prod_cat].isin(to_keep)].copy()
     # Create nutrient diversity df
-    df_diversity = nutrient.create_diveristy_df(df_prod_ed_reduce, prod_cat, 10, 50)
+    df_diversity = nutrient.create_diversity_df(df_prod_ed_reduce, prod_cat, 10, 50)
 
     logging.info("Plot heatmaps")
     # Plot heatmaps

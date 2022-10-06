@@ -22,9 +22,8 @@ def cat_entropy(df, cat):
     Returns:
         pd.Series: Series with entropy per category
     """
-    return df.groupby(cat)["kcal_100g_ml"].apply(
-        lambda x: entropy(x.value_counts(), base=2)
-    )
+    df["deciles"] = pd.qcut(df["kcal_100g_ml"], 10, labels=False)
+    return df.groupby(cat)["deciles"].apply(lambda x: entropy(x.value_counts(), base=2))
 
 
 def cat_variance(df, cat):
@@ -65,7 +64,7 @@ def avg_metric_samples(df, num_runs, cat, size):
     )
 
 
-def create_diveristy_df(df, cat, n_runs, sample_size):
+def create_diversity_df(df, cat, n_runs, sample_size):
     """
     Applies the entropy and variance functions to get total results for df and avg per samples
     Args:
