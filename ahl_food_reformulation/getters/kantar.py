@@ -267,3 +267,18 @@ def product_measurement():
         f"{PROJECT_DIR}/inputs/data/Nesta - Units, Grams, Millilitres, Servings All Products.txt",
         encoding="ISO-8859-1",
     )
+
+
+def purchase_records_volume():
+    """
+    Getter for the copy of purchase record with imputed weights.
+
+    Args:
+        None
+
+    Returns:
+        df (pd.DataFrame): pruchase records with additional columns for volumes
+
+    """
+
+    return pd.read_csv(f"{PROJECT_DIR}/inputs/data/pur_rec_volume.csv").iloc[:, 1:]
