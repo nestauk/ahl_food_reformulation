@@ -5,19 +5,18 @@ import pandas as pd
 import numpy as np
 
 
-def cat_energy_100(
+def prod_energy_100(
     cat: str,
-    val_fields: pd.DataFrame,
-    prod_mast: pd.DataFrame,
-    uom: pd.DataFrame,
-    pur_recs: pd.DataFrame,
-    nut_recs: pd.DataFrame,
-    prod_meta: pd.DataFrame,
-    prod_meas: pd.DataFrame,
+    val_fields,
+    prod_mast,
+    uom,
+    pur_recs,
+    nut_recs,
+    prod_meta,
+    prod_meas,
 ):
     """
-    Return simple and weighted kcal/100ml(g) aggregate by product category
-
+    Return simple and weighted kcal/100ml(g) by product (with category information)
     Args:
         cat (str): one product category
         val_fields (pd.DataFrame): Pandas dataframe with codes to merge product master and uom dfs
@@ -27,7 +26,6 @@ def cat_energy_100(
         nut_recs (pd.DataFrame): Pandas dataframe with per purchase nutritional information
         prod_meta (pd.DataFrame): Pandas dataframe with product descriptions
         prod_meas (pd.DataFrame): Pandas dataframe with additional conversions to g and ml for unit and serving products
-
     Returns:
         pd.DataFrame: Dataframe with average kcal/100ml(gr) simple and weighted by sales (for the year) and reported volume
     """
@@ -161,7 +159,23 @@ def cat_energy_100(
     )
 
     # merge kcal info with sales
-    pur_final = pur_rec_select.merge(density_prod, on="Product Code")
+    return pur_rec_select.merge(density_prod, on="Product Code")
+
+
+def cat_energy_100(
+    cat: str,
+    pur_final: pd.DataFrame,
+):
+    """
+    Return simple and weighted kcal/100ml(g) aggregate by product category
+
+    Args:
+        cat (str): one product category
+        pur_final (pd.DataFrame): Pandas dataframe products with energy density, sales and category information
+
+    Returns:
+        pd.DataFrame: Dataframe with average kcal/100ml(gr) simple and weighted by sales (for the year) and reported volume
+    """
 
     # simple mean
     s_mean = (
@@ -187,3 +201,21 @@ def cat_energy_100(
 
     # generate final output
     return s_mean.merge(w_mean[[cat, "kcal_100_w"]], on=cat)
+
+
+def energy_density_score(df_col: pd.Series):
+    """
+    Generate energy density category variable based on standard thresholds.
+
+    Args:
+        df_col (pd.Series): Energy density scores
+
+    Returns:
+        pd.DataFrame: Dataframe with average kcal/100ml(gr) simple and weighted by sales (for the year) and reported volume
+    """
+    # generate energy density category variable based on standard thresholds
+    return pd.cut(
+        df_col,
+        bins=[0, 60, 150, 400, float("Inf")],
+        labels=["very_low", "low", "medium", "high"],
+    )
