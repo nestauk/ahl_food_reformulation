@@ -71,5 +71,5 @@ def create_pop_table_cat(
     return (
         metrics_table.merge(df_diversity, on=prod_category, how="left")
         .merge(num_prods_cat, on=prod_category)
-        .drop(["count"], axis=1)
+        .drop(["count", "energy_density_cat"], axis=1)
     )
