@@ -1,6 +1,7 @@
 # Import libraries and directory
 from array import array
 import string
+from typing import List
 from ahl_food_reformulation import PROJECT_DIR
 import pandas as pd
 import numpy as np
@@ -63,6 +64,24 @@ def kmeans_score(k: int, X_umap: array):
     kmeans = KMeans(n_clusters=k)
     labels = kmeans.fit_predict(X_umap)
     return silhouette_score(X_umap, labels), labels
+
+
+def kmeans_score_list(no_clusters: list, X_umap: array):
+    """
+    Gives silhoutte scores from numbers of k
+
+    Args:
+        no_clusters (list): List of k
+        X_umap (array): Umap representation of household representations
+
+    Returns:
+        Silhoutte scores
+    """
+    scores = []
+    for k in no_clusters:
+        score, _ = kmeans_score(k, X_umap)
+        scores.append(score)
+    return scores
 
 
 def fcluster_score(Z: array, k: int, X_umap: array):
@@ -263,3 +282,50 @@ def test_methods(methods: list, X_umap: array, k: int):
         plt.show(block=False)
 
     return s_scores, c_coef
+
+
+def centroids_cluster(
+    umap: array, k_broad: int, k_gran: int, hh_df: pd.DataFrame, filename: str
+):
+    """
+    Creates and saved df of clusters assignments
+
+    Args:
+        umap (array): Umap representation of household representations
+        k_broad (int): K size for broader clusters
+        k_gran (int): K size for more granular clusters
+        hh_df (pd.DataFrame): Dataframe of hh representations
+        filename (str): File extension to save
+
+
+    Returns:
+        Df of cluster assignments
+    """
+    # Kmeans to get labels
+    kmeans = KMeans(n_clusters=k_gran)
+    labels = kmeans.fit_predict(umap)
+    # Get centroids
+    centroids = kmeans.cluster_centers_
+    # Kmeans on centroids
+    kmeans = KMeans(n_clusters=k_broad)  # Broader number
+    cent_labels = kmeans.fit_predict(centroids)
+
+    # Create df of labels to centroid labels
+    label_df = pd.DataFrame({"centroid_labels": list(cent_labels)})
+    label_df.reset_index(inplace=True)
+    label_df.rename(columns={"index": "clusters"}, inplace=True)
+    assigned_labels = pd.DataFrame(
+        {"clusters": list(labels)}, index=hh_df.index
+    ).reset_index()
+    assigned_labels = assigned_labels.merge(label_df, how="left", on="clusters")
+    assigned_labels.set_index("Panel Id", inplace=True)
+
+    # Save dataframe
+    # Create path if doesn't exist and save file
+    Path(f"{PROJECT_DIR}/outputs/data/alternative_clusters/").mkdir(
+        parents=True, exist_ok=True
+    )
+    assigned_labels.to_csv(
+        f"{PROJECT_DIR}/outputs/data/alternative_clusters/" + filename + ".csv"
+    )
+    return assigned_labels
