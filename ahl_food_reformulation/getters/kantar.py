@@ -268,14 +268,12 @@ def product_measurement():
         encoding="ISO-8859-1",
     )
 
-
 def panel_weights():
     """Reads the panel weights file"""
 
     return pd.read_csv(
         f"{PROJECT_DIR}/inputs/data/panel_demographic_weights_period.csv"
     )
-
 
 def purchase_records_volume():
     """
