@@ -4,15 +4,9 @@ from ahl_food_reformulation.getters import kantar
 from ahl_food_reformulation.pipeline import transform_data as transform
 from ahl_food_reformulation.pipeline import cluster_methods as cluster
 import logging
-import pandas as pd
-import numpy as np
 from pathlib import Path
 from matplotlib import pyplot as plt
-import matplotlib.cm as cm
 from sklearn.preprocessing import MinMaxScaler
-from sklearn.preprocessing import StandardScaler
-from sklearn.cluster import KMeans
-from sklearn.metrics import silhouette_score
 import seaborn as sns
 
 if __name__ == "__main__":
@@ -33,17 +27,15 @@ if __name__ == "__main__":
     # Converted household size
     pan_conv = transform.hh_size_conv(pan_ind)
     # Purchase and product info combined
-    comb_files = transform.purchases_comb = transform.combine_files(
+    comb_files = transform.combine_files(
         val_fields, purch_recs_subset, prod_mast, uom, prod_codes, prod_vals, 2907
     )
     # Household kcal per category adjusted for size - Make representation
     kcal_adj_subset = transform.hh_kcal_volume_converted(
-        purch_recs_subset, nut_subset, pan_conv, 2907, scaler, comb_files
+        nut_subset, pan_conv, scaler, comb_files
     )
     # Share of household kcal per category - Make representation
-    kcal_share_subset = transform.hh_kcal_per_category(
-        purch_recs_subset, nut_subset, scaler, 2907, comb_files
-    )
+    kcal_share_subset = transform.hh_kcal_per_category(nut_subset, scaler, comb_files)
 
     logging.info("Dimensionality reduction")
     # Using PCA and UMAP to reduce dimensions

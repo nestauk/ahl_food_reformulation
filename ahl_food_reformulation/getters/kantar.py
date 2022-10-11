@@ -275,3 +275,18 @@ def panel_weights():
     return pd.read_csv(
         f"{PROJECT_DIR}/inputs/data/panel_demographic_weights_period.csv"
     )
+
+
+def purchase_records_volume():
+    """
+    Getter for the copy of purchase record with imputed weights.
+
+    Args:
+        None
+
+    Returns:
+        df (pd.DataFrame): pruchase records with additional columns for volumes
+
+    """
+
+    return pd.read_csv(f"{PROJECT_DIR}/inputs/data/pur_rec_volume.csv").iloc[:, 1:]

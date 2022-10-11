@@ -5,10 +5,7 @@ from ahl_food_reformulation.pipeline import transform_data as transform
 from ahl_food_reformulation.pipeline import cluster_methods as cluster
 import logging
 import pandas as pd
-import numpy as np
 from pathlib import Path
-from matplotlib import pyplot as plt
-import matplotlib.cm as cm
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans
@@ -21,9 +18,14 @@ if __name__ == "__main__":
 
     purch_recs_subset = kantar.purchase_subsets(202111)
     nut_subset = kantar.nutrition_subsets(202111)
+    pan_ind = kantar.household_ind()
+    prod_mast = kantar.product_master()
+    val_fields = kantar.val_fields()
+    uom = kantar.uom()
+    prod_codes = kantar.product_codes()
+    prod_vals = kantar.product_values()
     nut_year = kantar.nutrition()
     purch_recs_year = kantar.purchase_records()
-    pan_ind = kantar.household_ind()
 
     # Scalers
     scalers = [MinMaxScaler(), StandardScaler()]
@@ -33,40 +35,56 @@ if __name__ == "__main__":
     ## Volume of household kcal per category - Make representations
     # Converted household size
     pan_conv = transform.hh_size_conv(pan_ind)
+
+    # Combine files
+    comb_files_broad_sub = transform.combine_files(
+        val_fields, purch_recs_subset, prod_mast, uom, prod_codes, prod_vals, 2829
+    )
+    comb_files_broad_year = transform.combine_files(
+        val_fields, purch_recs_year, prod_mast, uom, prod_codes, prod_vals, 2829
+    )
+    comb_files_gran_sub = transform.combine_files(
+        val_fields, purch_recs_subset, prod_mast, uom, prod_codes, prod_vals, 2907
+    )
+    comb_files_gran_year = transform.combine_files(
+        val_fields, purch_recs_year, prod_mast, uom, prod_codes, prod_vals, 2907
+    )
+
     # Broader category
     hh_kcal_subset_broad = [
         transform.hh_kcal_volume_converted(
-            purch_recs_subset, nut_subset, pan_conv, 2829, scaler
+            nut_subset, pan_conv, scaler, comb_files_broad_sub
         )
         for scaler in scalers
     ]
     hh_kcal_year_broad = [
         transform.hh_kcal_volume_converted(
-            purch_recs_year, nut_year, pan_conv, 2829, scaler
+            nut_year, pan_conv, scaler, comb_files_broad_year
         )
         for scaler in scalers
     ]
     # More granular category
     hh_kcal_subset = [
         transform.hh_kcal_volume_converted(
-            purch_recs_subset, nut_subset, pan_conv, 2907, scaler
+            nut_subset, pan_conv, scaler, comb_files_gran_sub
         )
         for scaler in scalers
     ]
     hh_kcal_year = [
         transform.hh_kcal_volume_converted(
-            purch_recs_year, nut_year, pan_conv, 2907, scaler
+            nut_year, pan_conv, scaler, comb_files_gran_year
         )
         for scaler in scalers
     ]
+
     logging.info("Share of kcal")
     ## Share of kcal
     kcal_share_subset = [
-        transform.hh_kcal_per_category(purch_recs_subset, nut_subset, scaler, 2907)
+        transform.hh_kcal_per_category(nut_subset, scaler, comb_files_gran_sub)
         for scaler in scalers
     ]
     kcal_share_year = [
-        transform.hh_kcal_per_category(purch_recs_year, nut_year, scaler, 2907)
+        transform.hh_kcal_per_category(nut_subset, scaler, comb_files_gran_year)
         for scaler in scalers
     ]
 
