@@ -55,9 +55,10 @@ def combine_files(
     pur_recs = pur_recs[
         pur_recs["Reported Volume"].notna()
     ]  # Remove purchases with no volume
-    pur_recs["att_vol"] = (
-        pur_recs["Attribute Value Description"] + "_" + pur_recs["Reported Volume"]
-    )
+    pur_recs["att_vol"] = pur_recs["Attribute Value Description"]
+    # pur_recs["att_vol"] = (
+    #    pur_recs["Attribute Value Description"] + "_" + pur_recs["Reported Volume"]
+    # )
     return pur_recs
 
 
@@ -120,11 +121,12 @@ def nutrition_merge(nutrition: pd.DataFrame, purch_recs: pd.DataFrame, cols: lis
     return purch_recs.merge(nutrition[["pur_id"] + cols], on="pur_id", how="left")
 
 
-def total_product_hh_purchase(purch_recs: pd.DataFrame):
+def total_product_hh_purchase(purch_recs: pd.DataFrame, cols):
     """Groups by household, measurement and product and sums the volume and kcal content.
 
     Args:
         purch_recs (pd.DataFrame): Pandas dataframe contains the purchase records of specified data
+        cols (list): List of cols to group (different for kcal and volume representations)
 
     Returns:
         (pandas.DateFrame): groupby pandas dataframe
@@ -132,9 +134,7 @@ def total_product_hh_purchase(purch_recs: pd.DataFrame):
     # Remove cases where volume is zero (8 cases)
     purch_recs = purch_recs[purch_recs["Volume"] != 0].copy()
     return (
-        purch_recs.groupby(["Panel Id", "Reported Volume", "att_vol"])[
-            ["Volume", "Energy KCal", "Quantity"]
-        ]
+        purch_recs.groupby(["Panel Id"] + cols)[["Volume", "Energy KCal", "Quantity"]]
         .sum()
         .reset_index()
     )
@@ -171,39 +171,19 @@ def hh_total_categories(df: pd.DataFrame):
 
 
 def make_purch_records(
-    purchases: pd.DataFrame,
-    nutrition: pd.DataFrame,
-    cat: int,
-    purchases_comb: pd.DataFrame,
+    nutrition: pd.DataFrame, purchases_comb: pd.DataFrame, cols: list
 ):
     """
     Merges dataframes to create purchase records df with food category and nutrition information
     Args:
-        purchases (pd.DataFrame): Pandas dataframe of purchase records (noramlised by volume measurement)
         nutrition (pd.DataFrame): Pandas dataframe of purchase level nutritional information
-        pur_recs (pd.DataFrame): Pandas dataframe contains the purchase records of specified data
         purchases_comb (pd.DataFrame): Combined files to give product informaion to purchases
+        cols (list): Columns to use for groupby
     Returns:
         pd.DateFrame: Household totals per food category
     """
-    # Get data
-    prod_mast = kantar.product_master()
-    val_fields = kantar.val_fields()
-    uom = kantar.uom()
-    prod_codes = kantar.product_codes()
-    prod_vals = kantar.product_values()
-
-    purchases_comb = combine_files(
-        val_fields,
-        purchases,
-        prod_mast,
-        uom,
-        prod_codes,
-        prod_vals,
-        cat,  # 2907 is default
-    )
     purchases_nutrition = nutrition_merge(nutrition, purchases_comb, ["Energy KCal"])
-    return total_product_hh_purchase(purchases_nutrition)
+    return total_product_hh_purchase(purchases_nutrition, cols)
 
 
 def kcal_contribution(purch_recs: pd.DataFrame):
@@ -546,24 +526,22 @@ def apply_hh_conv(hh_kcal: pd.DataFrame, pan_conv: pd.DataFrame):
 
 
 def hh_kcal_volume_converted(
-    purch_recs: pd.DataFrame,
     nut: pd.DataFrame,
     pan_conv: pd.DataFrame,
-    category: int,
     scaler: Function,
+    comb_files: pd.DataFrame,
 ):
     """
     Applies a scaler to each row of household purchases.
     Args:
-        purch_recs (pd.DataFrame): Pandas dataframe of purchase records
         nut (pd.DataFrame): Nutritional info per purchase
         pan_conv (pd.DataFrame): Pandas dataframe of households converted totals
-        category (int): Product category level
         scaler (function): Normalising scaler
+        comb_files (pd.DataFrame): Combined purchase/product file
     Returns:
         pd.DateFrame: Household converted total kcal purchased scaled
     """
-    purch_recs_comb = make_purch_records(purch_recs, nut, category)
+    purch_recs_comb = make_purch_records(nut, comb_files, ["att_vol"])
     hh_kcal = hh_kcal_per_prod(purch_recs_comb)
     hh_kcal_conv = apply_hh_conv(hh_kcal, pan_conv)
     return scale_df(scaler, hh_kcal_conv)

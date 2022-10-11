@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 
 
 def reduce_df(df: pd.DataFrame, min_number: int, prod_category: str):
@@ -39,3 +40,17 @@ def number_prods_cat(df: pd.DataFrame, prod_category: str):
         .reset_index()
         .rename({0: "number_products"}, axis=1)
     )
+
+
+def iqr(data: list):
+    """
+    calculate interquartile range (IQR) of a list
+
+    Args:
+        data (list): List of numbers
+
+    Returns:
+        (int): IQR value
+    """
+    q3, q1 = np.percentile(data, [75, 25])
+    return q3 - q1
