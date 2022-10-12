@@ -16,35 +16,69 @@ if __name__ == "__main__":
     uom = kantar.uom()
     prod_meta = kantar.product_metadata()
     prod_meas = kantar.product_measurement()
+    prod_codes = kantar.product_codes()
+    prod_vals = kantar.product_values()
+    pan_ind = kantar.household_ind()
 
     # Define categories
-    granular_category = "rst_4_extended"  # Granular category
-    broader_category = "rst_4_market_sector"  # Broader category
+    granular_category = [2907, "rst_4_extended"]  # Granular category
+    broader_category = [2828, "rst_4_market_sector"]  # Broader category
 
     logging.info("Creating tables")
     # Create tables
-    granular_table = report.create_pop_table_cat(
-        granular_category,
-        val_fields,
-        prod_mast,
-        uom,
-        pur_recs,
-        nut_recs,
-        prod_meta,
-        prod_meas,
+    logging.info("RST extended table (granular)")
+    granular_table = report.create_report_table(
+        report.kcal_contr_table(
+            granular_category[0],
+            pan_ind,
+            val_fields,
+            pur_recs,
+            prod_mast,
+            uom,
+            prod_codes,
+            prod_vals,
+            nut_recs,
+        ),
+        report.kcal_density_table(
+            granular_category[1],
+            val_fields,
+            prod_mast,
+            uom,
+            pur_recs,
+            nut_recs,
+            prod_meta,
+            prod_meas,
+        ),
     )
-    broader_table = report.create_pop_table_cat(
-        broader_category,
-        val_fields,
-        prod_mast,
-        uom,
-        pur_recs,
-        nut_recs,
-        prod_meta,
-        prod_meas,
+    logging.info("RST market sector table (broader)")
+    broader_table = report.create_report_table(
+        report.kcal_contr_table(
+            broader_category[0],
+            pan_ind,
+            val_fields,
+            pur_recs,
+            prod_mast,
+            uom,
+            prod_codes,
+            prod_vals,
+            nut_recs,
+        ),
+        report.kcal_density_table(
+            broader_category[1],
+            val_fields,
+            prod_mast,
+            uom,
+            pur_recs,
+            nut_recs,
+            prod_meta,
+            prod_meas,
+        ),
     )
-    unique_cats = prod_meta[[broader_category, granular_category]].drop_duplicates(
-        subset=[granular_category]
+    # Unique categories combined
+    unique_cats = (
+        prod_meta[[broader_category[1], granular_category[1]]]
+        .drop_duplicates(subset=[granular_category[1]])
+        .set_index(granular_category[1])
     )
 
     logging.info("Saving tables")
@@ -52,13 +86,15 @@ if __name__ == "__main__":
     Path(f"{PROJECT_DIR}/outputs/data/decision_table/").mkdir(
         parents=True, exist_ok=True
     )
-    granular_table.merge(unique_cats, on=granular_category).to_csv(
+    granular_table.merge(unique_cats, left_index=True, right_index=True).to_csv(
         f"{PROJECT_DIR}/outputs/data/decision_table/table_"
-        + granular_category
+        + granular_category[1]
         + ".csv",
         index=False,
     )
     broader_table.to_csv(
-        f"{PROJECT_DIR}/outputs/data/decision_table/table_" + broader_category + ".csv",
+        f"{PROJECT_DIR}/outputs/data/decision_table/table_"
+        + broader_category[1]
+        + ".csv",
         index=False,
     )
