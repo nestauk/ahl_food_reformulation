@@ -268,12 +268,20 @@ def product_measurement():
         encoding="ISO-8859-1",
     )
 
+
 def panel_weights():
     """Reads the panel weights file"""
 
     return pd.read_csv(
         f"{PROJECT_DIR}/inputs/data/panel_demographic_weights_period.csv"
     )
+
+
+def panel_weights_year():
+    """Reads the panel weights file"""
+
+    return pd.read_csv(f"{PROJECT_DIR}/inputs/data/panel_demographic_weights_year.csv")
+
 
 def purchase_records_volume():
     """
@@ -288,3 +296,35 @@ def purchase_records_volume():
     """
 
     return pd.read_csv(f"{PROJECT_DIR}/inputs/data/pur_rec_volume.csv").iloc[:, 1:]
+
+
+def cluster_kcal_share():
+    """
+    Getter for the lookup of households to cluster assignments according to the kcal share method
+
+    Args:
+        None
+
+    Returns:
+        df (pd.DataFrame): panel ids mapped to cluster labels
+
+    """
+    return pd.read_csv(
+        f"{PROJECT_DIR}/outputs/data/alternative_clusters/panel_clusters_kcal_share.csv"
+    )
+
+
+def cluster_adj_size():
+    """
+    Getter for the lookup of households to cluster assignments according to the hh adjustment size method
+
+    Args:
+        None
+
+    Returns:
+        df (pd.DataFrame): panel ids mapped to cluster labels
+
+    """
+    return pd.read_csv(
+        f"{PROJECT_DIR}/outputs/data/alternative_clusters/panel_clusters_adj_size.csv"
+    )
