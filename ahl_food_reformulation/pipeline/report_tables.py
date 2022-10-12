@@ -1,3 +1,4 @@
+from doctest import OutputChecker
 from ahl_food_reformulation.utils import util_functions as util_func
 from ahl_food_reformulation.pipeline import energy_density as energy
 from ahl_food_reformulation.pipeline import nutrient_metrics_funcs as nutrient
@@ -154,4 +155,6 @@ def create_report_table(kcal_density_df: pd.DataFrame, kcal_cont_df: pd.DataFram
     Returns:
         pd.DataFrame: Merged table of metrics
     """
-    return pd.merge(kcal_cont_df, kcal_density_df, left_index=True, right_index=True)
+    return pd.merge(
+        kcal_cont_df, kcal_density_df, left_index=True, right_index=True, how="outer"
+    )
