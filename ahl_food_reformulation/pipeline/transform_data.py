@@ -11,8 +11,8 @@ from sklearn.preprocessing import MinMaxScaler
 def combine_files(
     val_fields: pd.DataFrame,
     pur_recs: pd.DataFrame,
-    prod_mast: pd.DataFrame,
-    uom: pd.DataFrame,
+    # prod_mast: pd.DataFrame,
+    # uom: pd.DataFrame,
     prod_codes: pd.DataFrame,
     prod_vals: pd.DataFrame,
     att_num: int,
@@ -33,14 +33,22 @@ def combine_files(
     """
     val_fields.drop_duplicates(inplace=True)  # Remove duplicates
     pur_recs = pur_recs[
-        ["PurchaseId", "Panel Id", "Period", "Product Code", "Volume", "Quantity"]
-    ].merge(
-        prod_mast[["Product Code", "Validation Field"]], on="Product Code", how="left"
-    )
-    pur_recs = pur_recs.merge(
-        val_fields[["VF", "UOM"]], left_on="Validation Field", right_on="VF", how="left"
-    )
-    pur_recs = pur_recs.merge(uom[["UOM", "Reported Volume"]], on="UOM", how="left")
+        [
+            "PurchaseId",
+            "Panel Id",
+            "Period",
+            "Product Code",
+            "Volume",
+            "Quantity",
+            "Reported Volume",
+        ]
+    ]  # .merge(
+    #    prod_mast[["Product Code", "Validation Field"]], on="Product Code", how="left"
+    # )
+    # pur_recs = pur_recs.merge(
+    #    val_fields[["VF", "UOM"]], left_on="Validation Field", right_on="VF", how="left"
+    # )
+    # pur_recs = pur_recs.merge(uom[["UOM", "Reported Volume"]], on="UOM", how="left")
     rst_4_ext = prod_codes[prod_codes["Attribute Number"] == att_num].copy()
     prod_code_vals = rst_4_ext.merge(prod_vals, on="Attribute Value", how="left")
     pur_recs = pur_recs.merge(
@@ -224,7 +232,7 @@ def hh_kcal_per_prod(purch_recs: pd.DataFrame):
     )
     purch_recs.columns = purch_recs.columns.droplevel()
     return purch_recs
- 
+
 
 def scale_hh(df: pd.DataFrame, scaler: Function):
     """
@@ -240,6 +248,7 @@ def scale_hh(df: pd.DataFrame, scaler: Function):
     return pd.DataFrame(
         scaler.fit_transform(df.T).T, columns=list(df.columns), index=df.index
     )
+
 
 def scale_df(scaler: Function, df: pd.DataFrame):
     array_reshaped = df.to_numpy().reshape(-1, 1)

@@ -11,8 +11,6 @@ def kcal_contr_table(
     pan_ind: pd.DataFrame,
     val_fields: pd.DataFrame,
     pur_recs: pd.DataFrame,
-    prod_mast: pd.DataFrame,
-    uom: pd.DataFrame,
     prod_codes: pd.DataFrame,
     prod_vals: pd.DataFrame,
     nut_recs: pd.DataFrame,
@@ -36,8 +34,8 @@ def kcal_contr_table(
     # Converted household size
     pan_conv = transform.hh_size_conv(pan_ind)
     # Purchase and product info combined
-    comb_files = transform.purchases_comb = transform.combine_files(
-        val_fields, pur_recs, prod_mast, uom, prod_codes, prod_vals, prod_cat
+    comb_files = transform.combine_files(
+        val_fields, pur_recs, prod_codes, prod_vals, prod_cat
     )
     # Make household representations
     purch_recs_comb = transform.make_purch_records(nut_recs, comb_files, ["att_vol"])
@@ -66,9 +64,6 @@ def kcal_contr_table(
 
 def kcal_density_table(
     prod_category: str,
-    val_fields: pd.DataFrame,
-    prod_mast: pd.DataFrame,
-    uom: pd.DataFrame,
     pur_recs: pd.DataFrame,
     nut_recs: pd.DataFrame,
     prod_meta: pd.DataFrame,
@@ -80,9 +75,6 @@ def kcal_density_table(
 
     Args:
         prod_category (str): one product category
-        val_fields (pd.DataFrame): Pandas dataframe with codes to merge product master and uom dfs
-        prod_mast (pd.DataFrame): Pandas dataframe unique product list
-        uom (pd.DataFrame): Pandas dataframe contains product measurement information
         pur_recs (pd.DataFrame): Pandas dataframe contains the purchase records of specified data
         nut_recs (pd.DataFrame): Pandas dataframe with per purchase nutritional information
         prod_meta (pd.DataFrame): Pandas dataframe with product descriptions
@@ -93,9 +85,6 @@ def kcal_density_table(
     """
     df_prod_ed = energy.prod_energy_100(
         prod_category,
-        val_fields,
-        prod_mast,
-        uom,
         pur_recs,
         nut_recs,
         prod_meta,

@@ -9,7 +9,7 @@ if __name__ == "__main__":
 
     logging.info("Reading data")
     # read data
-    pur_recs = kantar.purchase_records()
+    pur_recs = kantar.purchase_records_updated()
     nut_recs = kantar.nutrition()
     prod_mast = kantar.product_master()
     val_fields = kantar.val_fields()
@@ -33,17 +33,12 @@ if __name__ == "__main__":
             pan_ind,
             val_fields,
             pur_recs,
-            prod_mast,
-            uom,
             prod_codes,
             prod_vals,
             nut_recs,
         ),
         report.kcal_density_table(
             granular_category[1],
-            val_fields,
-            prod_mast,
-            uom,
             pur_recs,
             nut_recs,
             prod_meta,
@@ -58,17 +53,12 @@ if __name__ == "__main__":
             pan_ind,
             val_fields,
             pur_recs,
-            prod_mast,
-            uom,
             prod_codes,
             prod_vals,
             nut_recs,
         ),
         report.kcal_density_table(
             broader_category[1],
-            val_fields,
-            prod_mast,
-            uom,
             pur_recs,
             nut_recs,
             prod_meta,
@@ -92,9 +82,11 @@ if __name__ == "__main__":
         f"{PROJECT_DIR}/outputs/data/decision_table/table_"
         + granular_category[1]
         + ".csv",
+        float_format="%.3f",
     )
     broader_table.to_csv(
         f"{PROJECT_DIR}/outputs/data/decision_table/table_"
         + broader_category[1]
         + ".csv",
+        float_format="%.3f",
     )

@@ -7,22 +7,17 @@ import numpy as np
 
 def prod_energy_100(
     cat: str,
-    val_fields,
-    prod_mast,
-    uom,
     pur_recs,
     nut_recs,
     prod_meta,
     prod_meas,
 ):
     """
-    Return simple and weighted kcal/100ml(g) by product (with category information)
+    Return simple and weighted kcal/100ml(g) by product (with category information).
+    Requires the purchases records with the 'reported volume' field added
     Args:
         cat (str): one product category
-        val_fields (pd.DataFrame): Pandas dataframe with codes to merge product master and uom dfs
-        prod_mast (pd.DataFrame): Pandas dataframe unique product list
-        uom (pd.DataFrame): Pandas dataframe contains product measurement information
-        pur_recs (pd.DataFrame): Pandas dataframe contains the purchase records of specified data
+        pur_recs (pd.DataFrame): Pandas dataframe contains the purchase records of specified data (with reported volume added)
         nut_recs (pd.DataFrame): Pandas dataframe with per purchase nutritional information
         prod_meta (pd.DataFrame): Pandas dataframe with product descriptions
         prod_meas (pd.DataFrame): Pandas dataframe with additional conversions to g and ml for unit and serving products
@@ -30,14 +25,11 @@ def prod_energy_100(
         pd.DataFrame: Dataframe with average kcal/100ml(gr) simple and weighted by sales (for the year) and reported volume
     """
 
-    # add standardised volume measurement
-    pur_rec_vol = transform.vol_for_purch(pur_recs, val_fields, prod_mast, uom)
-
     # add file with additional conversions (for units and servings)
     tbl = lps.measure_table(prod_meas)
 
     # merge to extract additional measures
-    pur_rec_vol = pur_rec_vol.merge(tbl, on="Product Code")
+    pur_rec_vol = pur_recs.merge(tbl, on="Product Code")
 
     # conditional expression to select volume
     conds = [
@@ -59,7 +51,7 @@ def prod_energy_100(
     choices = [
         pur_rec_vol["Reported Volume"],
         "Kilos",
-        "Liters",
+        "Litres",
     ]
 
     choice_volume = [

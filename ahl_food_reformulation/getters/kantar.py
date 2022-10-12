@@ -268,12 +268,14 @@ def product_measurement():
         encoding="ISO-8859-1",
     )
 
+
 def panel_weights():
     """Reads the panel weights file"""
 
     return pd.read_csv(
         f"{PROJECT_DIR}/inputs/data/panel_demographic_weights_period.csv"
     )
+
 
 def purchase_records_volume():
     """
@@ -288,3 +290,21 @@ def purchase_records_volume():
     """
 
     return pd.read_csv(f"{PROJECT_DIR}/inputs/data/pur_rec_volume.csv").iloc[:, 1:]
+
+
+def purchase_records_updated():
+    """
+    Getter for the copy of purchase record with imputed weights.
+    Cleaned to format of purchase records but with reported volume added.
+
+    Args:
+        None
+
+    Returns:
+        df (pd.DataFrame): purchase records with imputed volumes
+
+    """
+    pur_recs_updated = purchase_records_volume()
+    return pur_recs_updated.drop(
+        ["Reported Volume", "volume_per", "Volume"], axis=1
+    ).rename({"reported_volume_up": "Reported Volume", "volume_up": "Volume"}, axis=1)
