@@ -90,11 +90,9 @@ if __name__ == "__main__":
         f"{PROJECT_DIR}/outputs/data/decision_table/table_"
         + granular_category[1]
         + ".csv",
-        index=False,
     )
     broader_table.to_csv(
         f"{PROJECT_DIR}/outputs/data/decision_table/table_"
         + broader_category[1]
         + ".csv",
-        index=False,
     )
