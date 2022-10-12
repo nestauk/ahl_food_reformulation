@@ -72,6 +72,7 @@ def kcal_density_table(
     nut_recs: pd.DataFrame,
     prod_meta: pd.DataFrame,
     prod_meas: pd.DataFrame,
+    sample_size: int,
 ):
     """
     Create kcal density metrics table based on chosen category
@@ -85,6 +86,7 @@ def kcal_density_table(
         nut_recs (pd.DataFrame): Pandas dataframe with per purchase nutritional information
         prod_meta (pd.DataFrame): Pandas dataframe with product descriptions
         prod_meas (pd.DataFrame): Pandas dataframe with additional conversions to g and ml for unit and serving products
+        sample_size (int): Number of samples to use for entropy and variance averages
     Returns:
         pd.DataFrame: Table with metrics based on energy density scores per category
     """
@@ -127,11 +129,11 @@ def kcal_density_table(
         .merge(energy_dens_agg, on=prod_category)
     )
 
-    df_prod_ed_reduce = util_func.reduce_df(df_prod_ed, 50, prod_category)[
+    df_prod_ed_reduce = util_func.reduce_df(df_prod_ed, sample_size, prod_category)[
         [prod_category, "chosen_unit", "kcal_100g_ml"]
     ]
     df_diversity = nutrient.create_diversity_df(
-        df_prod_ed_reduce, prod_category, 10, 50
+        df_prod_ed_reduce, prod_category, 10, sample_size
     )
     num_prods_cat = util_func.number_prods_cat(df_prod_ed, prod_category)
 

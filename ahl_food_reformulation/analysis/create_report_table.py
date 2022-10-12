@@ -48,6 +48,7 @@ if __name__ == "__main__":
             nut_recs,
             prod_meta,
             prod_meas,
+            50,  # sample size
         ),
     )
     logging.info("RST market sector table (broader)")
@@ -72,6 +73,7 @@ if __name__ == "__main__":
             nut_recs,
             prod_meta,
             prod_meas,
+            50,  # sample size
         ),
     )
     # Unique categories combined
