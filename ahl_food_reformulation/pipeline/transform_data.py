@@ -6,8 +6,6 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from ahl_food_reformulation.getters import kantar
 from ahl_food_reformulation.utils import lookups as lps
 from sklearn.preprocessing import MinMaxScaler
-import os.path
-from ahl_food_reformulation import PROJECT_DIR
 
 
 def combine_files(
@@ -22,7 +20,6 @@ def combine_files(
     """
     Performs multiple merges and a few cleaning functions to combine the following files into one:
     val_fields, pur_records, prod_mast, uom, prod_codes, prod_vals
-
     Args:
         val_fields (pd.DataFrame): Pandas dataframe with codes to merge product master and uom dfs
         pur_recs (pd.DataFrame): Pandas dataframe contains the purchase records of specified data
@@ -31,7 +28,6 @@ def combine_files(
         prod_codes (pd.DataFrame): Pandas dataframe contains the codes to link products to category information
         prod_vals (pd.DataFrame): Pandas dataframe contains the product category information
         att_num (int): Product category type code number
-
     Returns:
         pur_recs (pandas.DateFrame): Merged pandas dataframe
     """
@@ -56,9 +52,6 @@ def combine_files(
         pur_recs["Reported Volume"].notna()
     ]  # Remove purchases with no volume
     pur_recs["att_vol"] = pur_recs["Attribute Value Description"]
-    # pur_recs["att_vol"] = (
-    #    pur_recs["Attribute Value Description"] + "_" + pur_recs["Reported Volume"]
-    # )
     return pur_recs
 
 
@@ -123,11 +116,9 @@ def nutrition_merge(nutrition: pd.DataFrame, purch_recs: pd.DataFrame, cols: lis
 
 def total_product_hh_purchase(purch_recs: pd.DataFrame, cols):
     """Groups by household, measurement and product and sums the volume and kcal content.
-
     Args:
         purch_recs (pd.DataFrame): Pandas dataframe contains the purchase records of specified data
         cols (list): List of cols to group (different for kcal and volume representations)
-
     Returns:
         (pandas.DateFrame): groupby pandas dataframe
     """
@@ -219,8 +210,10 @@ def kcal_contribution(purch_recs: pd.DataFrame):
 def hh_kcal_per_prod(purch_recs: pd.DataFrame):
     """
     Unstacks df to show total kcal per product per household then normalises by household (rows)
+
     Args:
         purch_recs (pd.DataFrame): Pandas dataframe contains the purchase records of specified data
+
     Returns:
         (pd.DateFrame): Kcal totals per product per household
     """
@@ -231,21 +224,22 @@ def hh_kcal_per_prod(purch_recs: pd.DataFrame):
     )
     purch_recs.columns = purch_recs.columns.droplevel()
     return purch_recs
-
+ 
 
 def scale_hh(df: pd.DataFrame, scaler: Function):
     """
     Applies a scaler to each row of household purchases.
+
     Args:
         df (pd.DataFrame): Pandas dataframe household purchases by food category
         scaler (function): Sklearn scaler to apply
+
     Returns:
         pd.DateFrame: Household totals scaled by rows.
     """
     return pd.DataFrame(
         scaler.fit_transform(df.T).T, columns=list(df.columns), index=df.index
     )
-
 
 def scale_df(scaler: Function, df: pd.DataFrame):
     array_reshaped = df.to_numpy().reshape(-1, 1)
@@ -253,39 +247,26 @@ def scale_df(scaler: Function, df: pd.DataFrame):
     return pd.DataFrame(scaled, columns=list(df.columns), index=df.index)
 
 
-def hh_kcal_per_category(purch_recs: pd.DataFrame):
+def hh_kcal_per_category(
+    nut: pd.DataFrame,
+    scaler_type: Function,
+    comb_files: pd.DataFrame,
+):
     """
     Unstacks df to show total kcal per product per household then normalises by household (rows)
-
     Args:
         purch_recs (pd.DataFrame): Pandas dataframe contains the purchase records of specified data
-
+        nut (pd.DataFrame): Pandas dataframe contains nutritional information per purchase record
+        scaler_type: Scaler function to apply to normalise data
+        cat (int): Number ID of product category
+        comb_files (pd.DataFrame): Combined purchase and product info
     Returns:
         (pd.DateFrame): Kcal totals per product per household normalised by total household kcal
     """
-    purch_recs = (
-        purch_recs.set_index(["Panel Id", "att_vol"])[["Energy KCal"]]
-        .unstack(["att_vol"])
-        .fillna(0)
-    )
-    purch_recs.columns = purch_recs.columns.droplevel()
-    return scale_hh(purch_recs, MinMaxScaler())  # Scale the hh purchases 0 to 1
-
-
-def scale_hh(df: pd.DataFrame, scaler: Function):
-    """
-    Applies a scaler to each row of household purchases.
-
-    Args:
-        df (pd.DataFrame): Pandas dataframe household purchases by food category
-        scaler (function): Sklearn scaler to apply
-
-    Returns:
-        pd.DateFrame: Household totals scaled by rows.
-    """
-    return pd.DataFrame(
-        scaler.fit_transform(df.T).T, columns=list(df.columns), index=df.index
-    )
+    purch_recs_comb = make_purch_records(nut, comb_files, ["att_vol"])
+    return scale_hh(
+        hh_kcal_per_prod(purch_recs_comb), scaler_type
+    )  # Scale the hh purchases 0 to 1
 
 
 def proportion_hh(df: pd.DataFrame):
@@ -440,8 +421,10 @@ def perc_variable(data: pd.Series):
 def hh_size_conv(pan_ind: pd.DataFrame):
     """
     Applies a scaler to each row of household purchases.
+
     Args:
         pan_ind (pd.DataFrame): Pandas dataframe of household members
+
     Returns:
         pd.DateFrame: Household converted total size
     """
@@ -511,9 +494,11 @@ def hh_size_conv(pan_ind: pd.DataFrame):
 def apply_hh_conv(hh_kcal: pd.DataFrame, pan_conv: pd.DataFrame):
     """
     Applies a scaler to each row of household purchases.
+
     Args:
         hh_kcal (pd.DataFrame): Pandas dataframe of households kcal totals
         pan_conv (pd.DataFrame): Pandas dataframe of households converted totals
+
     Returns:
         pd.DateFrame: Household converted total kcal purchased
     """
