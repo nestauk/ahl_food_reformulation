@@ -2,10 +2,7 @@
 from pyclbr import Function
 import pandas as pd
 import numpy as np
-from sklearn.base import BaseEstimator, TransformerMixin
-from ahl_food_reformulation.getters import kantar
 from ahl_food_reformulation.utils import lookups as lps
-from sklearn.preprocessing import MinMaxScaler
 
 
 def combine_files(
@@ -43,12 +40,6 @@ def combine_files(
             "Reported Volume",
         ]
     ]  # .merge(
-    #    prod_mast[["Product Code", "Validation Field"]], on="Product Code", how="left"
-    # )
-    # pur_recs = pur_recs.merge(
-    #    val_fields[["VF", "UOM"]], left_on="Validation Field", right_on="VF", how="left"
-    # )
-    # pur_recs = pur_recs.merge(uom[["UOM", "Reported Volume"]], on="UOM", how="left")
     rst_4_ext = prod_codes[prod_codes["Attribute Number"] == att_num].copy()
     prod_code_vals = rst_4_ext.merge(prod_vals, on="Attribute Value", how="left")
     pur_recs = pur_recs.merge(
@@ -539,3 +530,30 @@ def hh_kcal_volume_converted(
     hh_kcal = hh_kcal_per_prod(purch_recs_comb)
     hh_kcal_conv = apply_hh_conv(hh_kcal, pan_conv)
     return scale_df(scaler, hh_kcal_conv)
+
+
+def rst_4_market_sector_update(df: pd.DataFrame):
+    """
+    Updates rst_4_market_sector values to split out kilo/litre groups of products
+
+    Args:
+        df (pd.DataFrame): Df of products with rst_4_market_sector and 'rst_4_market' values
+
+    Returns:
+        df (pd.DataFrame): prod_meta df with updated rst_4_market_sector values
+
+    """
+    conditions = [
+        df["rst_4_market_sector"].eq("Dairy Products")
+        & df["rst_4_market"].eq("Total Cheese"),
+        df["rst_4_market_sector"].eq("Dairy Products")
+        & df["rst_4_market"].isin(["Eggs", "Butter", "Margarine"]),
+        df["rst_4_market_sector"].eq("Dairy Products")
+        & df["rst_4_market"].isin(["Yoghurt", "Fromage Frais"]),
+        df["rst_4_market_sector"].eq("Dairy Products")
+        & df["rst_4_market"].isin(["Total Milk", "Fresh Cream"]),
+        df["rst_4_market_sector"].eq("Frozen Confectionery")
+        & df["rst_4_market"].eq("Total Ice Cream"),
+    ]
+    choices = ["Cheese", "Eggs and Butter", "Yoghurt", "Milk and Cream", "Ice Cream"]
+    return np.select(conditions, choices, default=df["rst_4_market_sector"])

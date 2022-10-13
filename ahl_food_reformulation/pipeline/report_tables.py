@@ -9,11 +9,9 @@ import pandas as pd
 def kcal_contr_table(
     prod_cat: int,
     pan_ind: pd.DataFrame,
-    val_fields: pd.DataFrame,
     pur_recs: pd.DataFrame,
-    prod_codes: pd.DataFrame,
-    prod_vals: pd.DataFrame,
     nut_recs: pd.DataFrame,
+    prod_meta: pd.DataFrame,
 ):
     """
     Create kcal contribution metrics table based on chosen category
@@ -21,22 +19,25 @@ def kcal_contr_table(
     Args:
         prod_category (int): one product category
         pan_ind (pd.DataFrame): Pandas dataframe of individual household member info
-        val_fields (pd.DataFrame): Pandas dataframe with codes to merge product master and uom dfs
         pur_recs (pd.DataFrame): Pandas dataframe contains the purchase records of specified data
-        prod_mast (pd.DataFrame): Pandas dataframe unique product list
-        uom (pd.DataFrame): Pandas dataframe contains product measurement information
-        prod_codes (pd.DataFrame): Pandas dataframe of product code information
-        prod_vals (pd.DataFrame): Pandas dataframe of product values for product codes
         nut_recs (pd.DataFrame): Pandas dataframe with per purchase nutritional information
+        prod_meta (pd.DataFrame): Pandas dataframe with product descriptions
     Returns:
         pd.DataFrame: Table with metrics based on kcal contribution per category
     """
     # Converted household size
     pan_conv = transform.hh_size_conv(pan_ind)
-    # Purchase and product info combined
-    comb_files = transform.combine_files(
-        val_fields, pur_recs, prod_codes, prod_vals, prod_cat
+    comb_files = pur_recs.merge(
+        prod_meta[["product_code", prod_cat]],
+        left_on=["Product Code"],
+        right_on="product_code",
+        how="left",
     )
+    comb_files = comb_files[
+        comb_files["Reported Volume"].notna()
+    ]  # Remove purchases with no volume
+    comb_files["att_vol"] = comb_files[prod_cat]
+    comb_files.drop("product_code", axis=1, inplace=True)
     # Make household representations
     purch_recs_comb = transform.make_purch_records(nut_recs, comb_files, ["att_vol"])
     hh_kcal = transform.hh_kcal_per_prod(purch_recs_comb)

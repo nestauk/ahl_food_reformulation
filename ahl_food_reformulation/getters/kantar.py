@@ -7,6 +7,7 @@ from typing import Tuple, Dict
 from toolz import pipe
 from ahl_food_reformulation.getters.miscelaneous import postcode_region_lookup
 from ahl_food_reformulation.utils.lookups import product_table
+from ahl_food_reformulation.pipeline.transform_data import rst_4_market_sector_update
 
 
 def purchase_records():
@@ -308,3 +309,20 @@ def purchase_records_updated():
     return pur_recs_updated.drop(
         ["Reported Volume", "volume_per", "Volume"], axis=1
     ).rename({"reported_volume_up": "Reported Volume", "volume_up": "Volume"}, axis=1)
+
+
+def prod_meta_update():
+    """
+    Getter for the copy of prod_meta df with updated rst_4_market_sector values.
+
+    Args:
+        None
+
+    Returns:
+        df (pd.DataFrame): prod_meta df with updated rst_4_market_sector values
+
+    """
+    prod_meta = product_metadata()
+    prod_meta["rst_4_market_sector"] = rst_4_market_sector_update(prod_meta)
+
+    return prod_meta[prod_meta["rst_4_market_sector"] != "Dairy Products"]

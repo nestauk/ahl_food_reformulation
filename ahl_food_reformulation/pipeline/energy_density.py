@@ -104,9 +104,9 @@ def prod_energy_100(
     level_pivot["kilo_share"] = level_pivot["Kilos"] / level_pivot["tot"]
     level_pivot["litre_share"] = level_pivot["Litres"] / level_pivot["tot"]
     level_pivot["chosen_unit"] = np.where(
-        level_pivot["litre_share"] >= 0.9,
+        level_pivot["litre_share"] >= 0.75,
         "Litres",
-        np.where(level_pivot["kilo_share"] >= 0.9, "Kilos", "none"),
+        np.where(level_pivot["kilo_share"] >= 0.75, "Kilos", "none"),
     )
 
     # merge with product metadata
@@ -114,7 +114,7 @@ def prod_energy_100(
         prod_meta, left_on="Product Code", right_on="product_code", how="left"
     ).merge(level_pivot[[cat, "chosen_unit"]], on=cat)
 
-    # subset to products where the reported volume is equal to the chosen unit based on 90% rule
+    # subset to products where the reported volume is equal to the chosen unit based on 75% rule
     pur_rec_select = pur_rec_conv[
         pur_rec_conv["reported_volume_up"] == pur_rec_conv["chosen_unit"]
     ]
