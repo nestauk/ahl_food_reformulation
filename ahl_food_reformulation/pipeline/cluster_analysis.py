@@ -1,23 +1,10 @@
 from ahl_food_reformulation.getters import kantar
 from ahl_food_reformulation.pipeline import transform_data as transform
+from ahl_food_reformulation.pipeline import hh_income_class
 import pandas as pd
 from patsy.contrasts import Sum
 import statsmodels.api as sm
 import patsy
-
-
-# read data
-pur_recs = kantar.purchase_records()
-nut_rec = kantar.nutrition()
-pan_ind = kantar.household_ind()
-prod_mast = kantar.product_master()
-val_fields = kantar.val_fields()
-uom = kantar.uom()
-prod_codes = kantar.product_codes()
-prod_vals = kantar.product_values()
-panel_weight = kantar.panel_weights_year()
-cl_kcal_share = kantar.cluster_kcal_share()
-cl_adj_size = kantar.cluster_adj_size()
 
 
 def mk_reg_df_share(
@@ -168,6 +155,7 @@ def reg_share(
     panel_weight: pd.DataFrame,
     purch_recs_wide_share: pd.DataFrame,
     sig_level: float,
+    top: float,
 ):
     """
     Runs multiple regressions using the deviant coding method with share of kcal for a category as dependent variable and cluster assignment dummies as independent variables. Retains only coefficients that are significant and positive.
@@ -182,7 +170,8 @@ def reg_share(
         Share of kcal consumed by hh by categoty.
     sig_level : float
         significance level to retain coefficients (e.g 0.05 for 5%).
-
+    top : float
+        percentile to identify top x% poorest clusters. E.g. to get the top 20% poorest clusters input 0.2
 
     Returns
     -------
@@ -237,10 +226,22 @@ def reg_share(
     # merge in weights
     out = out.merge(cluster_w, on="clusters")
 
+    # read in income classifier
+    income_class = hh_income_class.income_class_share(top)
+
+    # merge with income classifier
+    out_income = out.merge(income_class, on="clusters")
+
     # create final dataset by merging aggregate
     final = pd.merge(
-        out.groupby(["category"])["clusters"].size().reset_index(name="cluster_no"),
-        out.groupby(["category"])["tot"].sum().reset_index(name="pop"),
+        pd.merge(
+            out.groupby(["category"])["clusters"].size().reset_index(name="cluster_no"),
+            out.groupby(["category"])["tot"].sum().reset_index(name="pop"),
+            on="category",
+        ),
+        out_income.groupby(["category"])["low"]
+        .sum()
+        .reset_index(name="cluster_low_income"),
         on="category",
     )
 
@@ -255,6 +256,7 @@ def reg_adj(
     panel_weight: pd.DataFrame,
     purch_recs_wide_abs: pd.DataFrame,
     sig_level: float,
+    top: float,
 ):
     """
     Runs multiple regressions using the deviant coding method with absolute adjusted kcal for a category as dependent variable and cluster assignment dummies as independent variables. Retains only coefficients that are significant and positive.
@@ -269,6 +271,8 @@ def reg_adj(
         Absolute adjusted kcal consumed by hh by categoty.
     sig_level : float
         significance level to retain coefficients (e.g 0.05 for 5%).
+    top : float
+        percentile to identify top x% poorest clusters. E.g. to get the top 20% poorest clusters input 0.2
 
 
     Returns
@@ -324,10 +328,22 @@ def reg_adj(
     # merge in weights
     out = out.merge(cluster_w, on="clusters")
 
+    # income classifier
+    income_class = hh_income_class.income_class_adj(top)
+
+    # merge in classifier
+    out_income = out.merge(income_class, on="clusters")
+
     # create final dataset by merging aggregate
     final = pd.merge(
-        out.groupby(["category"])["clusters"].size().reset_index(name="cluster_no"),
-        out.groupby(["category"])["tot"].sum().reset_index(name="pop"),
+        pd.merge(
+            out.groupby(["category"])["clusters"].size().reset_index(name="cluster_no"),
+            out.groupby(["category"])["tot"].sum().reset_index(name="pop"),
+            on="category",
+        ),
+        out_income.groupby(["category"])["low"]
+        .sum()
+        .reset_index(name="cluster_low_income"),
         on="category",
     )
 

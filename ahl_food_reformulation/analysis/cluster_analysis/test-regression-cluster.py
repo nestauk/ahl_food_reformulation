@@ -25,7 +25,9 @@ purch_recs_wide_share = cl.mk_reg_df_share(
     val_fields, pur_recs, prod_mast, uom, prod_codes, prod_vals, nut_rec, rst_4_extended
 )
 
-share_table = cl.reg_share(cl_kcal_share, panel_weight, purch_recs_wide_share, 0.05)
+share_table = cl.reg_share(
+    cl_kcal_share, panel_weight, purch_recs_wide_share, 0.05, 0.25
+)
 
 share_table.to_csv(
     f"{PROJECT_DIR}/outputs/data/decision_table/rst_4_extended_cluster_share.csv",
@@ -44,7 +46,7 @@ purch_recs_wide_abs = cl.mk_reg_df_adj(
     rst_4_extended,
 )
 
-adj_table = cl.reg_adj(cl_adj_size, panel_weight, purch_recs_wide_abs, 0.05)
+adj_table = cl.reg_adj(cl_adj_size, panel_weight, purch_recs_wide_abs, 0.05, 0.25)
 
 adj_table.to_csv(
     f"{PROJECT_DIR}/outputs/data/decision_table/rst_4_extended_cluster_adj.csv",
@@ -64,7 +66,9 @@ purch_recs_wide_share = cl.mk_reg_df_share(
     rst_4_market_sector,
 )
 
-share_table = cl.reg_share(cl_kcal_share, panel_weight, purch_recs_wide_share, 0.05)
+share_table = cl.reg_share(
+    cl_kcal_share, panel_weight, purch_recs_wide_share, 0.05, 0.25
+)
 
 share_table.to_csv(
     f"{PROJECT_DIR}/outputs/data/decision_table/rst_4_market_sector_cluster_share.csv",
@@ -83,7 +87,7 @@ purch_recs_wide_abs = cl.mk_reg_df_adj(
     rst_4_market_sector,
 )
 
-adj_table = cl.reg_adj(cl_adj_size, panel_weight, purch_recs_wide_abs, 0.05)
+adj_table = cl.reg_adj(cl_adj_size, panel_weight, purch_recs_wide_abs, 0.05, 0.25)
 
 adj_table.to_csv(
     f"{PROJECT_DIR}/outputs/data/decision_table/rst_4_market_sector_cluster_adj.csv",
