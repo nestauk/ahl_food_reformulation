@@ -9,7 +9,7 @@ from ahl_food_reformulation import PROJECT_DIR
 def nspl():
     """Read the National Postcode lookup"""
 
-    return pd.read_csv(f"{PROJECT_DIR}/inputs/data/NSPL/Data/NSPL_AUG_2021_UK.csv")
+    return pd.read_csv(f"{PROJECT_DIR}/inputs/data/NSPL/Data/NSPL_UK.csv")
 
 
 def region_name_lookup() -> Dict[str, str]:
