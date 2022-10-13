@@ -206,6 +206,18 @@ def demog_val():
     )
 
 
+def demog():
+    """Reads in dataset of values of demog id
+
+    Args: None
+
+    Returns: pd.DataFrame: demographic id dataframe
+    """
+    return pd.read_csv(
+        PROJECT_DIR / "inputs/data/panel_demographics.csv", encoding="ISO-8859-1"
+    )
+
+
 def household_demog():
     """Reads in dataset of household demographic information
 
