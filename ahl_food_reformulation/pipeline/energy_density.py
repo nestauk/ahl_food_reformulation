@@ -13,8 +13,9 @@ def prod_energy_100(
     prod_meas,
 ):
     """
-    Return simple and weighted kcal/100ml(g) by product (with category information).
-    Requires the purchases records with the 'reported volume' field added
+    Creates a unique list of product with a simple and weighted kcal/100ml(g). Excludes products with a different unit of
+    measurement to their category (based on the 75% rule).
+    To note: Requires the purchases records with the 'reported volume' field added
     Args:
         cat (str): one product category
         pur_recs (pd.DataFrame): Pandas dataframe contains the purchase records of specified data (with reported volume added)

@@ -47,9 +47,9 @@ def kcal_contr_table(
         [
             (hh_kcal.sum() / hh_kcal.sum().sum()) * 100,
             (hh_kcal_conv.sum() / hh_kcal_conv.sum().sum()) * 100,
-            hh_kcal_conv.median(),
-            hh_kcal_conv.mean(),
-            hh_kcal_conv.apply(util_func.iqr),
+            (hh_kcal_conv.median()) / 365,
+            (hh_kcal_conv.mean()) / 365,
+            (hh_kcal_conv.apply(util_func.iqr)) / 365,
         ],
         axis=1,
     )
