@@ -43,9 +43,11 @@ if __name__ == "__main__":
     clust = kantar.panel_clusters()
 
     clust_lu = clust.set_index("Panel Id")["clusters"].to_dict()
+    num_clust = len(set(clust_lu.values()))
+    print(num_clust)
 
     # NB we are dropping the weird cluster 18
-    demog = kantar.demog_clean().query("cluster!=18")
+    demog = kantar.demog_clean()
 
     logging.info("Descriptive analysis: categorical")
     # Descriptive analysis: categorical variables
@@ -95,17 +97,13 @@ if __name__ == "__main__":
 
     # Age
     ageplot = altair_text_resize(
-        cluster_interp.plot_cluster_comparison_non_cat(
-            demog.query("cluster!=18"), "main_shopper_age"
-        )
+        cluster_interp.plot_cluster_comparison_non_cat(demog, "main_shopper_age")
     )
 
     save_altair(ageplot, "age_cluster_comp", driver=driver)
 
     # Household size
-    cluster_interp.plot_cluster_comparison_non_cat(
-        demog.query("cluster!=18"), "household_size"
-    )
+    cluster_interp.plot_cluster_comparison_non_cat(demog, "household_size")
 
     logging.info("Cluster predictive analysis")
     # What determines cluster membership?
@@ -126,9 +124,7 @@ if __name__ == "__main__":
     # NB we are choosing C=0.005 (a lot of regularization) as the best model
     regression_coefficients = cluster_interp.get_regression_coefficients(
         all_X, all_y, 0.005, top_keep=10
-    ).assign(
-        cluster=lambda df: df["cluster"].astype(str).replace("18", "19").astype(int)
-    )
+    ).assign(cluster=lambda df: df["cluster"].astype(int))
 
     # Plot regression coefficients
     demog_regression = cluster_interp.plot_regression_coeffs(
@@ -171,8 +167,9 @@ if __name__ == "__main__":
             how="left",
         )
         .assign(clust=lambda df: df["panel_id"].map(clust_lu))
-        .query("clust!=18")
     )
+
+    print(purchase_recs_may.head())
 
     share_distro = cluster_interp.plot_item_share(
         cluster_interp.item_share(purchase_recs_may, "rst_4_market_sector"),
@@ -184,7 +181,7 @@ if __name__ == "__main__":
     # Shares normalised
     food_volumes = cluster_interp.plot_shares_normalised(
         cluster_interp.make_purchase_shares_normalised(
-            purchase_recs_may, "rst_4_market_sector", top_n=2
+            purchase_recs_may, "rst_4_market_sector", top_n=2, num_clust=num_clust
         ),
         "rst_4_market_sector",
     )
