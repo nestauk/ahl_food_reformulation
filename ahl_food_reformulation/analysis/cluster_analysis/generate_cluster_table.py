@@ -45,7 +45,6 @@ if __name__ == "__main__":
     out_mkt.to_csv(
         f"{PROJECT_DIR}/outputs/data/decision_table/table_cluster_rst_4_market_sector.csv",
         float_format="%.3f",
-        index=False,
     )
 
     rst_4_extended = 2907
@@ -71,5 +70,4 @@ if __name__ == "__main__":
     out_ext.to_csv(
         f"{PROJECT_DIR}/outputs/data/decision_table/table_cluster_rst_4_extended.csv",
         float_format="%.3f",
-        index=False,
     )
