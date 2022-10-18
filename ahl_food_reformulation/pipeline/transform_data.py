@@ -36,6 +36,7 @@ def combine_files(
             "Volume",
             "Quantity",
             "Reported Volume",
+            "Gross Up Weight",
         ]
     ]  # .merge(
     rst_4_ext = prod_codes[prod_codes["Attribute Number"] == att_num].copy()
