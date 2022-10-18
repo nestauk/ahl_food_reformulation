@@ -135,16 +135,19 @@ def kcal_density_table(
     ).set_index(prod_category)
 
 
-def create_report_table(kcal_density_df: pd.DataFrame, kcal_cont_df: pd.DataFrame):
+def create_report_table(
+    kcal_density_df: pd.DataFrame, kcal_cont_df: pd.DataFrame, clust_table: pd.DataFrame
+):
     """
     Merges kcal density and kcal contribution tables
 
     Args:
         kcal_density_df (pd.DataFrame): Pandas dataframe with kcal density metrics
         kcal_cont_df (pd.DataFrame): Pandas dataframe with kcal contribution metrics
+        clust_table (pd.DataFrame): Pandas dataframe with cluster metrics
     Returns:
         pd.DataFrame: Merged table of metrics
     """
     return pd.merge(
         kcal_cont_df, kcal_density_df, left_index=True, right_index=True, how="outer"
-    )
+    ).merge(clust_table, left_index=True, right_index=True, how="outer")

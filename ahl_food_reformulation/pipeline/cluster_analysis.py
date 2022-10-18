@@ -490,4 +490,4 @@ def cluster_table(
         tbl.merge(share_table, on="att_vol", how="left")
         .merge(adj_table, on="att_vol", how="left")
         .drop("att_vol", axis=1)
-    )
+    ).set_index(cat)

@@ -123,8 +123,13 @@ def total_product_hh_purchase(purch_recs: pd.DataFrame, cols):
     """
     # Remove cases where volume is zero (8 cases)
     purch_recs = purch_recs[purch_recs["Volume"] != 0].copy()
+    purch_recs["Gross_up_kcal"] = (
+        purch_recs["Energy KCal"] * purch_recs["Gross Up Weight"]
+    )
     return (
-        purch_recs.groupby(["Panel Id"] + cols)[["Volume", "Energy KCal", "Quantity"]]
+        purch_recs.groupby(["Panel Id"] + cols)[
+            ["Volume", "Energy KCal", "Quantity", "Gross Up Weight", "Gross_up_kcal"]
+        ]
         .sum()
         .reset_index()
     )
