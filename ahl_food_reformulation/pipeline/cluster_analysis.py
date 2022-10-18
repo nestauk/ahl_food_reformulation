@@ -5,16 +5,17 @@ import pandas as pd
 from patsy.contrasts import Sum
 import statsmodels.api as sm
 import patsy
+from ahl_food_reformulation.pipeline import cluster_analysis as cl
+import logging
 
 
 def mk_reg_df_share(
     val_fields: pd.DataFrame,
     pur_recs: pd.DataFrame,
-    prod_mast: pd.DataFrame,
-    uom: pd.DataFrame,
     prod_codes: pd.DataFrame,
     prod_vals: pd.DataFrame,
     nut_rec: pd.DataFrame,
+    prod_meta: pd.DataFrame,
     att_num: int,
 ):
     """
@@ -23,8 +24,6 @@ def mk_reg_df_share(
         val_fields (pd.DataFrame): Pandas dataframe with codes to merge product master and uom dfs
         pur_recs (pd.DataFrame): Pandas dataframe contains the purchase records of specified data
         nut (pd.DataFrame): Pandas dataframe of purchase level nutritional information
-        prod_mast (pd.DataFrame): Pandas dataframe unique product list
-        uom (pd.DataFrame): Panadas dataframe contains product measurement information
         prod_codes (pd.DataFrame): Pandas dataframe contains the codes to link products to category information
         prod_vals (pd.DataFrame): Pandas dataframe contains the product category information
         att_num (int): Product category type code number
@@ -36,10 +35,21 @@ def mk_reg_df_share(
     """
     # Purchase and product info combined
     comb_files = transform.combine_files(
-        val_fields, pur_recs, prod_mast, uom, prod_codes, prod_vals, att_num
+        val_fields, pur_recs, prod_codes, prod_vals, att_num
+    ).drop("att_vol", axis=1)
+
+    comb_update = comb_files.merge(
+        prod_meta[["product_code", "rst_4_extended", "rst_4_market_sector"]],
+        left_on="Product Code",
+        right_on="product_code",
     )
 
-    purch_recs_comb = transform.make_purch_records(nut_rec, comb_files, ["att_vol"])
+    if att_num == 2907:
+        comb_update.rename(columns={"rst_4_extended": "att_vol"}, inplace=True)
+    elif att_num == 2828:
+        comb_update.rename(columns={"rst_4_market_sector": "att_vol"}, inplace=True)
+
+    purch_recs_comb = transform.make_purch_records(nut_rec, comb_update, ["att_vol"])
 
     # for each hh and category create share of kcal
     purch_recs_comb["share"] = purch_recs_comb["Energy KCal"] / purch_recs_comb.groupby(
@@ -49,16 +59,16 @@ def mk_reg_df_share(
     # clean category names
     purch_recs_comb["att_vol"] = (
         purch_recs_comb["att_vol"]
-        .str.replace(" ", "")
-        .str.replace("/", "")
-        .str.replace("-", "")
-        .str.replace("1", "One")
-        .str.replace("2", "Two")
-        .str.replace("+", "")
-        .str.replace("&", "")
-        .str.replace(".", "")
-        .str.replace("(", "")
-        .str.replace(")", "")
+        .str.replace(" ", "", regex=True)
+        .str.replace("/", "", regex=True)
+        .str.replace("-", "", regex=True)
+        .str.replace("1", "One", regex=True)
+        .str.replace("2", "Two", regex=True)
+        .str.replace("+", "", regex=True)
+        .str.replace("&", "", regex=True)
+        .str.replace(".", "", regex=True)
+        .str.replace("(", "", regex=True)
+        .str.replace(")", "", regex=True)
     )
 
     # create file with share for regression
@@ -77,11 +87,10 @@ def mk_reg_df_adj(
     pan_ind: pd.DataFrame,
     val_fields: pd.DataFrame,
     pur_recs: pd.DataFrame,
-    prod_mast: pd.DataFrame,
-    uom: pd.DataFrame,
     prod_codes: pd.DataFrame,
     prod_vals: pd.DataFrame,
     nut_rec: pd.DataFrame,
+    prod_meta: pd.DataFrame,
     att_num: int,
 ):
     """
@@ -94,8 +103,6 @@ def mk_reg_df_adj(
     nut (pd.DataFrame): Pandas dataframe of purchase level nutritional information
     val_fields (pd.DataFrame): Pandas dataframe with codes to merge product master and uom dfs
     pur_recs (pd.DataFrame): Pandas dataframe contains the purchase records of specified data
-    prod_mast (pd.DataFrame): Pandas dataframe unique product list
-    uom (pd.DataFrame): Panadas dataframe contains product measurement information
     prod_codes (pd.DataFrame): Pandas dataframe contains the codes to link products to category information
     prod_vals (pd.DataFrame): Pandas dataframe contains the product category information
     att_num (int): Product category type code number
@@ -111,11 +118,22 @@ def mk_reg_df_adj(
 
     # Purchase and product info combined
     comb_files = transform.combine_files(
-        val_fields, pur_recs, prod_mast, uom, prod_codes, prod_vals, att_num
+        val_fields, pur_recs, prod_codes, prod_vals, att_num
+    ).drop("att_vol", axis=1)
+
+    comb_update = comb_files.merge(
+        prod_meta[["product_code", "rst_4_extended", "rst_4_market_sector"]],
+        left_on="Product Code",
+        right_on="product_code",
     )
 
+    if att_num == 2907:
+        comb_update.rename(columns={"rst_4_extended": "att_vol"}, inplace=True)
+    elif att_num == 2828:
+        comb_update.rename(columns={"rst_4_market_sector": "att_vol"}, inplace=True)
+
     purch_recs_comb = transform.make_purch_records(
-        nut_rec, comb_files, ["att_vol"]
+        nut_rec, comb_update, ["att_vol"]
     ).merge(pan_conv, on="Panel Id")
 
     # for each hh and category create adjusted kcal
@@ -126,16 +144,16 @@ def mk_reg_df_adj(
     # clean category names
     purch_recs_comb["att_vol"] = (
         purch_recs_comb["att_vol"]
-        .str.replace(" ", "")
-        .str.replace("/", "")
-        .str.replace("-", "")
-        .str.replace("1", "One")
-        .str.replace("2", "Two")
-        .str.replace("+", "")
-        .str.replace("&", "")
-        .str.replace(".", "")
-        .str.replace("(", "")
-        .str.replace(")", "")
+        .str.replace(" ", "", regex=True)
+        .str.replace("/", "", regex=True)
+        .str.replace("-", "", regex=True)
+        .str.replace("1", "One", regex=True)
+        .str.replace("2", "Two", regex=True)
+        .str.replace("+", "", regex=True)
+        .str.replace("&", "", regex=True)
+        .str.replace(".", "", regex=True)
+        .str.replace("(", "", regex=True)
+        .str.replace(")", "", regex=True)
     )
 
     # create file with absolute adjusted values for regression
@@ -221,7 +239,7 @@ def reg_share(
     out = flat[(flat.pvalues < sig_level) & (flat.coeffs > 0)]
 
     # create cluster variable
-    out["clusters"] = out["clusters"].str.extract("(\d+)").astype(int)
+    out = out.assign(clusters=out["clusters"].str.extract("(\d+)").astype(int))
 
     # merge in weights
     out = out.merge(cluster_w, on="clusters")
@@ -323,7 +341,7 @@ def reg_adj(
     out = flat[(flat.pvalues < sig_level) & (flat.coeffs > 0)]
 
     # create cluster variable
-    out["clusters"] = out["clusters"].str.extract("(\d+)").astype(int)
+    out = out.assign(clusters=out["clusters"].str.extract("(\d+)").astype(int))
 
     # merge in weights
     out = out.merge(cluster_w, on="clusters")
@@ -351,3 +369,125 @@ def reg_adj(
     final["share"] = final["pop"] / pop_size
 
     return final
+
+
+def cluster_table(
+    val_fields: pd.DataFrame,
+    pur_recs: pd.DataFrame,
+    prod_codes: pd.DataFrame,
+    prod_vals: pd.DataFrame,
+    nut_rec: pd.DataFrame,
+    prod_meta: pd.DataFrame,
+    panel_weight: pd.DataFrame,
+    cl_kcal_share: pd.DataFrame,
+    cl_adj_size: pd.DataFrame,
+    pan_ind: pd.DataFrame,
+    att_num: int,
+    sig_level: float,
+    top: float,
+):
+    """
+
+    Generates data, run regression and merges final outputs
+
+    Parameters
+    ----------
+    val_fields (pd.DataFrame): Pandas dataframe with codes to merge product master and uom dfs
+    pur_recs (pd.DataFrame): Pandas dataframe contains the purchase records of specified data
+    prod_codes (pd.DataFrame): Pandas dataframe contains the codes to link products to category information
+    prod_vals (pd.DataFrame): Pandas dataframe contains the product category information
+    nut_rec (pd.DataFrame): Pandas dataframe of purchase level nutritional information
+    prod_meta (pd.DataFrame) : Pandas data frame of products with categories
+    att_num (int): Product category type code number
+    sig_level (float): significance level to retain coefficients (e.g 0.05 for 5%).
+    top (float): percentile to identify top x% poorest clusters. E.g. to get the top 20% poorest clusters input 0.2
+    panel_weight (pd.DataFrame) demographic weights.
+    purch_recs_wide_share (pd.DataFrame) Share of kcal consumed by hh by categoty.
+    cl_kcal_share (pd.DataFrame) cluster assignment based on share of kcal.
+
+    Returns
+    -------
+    pd.DataFrame aggregate table by category
+
+    """
+    logging.info("Generating regression data")
+
+    purch_recs_wide_share = cl.mk_reg_df_share(
+        val_fields,
+        pur_recs,
+        prod_codes,
+        prod_vals,
+        nut_rec,
+        prod_meta,
+        att_num,
+    )
+
+    purch_recs_wide_abs = cl.mk_reg_df_adj(
+        pan_ind,
+        val_fields,
+        pur_recs,
+        prod_codes,
+        prod_vals,
+        nut_rec,
+        prod_meta,
+        att_num,
+    )
+
+    logging.info("Running regression")
+
+    share_table = cl.reg_share(
+        cl_kcal_share, panel_weight, purch_recs_wide_share, sig_level, top
+    )[["category", "share", "cluster_no", "cluster_low_income"]]
+
+    adj_table = cl.reg_adj(
+        cl_adj_size, panel_weight, purch_recs_wide_abs, sig_level, top
+    )[["category", "share", "cluster_no", "cluster_low_income"]]
+
+    if att_num == 2907:
+        cat = "rst_4_extended"
+    elif att_num == 2828:
+        cat = "rst_4_market_sector"
+
+    logging.info("Mergin tables")
+
+    tbl = pd.DataFrame(prod_meta[cat].unique(), columns=[cat])
+
+    tbl["att_vol"] = (
+        tbl[cat]
+        .str.replace(" ", "", regex=True)
+        .str.replace("/", "", regex=True)
+        .str.replace("-", "", regex=True)
+        .str.replace("1", "One", regex=True)
+        .str.replace("2", "Two", regex=True)
+        .str.replace("+", "", regex=True)
+        .str.replace("&", "", regex=True)
+        .str.replace(".", "", regex=True)
+        .str.replace("(", "", regex=True)
+        .str.replace(")", "", regex=True)
+    )
+
+    adj_table.rename(
+        columns={
+            "category": "att_vol",
+            "share": "share_adj",
+            "cluster_no": "cluster_no_adj",
+            "cluster_low_income": "cluster_low_adj",
+        },
+        inplace=True,
+    )
+
+    share_table.rename(
+        columns={
+            "category": "att_vol",
+            "share": "share_sh",
+            "cluster_no": "cluster_no_sh",
+            "cluster_low_income": "cluster_low_sh",
+        },
+        inplace=True,
+    )
+
+    return (
+        tbl.merge(share_table, on="att_vol", how="left")
+        .merge(adj_table, on="att_vol", how="left")
+        .drop("att_vol", axis=1)
+    )

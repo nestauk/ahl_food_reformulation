@@ -7,6 +7,7 @@ from typing import Tuple, Dict
 from toolz import pipe
 from ahl_food_reformulation.getters.miscelaneous import postcode_region_lookup
 from ahl_food_reformulation.utils.lookups import product_table
+from ahl_food_reformulation.pipeline.transform_data import rst_4_market_sector_update
 
 
 def purchase_records():
@@ -206,18 +207,6 @@ def demog_val():
     )
 
 
-def demog():
-    """Reads in dataset of values of demog id
-
-    Args: None
-
-    Returns: pd.DataFrame: demographic id dataframe
-    """
-    return pd.read_csv(
-        PROJECT_DIR / "inputs/data/panel_demographics.csv", encoding="ISO-8859-1"
-    )
-
-
 def household_demog():
     """Reads in dataset of household demographic information
 
@@ -289,12 +278,6 @@ def panel_weights():
     )
 
 
-def panel_weights_year():
-    """Reads the panel weights file"""
-
-    return pd.read_csv(f"{PROJECT_DIR}/inputs/data/panel_demographic_weights_year.csv")
-
-
 def purchase_records_volume():
     """
     Getter for the copy of purchase record with imputed weights.
@@ -310,6 +293,47 @@ def purchase_records_volume():
     return pd.read_csv(f"{PROJECT_DIR}/inputs/data/pur_rec_volume.csv").iloc[:, 1:]
 
 
+def purchase_records_updated():
+    """
+    Getter for the copy of purchase record with imputed weights.
+    Cleaned to format of purchase records but with reported volume added.
+
+    Args:
+        None
+
+    Returns:
+        df (pd.DataFrame): purchase records with imputed volumes
+
+    """
+    pur_recs_updated = purchase_records_volume()
+    return pur_recs_updated.drop(
+        ["Reported Volume", "volume_per", "Volume"], axis=1
+    ).rename({"reported_volume_up": "Reported Volume", "volume_up": "Volume"}, axis=1)
+
+
+def prod_meta_update():
+    """
+    Getter for the copy of prod_meta df with updated rst_4_market_sector values.
+
+    Args:
+        None
+
+    Returns:
+        df (pd.DataFrame): prod_meta df with updated rst_4_market_sector values
+
+    """
+    prod_meta = product_metadata()
+    prod_meta["rst_4_market_sector"] = rst_4_market_sector_update(prod_meta)
+
+    return prod_meta[prod_meta["rst_4_market_sector"] != "Dairy Products"]
+
+
+def panel_weights_year():
+    """Reads the panel weights file"""
+
+    return pd.read_csv(f"{PROJECT_DIR}/inputs/data/panel_demographic_weights_year.csv")
+
+
 def cluster_kcal_share():
     """
     Getter for the lookup of households to cluster assignments according to the kcal share method
@@ -320,7 +344,9 @@ def cluster_kcal_share():
     Returns:
         df (pd.DataFrame): panel ids mapped to cluster labels
 
+
     """
+
     return pd.read_csv(
         f"{PROJECT_DIR}/outputs/data/alternative_clusters/panel_clusters_kcal_share.csv"
     )

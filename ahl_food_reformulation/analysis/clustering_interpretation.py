@@ -95,7 +95,10 @@ def plot_cluster_comparison_cat(
         .apply(
             lambda df: df.assign(
                 text=lambda df_2: [
-                    cl if (rank < pos_text) | (rank > 20 - pos_text) else ""
+                    cl
+                    if (rank < pos_text)
+                    | (rank > len(set(distr["cluster"])) - pos_text)
+                    else ""
                     for cl, rank in zip(df_2["cluster"], df_2["share_norm"].rank())
                 ]
             )
@@ -427,7 +430,7 @@ def plot_item_share(distribution: pd.Series, category: str) -> alt.Chart:
 
 
 def make_purchase_shares_normalised(
-    purchase_records: pd.DataFrame, category: str, top_n: int = 5, num_clust: int = 18
+    purchase_records: pd.DataFrame, category: str, num_clust: int, top_n: int = 5
 ) -> pd.DataFrame:
     """Creates normalised purchase shares
     Args:
@@ -456,7 +459,7 @@ def make_purchase_shares_normalised(
         .apply(
             lambda df: df.assign(
                 add_label=[
-                    text if (rank < top_n) | (rank > num_clust - top_n) else ""
+                    text if (rank <= top_n) | (rank > num_clust - top_n) else ""
                     for text, rank in zip(df["clust"], df["share_normalised"].rank())
                 ]
             )

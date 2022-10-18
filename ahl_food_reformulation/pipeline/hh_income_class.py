@@ -26,8 +26,10 @@ def income_class_share(top: float):
     demog_sub = demog_clean[["panel_id", "household_income", "region"]]
 
     # filter to known income
-    remove = ["Did not want to answer", "Unknown"]
-    demog_sub.query("household_income not in @remove", inplace=True)
+    demog_sub = demog_sub.loc[
+        (demog_sub["household_income"] != "Did not want to answer")
+        & (demog_sub["household_income"] != "Unknown")
+    ]
 
     # filter to known region
     demog_sub = demog_sub[demog_sub["region"].notna()].copy()
@@ -54,7 +56,7 @@ def income_class_share(top: float):
     # extract coefficients and identify top poorest quntiles
     coefs = pd.DataFrame(log_reg.params, columns=["coef"]).reset_index()
     coefs = coefs[coefs["index"].str.contains("clusters")]
-    coefs["clusters"] = coefs["index"].str.extract("(\d+)").astype(int)
+    coefs = coefs.assign(clusters=coefs["index"].str.extract("(\d+)").astype("int64"))
     coefs["low"] = np.where(coefs["coef"] >= coefs["coef"].quantile(1 - top), 1, 0)
 
     return coefs[["clusters", "low"]]
@@ -82,8 +84,10 @@ def income_class_adj(top: float):
     demog_sub = demog_clean[["panel_id", "household_income", "region"]]
 
     # filter to known income
-    remove = ["Did not want to answer", "Unknown"]
-    demog_sub.query("household_income not in @remove", inplace=True)
+    demog_sub = demog_sub.loc[
+        (demog_sub["household_income"] != "Did not want to answer")
+        & (demog_sub["household_income"] != "Unknown")
+    ].copy()
 
     # filter to known region
     demog_sub = demog_sub[demog_sub["region"].notna()].copy()
@@ -108,7 +112,7 @@ def income_class_adj(top: float):
     # extract coefficients and identify top poorest quntiles
     coefs = pd.DataFrame(log_reg.params, columns=["coef"]).reset_index()
     coefs = coefs[coefs["index"].str.contains("clusters")]
-    coefs["clusters"] = coefs["index"].str.extract("(\d+)").astype(int)
+    coefs = coefs.assign(clusters=coefs["index"].str.extract("(\d+)").astype("int64"))
     coefs["low"] = np.where(coefs["coef"] >= coefs["coef"].quantile(1 - top), 1, 0)
 
     return coefs[["clusters", "low"]]

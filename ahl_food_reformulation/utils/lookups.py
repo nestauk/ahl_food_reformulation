@@ -171,9 +171,10 @@ def measure_table(conv: pd.DataFrame):
     Returns:
         pd.DateFrame: Dataframe with table of products and measurements
     """
-    conv.set_index("PRODUCT", inplace=True)
+    conv_update = conv.copy()
+    conv_update.set_index("PRODUCT", inplace=True)
     conv_meas = (
-        conv.groupby([conv.index, "VOLUME TYPE"])["VALUE"]
+        conv_update.groupby([conv_update.index, "VOLUME TYPE"])["VALUE"]
         .first()
         .unstack()
         .reset_index()

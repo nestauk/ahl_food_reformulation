@@ -9,7 +9,9 @@ from ahl_food_reformulation import PROJECT_DIR
 def nspl():
     """Read the National Postcode lookup"""
 
-    return pd.read_csv(f"{PROJECT_DIR}/inputs/data/NSPL/Data/NSPL_UK.csv")
+    return pd.read_csv(
+        f"{PROJECT_DIR}/inputs/data/NSPL/Data/NSPL_UK.csv", low_memory=False
+    )
 
 
 def region_name_lookup() -> Dict[str, str]:
@@ -19,7 +21,9 @@ def region_name_lookup() -> Dict[str, str]:
         pd.read_csv(
             f"{PROJECT_DIR}/inputs/data/NSPL/Documents/Region names and codes EN as at 12_20 (RGN).csv"
         )
-        .assign(RGN20NM=lambda df: df["RGN20NM"].str.replace("\(pseudo\) ", ""))
+        .assign(
+            RGN20NM=lambda df: df["RGN20NM"].str.replace("\(pseudo\) ", "", regex=True)
+        )
         .set_index("RGN20CD")["RGN20NM"]
         .to_dict()
     )

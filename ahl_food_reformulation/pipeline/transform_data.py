@@ -2,16 +2,14 @@
 from pyclbr import Function
 import pandas as pd
 import numpy as np
-from sklearn.base import BaseEstimator, TransformerMixin
 from ahl_food_reformulation.utils import lookups as lps
-from sklearn.preprocessing import MinMaxScaler
 
 
 def combine_files(
     val_fields: pd.DataFrame,
     pur_recs: pd.DataFrame,
-    prod_mast: pd.DataFrame,
-    uom: pd.DataFrame,
+    # prod_mast: pd.DataFrame,
+    # uom: pd.DataFrame,
     prod_codes: pd.DataFrame,
     prod_vals: pd.DataFrame,
     att_num: int,
@@ -32,14 +30,16 @@ def combine_files(
     """
     val_fields.drop_duplicates(inplace=True)  # Remove duplicates
     pur_recs = pur_recs[
-        ["PurchaseId", "Panel Id", "Period", "Product Code", "Volume", "Quantity"]
-    ].merge(
-        prod_mast[["Product Code", "Validation Field"]], on="Product Code", how="left"
-    )
-    pur_recs = pur_recs.merge(
-        val_fields[["VF", "UOM"]], left_on="Validation Field", right_on="VF", how="left"
-    )
-    pur_recs = pur_recs.merge(uom[["UOM", "Reported Volume"]], on="UOM", how="left")
+        [
+            "PurchaseId",
+            "Panel Id",
+            "Period",
+            "Product Code",
+            "Volume",
+            "Quantity",
+            "Reported Volume",
+        ]
+    ]  # .merge(
     rst_4_ext = prod_codes[prod_codes["Attribute Number"] == att_num].copy()
     prod_code_vals = rst_4_ext.merge(prod_vals, on="Attribute Value", how="left")
     pur_recs = pur_recs.merge(
@@ -254,14 +254,12 @@ def hh_kcal_per_category(
 ):
     """
     Unstacks df to show total kcal per product per household then normalises by household (rows)
-
     Args:
         purch_recs (pd.DataFrame): Pandas dataframe contains the purchase records of specified data
         nut (pd.DataFrame): Pandas dataframe contains nutritional information per purchase record
         scaler_type: Scaler function to apply to normalise data
         cat (int): Number ID of product category
         comb_files (pd.DataFrame): Combined purchase and product info
-
     Returns:
         (pd.DateFrame): Kcal totals per product per household normalised by total household kcal
     """
@@ -532,3 +530,30 @@ def hh_kcal_volume_converted(
     hh_kcal = hh_kcal_per_prod(purch_recs_comb)
     hh_kcal_conv = apply_hh_conv(hh_kcal, pan_conv)
     return scale_df(scaler, hh_kcal_conv)
+
+
+def rst_4_market_sector_update(df: pd.DataFrame):
+    """
+    Updates rst_4_market_sector values to split out kilo/litre groups of products
+
+    Args:
+        df (pd.DataFrame): Df of products with rst_4_market_sector and 'rst_4_market' values
+
+    Returns:
+        df (pd.DataFrame): prod_meta df with updated rst_4_market_sector values
+
+    """
+    conditions = [
+        df["rst_4_market_sector"].eq("Dairy Products")
+        & df["rst_4_market"].eq("Total Cheese"),
+        df["rst_4_market_sector"].eq("Dairy Products")
+        & df["rst_4_market"].isin(["Eggs", "Butter", "Margarine"]),
+        df["rst_4_market_sector"].eq("Dairy Products")
+        & df["rst_4_market"].isin(["Yoghurt", "Fromage Frais"]),
+        df["rst_4_market_sector"].eq("Dairy Products")
+        & df["rst_4_market"].isin(["Total Milk", "Fresh Cream"]),
+        df["rst_4_market_sector"].eq("Frozen Confectionery")
+        & df["rst_4_market"].eq("Total Ice Cream"),
+    ]
+    choices = ["Cheese", "Eggs and Butter", "Yoghurt", "Milk and Cream", "Ice Cream"]
+    return np.select(conditions, choices, default=df["rst_4_market_sector"])
