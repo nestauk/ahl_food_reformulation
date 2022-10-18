@@ -326,3 +326,43 @@ def prod_meta_update():
     prod_meta["rst_4_market_sector"] = rst_4_market_sector_update(prod_meta)
 
     return prod_meta[prod_meta["rst_4_market_sector"] != "Dairy Products"]
+
+
+def panel_weights_year():
+    """Reads the panel weights file"""
+
+    return pd.read_csv(f"{PROJECT_DIR}/inputs/data/panel_demographic_weights_year.csv")
+
+
+def cluster_kcal_share():
+    """
+    Getter for the lookup of households to cluster assignments according to the kcal share method
+
+    Args:
+        None
+
+    Returns:
+        df (pd.DataFrame): panel ids mapped to cluster labels
+
+
+    """
+
+    return pd.read_csv(
+        f"{PROJECT_DIR}/outputs/data/alternative_clusters/panel_clusters_kcal_share.csv"
+    )
+
+
+def cluster_adj_size():
+    """
+    Getter for the lookup of households to cluster assignments according to the hh adjustment size method
+
+    Args:
+        None
+
+    Returns:
+        df (pd.DataFrame): panel ids mapped to cluster labels
+
+    """
+    return pd.read_csv(
+        f"{PROJECT_DIR}/outputs/data/alternative_clusters/panel_clusters_adj_size.csv"
+    )
