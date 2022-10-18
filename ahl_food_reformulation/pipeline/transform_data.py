@@ -8,8 +8,6 @@ from ahl_food_reformulation.utils import lookups as lps
 def combine_files(
     val_fields: pd.DataFrame,
     pur_recs: pd.DataFrame,
-    # prod_mast: pd.DataFrame,
-    # uom: pd.DataFrame,
     prod_codes: pd.DataFrame,
     prod_vals: pd.DataFrame,
     att_num: int,
@@ -211,18 +209,19 @@ def kcal_contribution(purch_recs: pd.DataFrame):
     )
 
 
-def hh_kcal_per_prod(purch_recs: pd.DataFrame):
+def hh_kcal_per_prod(purch_recs: pd.DataFrame, kcal_col: str):
     """
     Unstacks df to show total kcal per product per household then normalises by household (rows)
 
     Args:
         purch_recs (pd.DataFrame): Pandas dataframe contains the purchase records of specified data
+        kcal_col (str): Energy Kcal column (weighted or unweighted)
 
     Returns:
         (pd.DateFrame): Kcal totals per product per household
     """
     purch_recs = (
-        purch_recs.set_index(["Panel Id", "att_vol"])[["Energy KCal"]]
+        purch_recs.set_index(["Panel Id", "att_vol"])[[kcal_col]]
         .unstack(["att_vol"])
         .fillna(0)
     )
