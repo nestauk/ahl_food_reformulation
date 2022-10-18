@@ -52,9 +52,9 @@ def mk_reg_df_share(
     purch_recs_comb = transform.make_purch_records(nut_rec, comb_update, ["att_vol"])
 
     # for each hh and category create share of kcal
-    purch_recs_comb["share"] = purch_recs_comb["Energy KCal"] / purch_recs_comb.groupby(
-        ["Panel Id"]
-    )["Energy KCal"].transform("sum")
+    purch_recs_comb["share"] = purch_recs_comb[
+        "Gross_up_kcal"
+    ] / purch_recs_comb.groupby(["Panel Id"])["Gross_up_kcal"].transform("sum")
 
     # clean category names
     purch_recs_comb["att_vol"] = (
@@ -490,4 +490,5 @@ def cluster_table(
         tbl.merge(share_table, on="att_vol", how="left")
         .merge(adj_table, on="att_vol", how="left")
         .drop("att_vol", axis=1)
+        .fillna(0)
     ).set_index(cat)
