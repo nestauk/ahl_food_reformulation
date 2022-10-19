@@ -19,3 +19,5 @@ networkx
 python-louvain
 selenium==4.2.0
 toolz
+fsspec
+s3fs
