@@ -284,6 +284,7 @@ if __name__ == "__main__":
     logging.info("Calculating indicator heatmaps")
 
     report_table_clean_long = (
+        # We focus on the variables that are not supercorrelated with each other
         report_table_clean[selected_vars]
         .apply(lambda x: zscore(x, nan_policy="omit"))
         .stack()
