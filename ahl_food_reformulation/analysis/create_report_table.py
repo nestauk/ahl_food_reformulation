@@ -95,6 +95,9 @@ if __name__ == "__main__":
         .set_index(granular_category)
     )
 
+    # Removing cat with less than 50 products (broader cat)
+    broader_table = broader_table[broader_table["number_products"] > 50].copy()
+
     logging.info("Saving tables")
     # Save tables
     Path(f"{PROJECT_DIR}/outputs/data/decision_table/").mkdir(
