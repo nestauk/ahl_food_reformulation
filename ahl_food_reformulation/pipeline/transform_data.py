@@ -8,8 +8,6 @@ from ahl_food_reformulation.utils import lookups as lps
 def combine_files(
     val_fields: pd.DataFrame,
     pur_recs: pd.DataFrame,
-    # prod_mast: pd.DataFrame,
-    # uom: pd.DataFrame,
     prod_codes: pd.DataFrame,
     prod_vals: pd.DataFrame,
     att_num: int,
