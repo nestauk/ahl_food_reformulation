@@ -175,13 +175,13 @@ def get_nut_proportions(nut_props_cat: pd.DataFrame, cat: str):
     """
     # Calculate the proportions
     nut_props_cat["Carb_prop"] = (
-        (nut_props_cat["Carbohydrate KG"] * 4000) / nut_props_cat["Energy KCal"]
+        (nut_props_cat["carb_gross"] * 4000) / nut_props_cat["kcal_gross"]
     ) * 100
     nut_props_cat["Prot_prop"] = (
-        (nut_props_cat["Protein KG"] * 4000) / nut_props_cat["Energy KCal"]
+        (nut_props_cat["prot_gross"] * 4000) / nut_props_cat["kcal_gross"]
     ) * 100
     nut_props_cat["Fat_prop"] = (
-        (nut_props_cat["Fat KG"] * 9000) / nut_props_cat["Energy KCal"]
+        (nut_props_cat["fat_gross"] * 9000) / nut_props_cat["kcal_gross"]
     ) * 100
     nut_props_cat["Sum_props"] = (
         nut_props_cat["Carb_prop"]
@@ -202,7 +202,7 @@ def macro_diversity(pur_nut_info: pd.DataFrame, cat: str):
     """
     # Create nutrition proportions
     nut_props_prod = pur_nut_info.groupby([cat, "Product Code"])[
-        ["Energy KCal", "Carbohydrate KG", "Protein KG", "Fat KG"]
+        ["kcal_gross", "carb_gross", "prot_gross", "fat_gross"]
     ].sum()
     prod_nut_props = get_nut_proportions(nut_props_prod, cat).reset_index()
     # Create diversity table
@@ -232,7 +232,9 @@ def macro_nutrient_table(
         pd.DataFrame: Dataframe macro nutrient diversity
     """
     # Combine purchase, product and nutrition info
-    comb_files = pur_recs[["PurchaseId", "Period", "Product Code"]].merge(
+    comb_files = pur_recs[
+        ["PurchaseId", "Period", "Product Code", "Gross Up Weight"]
+    ].merge(
         prod_meta[["product_code", cat]],
         left_on=["Product Code"],
         right_on="product_code",
@@ -242,10 +244,21 @@ def macro_nutrient_table(
         nut_recs, comb_files, ["Energy KCal", "Carbohydrate KG", "Protein KG", "Fat KG"]
     )
 
+    pur_nut_info["kcal_gross"] = (
+        pur_nut_info["Energy KCal"] * pur_nut_info["Gross Up Weight"]
+    )
+    pur_nut_info["carb_gross"] = (
+        pur_nut_info["Carbohydrate KG"] * pur_nut_info["Gross Up Weight"]
+    )
+    pur_nut_info["prot_gross"] = (
+        pur_nut_info["Protein KG"] * pur_nut_info["Gross Up Weight"]
+    )
+    pur_nut_info["fat_gross"] = pur_nut_info["Fat KG"] * pur_nut_info["Gross Up Weight"]
+
     # Create proportions table
     # Group by category and sum the macro nutrients
     nut_props_cat = pur_nut_info.groupby([cat])[
-        ["Energy KCal", "Carbohydrate KG", "Protein KG", "Fat KG"]
+        ["kcal_gross", "carb_gross", "prot_gross", "fat_gross"]
     ].sum()
     cat_nut_props = get_nut_proportions(nut_props_cat, cat).reset_index()
 
