@@ -4,59 +4,34 @@
     "Soft Bread Rolls",
     "Wrapped Bread Wholemeal",
     "Ambient Cakes Small Cakes",
-    "Ambient Cakes Large Whole Cake",
-    "Crumpets/Pikelets",
-    "Wrapped Bread Brown",
-    "Hotcross Buns",
-    "Morning Goods Tortilla Wraps",
-    "Ambient Cakes+Past Mince Pies"
+    "Ambient Cakes Large Whole Cake"
   ],
   "Chilled Bakery Products": [
     "Chilled Cakes Small Cakes",
     "Chilled Breads Garlic Slices",
     "Chilled Cakes Small Tarts",
     "Chilled Cakes Large Tarts",
-    "Chilled Cakes Cheesecake",
-    "Chilled Breads Baguettes",
-    "Chilled Cakes Large Pies",
-    "Chilled Breads Partbaked",
-    "Chilled Cakes Sponge Sandwich",
-    "Chilled Cakes Large Whole Cake"
+    "Chilled Cakes Cheesecake"
   ],
   "Biscuits": [
     "Chocolate Biscuit Bars",
     "Everyday Treat Choc Digestives",
-    "Everyday Biscuits Digestives",
     "Confect. & Oth Savoury Snacks",
-    "Everyday Biscuits Rich Tea",
-    "Everyday Biscu Custard Creams",
     "Ssnl Bisc Assortment",
-    "Everyday Treats Other Creams",
-    "Savoury Biscui Savoury Snacks",
-    "Cereal Bars Chocolate"
+    "Everyday Treats Other Creams"
   ],
   "Chilled Convenience": [
-    "Chilled Ready M Complete Meal",
     "Chilled Ready Mea Meal Centre",
-    "Cooked Meats Ham",
-    "PP Fsh Mt+Vg Pork Pies",
-    "PP Fsh Mt+Vg Hot Pies",
     "Chilled Prepared Sld Coleslaw",
     "Chilled Ready Vegetable Accom",
-    "PP Fsh Mt+Vg Pasties",
-    "PP Fsh Mt+Vg Sausage Rolls",
-    "PP Fsh Mt+Vg Quiches/Flans"
+    "Chilled Dips Single",
+    "Cooked Meats Continental Meat"
   ],
   "Eggs and Butter": [
     "Butter Slightly Sal Spreadable",
     "Eggs Hens Free Range",
     "Dairy Spreads",
     "Butter Standard Block",
-    "Pufa/Mufa Margarine/Spread",
-    "Butter Standard Spreadable",
-    "Non Pufa Low Fat Spread",
-    "Butter Unsalted Block",
-    "Eggs Hens Non-Free Range",
-    "Other Soft Margarine"
+    "Pufa/Mufa Margarine/Spread"
   ]
 }

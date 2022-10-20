@@ -191,7 +191,7 @@ def make_recommendations(
 
     top_candidates = {}
 
-    for cat in ["Impact on diets", "Feasibility", "Inclusion"]:
+    for cat in ["Impact on Diets", "Feasibility", "Inclusion"]:
 
         top_candidates[cat] = ", ".join(
             report_table_aggregated.query(f"category=='{cat}'").sort_values(
@@ -217,7 +217,7 @@ def make_detailed_recommendations(
         "nutrient_entropy_normalised",
         "kcal_contribution_share_adjusted",
     ],
-    thresholds: list = [100, 10],
+    thresholds: list = [30, 5],
 ) -> pd.DataFrame:
     """Function to make detailed recommendations about products to reformulate"""
 
