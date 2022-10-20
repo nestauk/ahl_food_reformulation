@@ -1,5 +1,8 @@
 import logging
 import re
+
+
+import json
 from scipy.stats import zscore
 from toolz import pipe
 from functools import partial
@@ -19,15 +22,15 @@ from ahl_food_reformulation.utils.altair_save_utils import (
 
 clean_variable_names = {
     "number_products": "number_products",
-    "kcal_100_s": "high_density_share",
-    "kcal_100_w": "high_density_share_sales",
-    "percent_high_ed": "high_density_products_share",
-    "percent_high_ed_sales_weighted": "high_density_products_share_sales",
-    "mean_kcal_size_adj": "mean_kcal_sales_adjusted",
-    "median_kcal_size_adj": "median_kcal_sales_adjusted",
-    "IQR_kcal_size_adj": "interquantile_range_kcal",
-    "percent_kcal_contrib": "kcal_contribution_share",
-    "percent_kcal_contrib_size_adj": "kcal_contribution_share_adjusted",
+    "kcal_100_s": "high_energy_density_share",
+    "kcal_100_w": "high_energy_density_share_sales",
+    "percent_high_ed": "high_energy_density_products_share",
+    "percent_high_ed_sales_weighted": "high_energy_density_products_share_sales",
+    "mean_kcal_size_adj_weighted": "mean_kcal_sales_adjusted",
+    "median_kcal_size_adj_weighted": "median_kcal_sales_adjusted",
+    "IQR_kcal_size_adj_weighted": "interquartile_range_kcal",
+    "percent_kcal_contrib_weighted": "kcal_contribution_share",
+    "percent_kcal_contrib_size_adj_weighted": "kcal_contribution_share_adjusted",
     "variance": "kcal_density_variance",
     "variance_size_adj": "kcal_density_variance_normalised",
     "variance_adj_scaled": "kcal_density_variance_adjusted_normalised",
@@ -48,7 +51,7 @@ plotting_order = list(plotting_names.values())
 
 # We will focus on these variables after the correlation analysis
 selected_vars = [
-    "high_density_share_sales",
+    "high_energy_density_share_sales",
     "kcal_contribution_share_adjusted",
     "kcal_density_variance_normalised",
     "nutrient_entropy_normalised",
@@ -57,8 +60,8 @@ selected_vars = [
 
 # Lookup between clean variable names and categories
 var_category_lookup = {
-    "high_density_share_sales": "Desirability",
-    "kcal_contribution_share_adjusted": "Desirability",
+    "high_energy_density_share_sales": "Impact on Diets",
+    "kcal_contribution_share_adjusted": "Impact on Diets",
     "kcal_density_variance_normalised": "Feasibility",
     "nutrient_entropy_normalised": "Feasibility",
     "clusters_impacted_share_clusters": "Inclusion",
@@ -188,7 +191,7 @@ def make_recommendations(
 
     top_candidates = {}
 
-    for cat in report_table_aggregated["category"].unique():
+    for cat in ["Impact on diets", "Feasibility", "Inclusion"]:
 
         top_candidates[cat] = ", ".join(
             report_table_aggregated.query(f"category=='{cat}'").sort_values(
@@ -225,7 +228,6 @@ def make_detailed_recommendations(
         detailed_products[t] = ", ".join(
             (
                 detailed_table.query(f"rst_4_market_sector=='{t}'")
-                .dropna(axis=0, subset=variables[0])
                 # This beging by sorting by out "top criterion" and then the second
                 .sort_values(variables[0], ascending=False)[: thresholds[0]]
                 .sort_values(variables[1], ascending=False)["product"][: thresholds[1]]
@@ -341,3 +343,11 @@ if __name__ == "__main__":
     logging.info(detailed_reccs.head())
 
     detailed_reccs.to_csv(f"{PROJECT_DIR}/outputs/reports/detailed_recommendation.csv")
+
+    # Save an easier to parse version for the macro nutrient chart
+
+    with open(f"{PROJECT_DIR}/outputs/reports/detailed_products.json", "w") as outfile:
+        json.dump(
+            detailed_reccs["Detailed recommendations"].str.split(", ").to_dict(),
+            outfile,
+        )
