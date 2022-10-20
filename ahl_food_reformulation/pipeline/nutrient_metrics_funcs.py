@@ -1,5 +1,6 @@
 # Import libraries
 from ahl_food_reformulation import PROJECT_DIR
+from ahl_food_reformulation.pipeline import transform_data as transform
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -162,3 +163,107 @@ def diversity_heatmaps(
         bbox_inches="tight",
     )
     plt.show(block=False)
+
+
+def get_nut_proportions(nut_props_cat: pd.DataFrame, cat: str):
+    """
+    Creates new columns to show the proportion of Carbohydrate's protein and fat out of the Energy kcal
+    Args:
+        nut_props_cat (pd.DataFrame): Pandas dataframe including kcal and macro nutrients
+        cat (str): Name of category level
+    Returns:
+        pd.DataFrame: Dataframe with added columns
+    """
+    # Calculate the proportions
+    nut_props_cat["Carb_prop"] = (
+        (nut_props_cat["carb_gross"] * 4000) / nut_props_cat["kcal_gross"]
+    ) * 100
+    nut_props_cat["Prot_prop"] = (
+        (nut_props_cat["prot_gross"] * 4000) / nut_props_cat["kcal_gross"]
+    ) * 100
+    nut_props_cat["Fat_prop"] = (
+        (nut_props_cat["fat_gross"] * 9000) / nut_props_cat["kcal_gross"]
+    ) * 100
+    nut_props_cat["Sum_props"] = (
+        nut_props_cat["Carb_prop"]
+        + nut_props_cat["Prot_prop"]
+        + nut_props_cat["Fat_prop"]
+    )
+    return nut_props_cat
+
+
+def macro_diversity(pur_nut_info: pd.DataFrame, cat: str):
+    """
+    Produces df with variance calculated for each each category for each macro nutrient
+    Args:
+        pur_nut_info (pd.DataFrame): Pandas dataframe including kcal, macro nutrients and categories
+        cat (str): Name of category level
+    Returns:
+        pd.DataFrame: Dataframe macro nutrient diversity
+    """
+    # Create nutrition proportions
+    nut_props_prod = pur_nut_info.groupby([cat, "Product Code"])[
+        ["kcal_gross", "carb_gross", "prot_gross", "fat_gross"]
+    ].sum()
+    prod_nut_props = get_nut_proportions(nut_props_prod, cat).reset_index()
+    # Create diversity table
+    df_diversity = pd.concat(
+        [
+            cat_variance(prod_nut_props, cat, "Carb_prop"),
+            cat_variance(prod_nut_props, cat, "Prot_prop"),
+            cat_variance(prod_nut_props, cat, "Fat_prop"),
+        ],
+        axis=1,
+    )
+    df_diversity.columns = ["Carb_variance", "Prot_variance", "Fat_variance"]
+    return df_diversity
+
+
+def macro_nutrient_table(
+    pur_recs: pd.DataFrame, prod_meta: pd.DataFrame, nut_recs: pd.DataFrame, cat: str
+):
+    """
+    Creates macro nutrient table
+    Args:
+        pur_recs (pd.DataFrame): Pandas dataframe purchase records
+        prod_meta (pd.DataFrame): Pandas dataframe product metadata
+        nut_recs (pd.DataFrame): Pandas dataframe nutritional info for purchases
+        cat (str): Name of category level
+    Returns:
+        pd.DataFrame: Dataframe macro nutrient diversity
+    """
+    # Combine purchase, product and nutrition info
+    comb_files = pur_recs[
+        ["PurchaseId", "Period", "Product Code", "Gross Up Weight"]
+    ].merge(
+        prod_meta[["product_code", cat]],
+        left_on=["Product Code"],
+        right_on="product_code",
+        how="left",
+    )
+    pur_nut_info = transform.nutrition_merge(
+        nut_recs, comb_files, ["Energy KCal", "Carbohydrate KG", "Protein KG", "Fat KG"]
+    )
+
+    pur_nut_info["kcal_gross"] = (
+        pur_nut_info["Energy KCal"] * pur_nut_info["Gross Up Weight"]
+    )
+    pur_nut_info["carb_gross"] = (
+        pur_nut_info["Carbohydrate KG"] * pur_nut_info["Gross Up Weight"]
+    )
+    pur_nut_info["prot_gross"] = (
+        pur_nut_info["Protein KG"] * pur_nut_info["Gross Up Weight"]
+    )
+    pur_nut_info["fat_gross"] = pur_nut_info["Fat KG"] * pur_nut_info["Gross Up Weight"]
+
+    # Create proportions table
+    # Group by category and sum the macro nutrients
+    nut_props_cat = pur_nut_info.groupby([cat])[
+        ["kcal_gross", "carb_gross", "prot_gross", "fat_gross"]
+    ].sum()
+    cat_nut_props = get_nut_proportions(nut_props_cat, cat).reset_index()
+
+    # Create diversity table
+    df_diversity = macro_diversity(pur_nut_info, cat).reset_index()
+
+    return cat_nut_props.merge(df_diversity, on=cat)
