@@ -12,6 +12,7 @@ def kcal_contr_table(
     pur_recs: pd.DataFrame,
     nut_recs: pd.DataFrame,
     prod_meta: pd.DataFrame,
+    panel_weight: pd.DataFrame,
 ):
     """
     Create kcal contribution metrics table based on chosen category
@@ -22,11 +23,13 @@ def kcal_contr_table(
         pur_recs (pd.DataFrame): Pandas dataframe contains the purchase records of specified data
         nut_recs (pd.DataFrame): Pandas dataframe with per purchase nutritional information
         prod_meta (pd.DataFrame): Pandas dataframe with product descriptions
+        panel_weight (pd.Dataframe): Pandas dataframe of demographic weights
     Returns:
         pd.DataFrame: Table with metrics based on kcal contribution per category
     """
     # Converted household size
     pan_conv = transform.hh_size_conv(pan_ind)
+
     comb_files = pur_recs.merge(
         prod_meta[["product_code", prod_cat]],
         left_on=["Product Code"],
@@ -40,28 +43,49 @@ def kcal_contr_table(
     comb_files.drop("product_code", axis=1, inplace=True)
     # Make household representations
     purch_recs_comb = transform.make_purch_records(nut_recs, comb_files, ["att_vol"])
-    hh_kcal = transform.hh_kcal_per_prod(purch_recs_comb, "Energy KCal")
+    # hh_kcal = transform.hh_kcal_per_prod(purch_recs_comb, "Energy KCal")
     hh_kcal_weighted = transform.hh_kcal_per_prod(purch_recs_comb, "Gross_up_kcal")
-    hh_kcal_conv = transform.apply_hh_conv(hh_kcal, pan_conv)
+
+    pan_conv_weighted = pan_conv.merge(
+        panel_weight, left_on="Panel Id", right_on="panel_id", how="inner"
+    )
+    pan_conv_weighted["conversion"] = (
+        pan_conv_weighted["conversion"] * pan_conv_weighted["demographic_weight"]
+    )
+    pan_conv_weighted = pan_conv_weighted[["Panel Id", "conversion"]]
+
+    # hh_kcal_conv = transform.apply_hh_conv(hh_kcal, pan_conv)
+    hh_kcal_conv_weighted = transform.apply_hh_conv(
+        hh_kcal_weighted, pan_conv_weighted
+    ).dropna(axis=0)
+
     # Create table
     kcal_cont_df = pd.concat(
         [
-            (hh_kcal.sum() / hh_kcal.sum().sum()) * 100,
+            # (hh_kcal.sum() / hh_kcal.sum().sum()) * 100,
             (hh_kcal_weighted.sum() / hh_kcal_weighted.sum().sum()) * 100,
-            (hh_kcal_conv.sum() / hh_kcal_conv.sum().sum()) * 100,
-            (hh_kcal_conv.median()) / 365,
-            (hh_kcal_conv.mean()) / 365,
-            (hh_kcal_conv.apply(util_func.iqr)) / 365,
+            # (hh_kcal_conv.sum() / hh_kcal_conv.sum().sum()) * 100,
+            (hh_kcal_conv_weighted.sum() / hh_kcal_conv_weighted.sum().sum()) * 100,
+            # (hh_kcal_conv.median()) / 365,
+            (hh_kcal_conv_weighted.median()) / 365,
+            # (hh_kcal_conv.mean()) / 365,
+            (hh_kcal_conv_weighted.mean()) / 365,
+            # (hh_kcal_conv.apply(util_func.iqr)) / 365,
+            (hh_kcal_conv_weighted.apply(util_func.iqr)) / 365,
         ],
         axis=1,
     )
     kcal_cont_df.columns = [
-        "percent_kcal_contrib",
+        # "percent_kcal_contrib",
         "percent_kcal_contrib_weighted",
-        "percent_kcal_contrib_size_adj",
-        "median_kcal_size_adj",
-        "mean_kcal_size_adj",
-        "IQR_kcal_size_adj",
+        # "percent_kcal_contrib_size_adj",
+        "percent_kcal_contrib_size_adj_weighted",
+        # "median_kcal_size_adj",
+        "median_kcal_size_adj_weighted",
+        # "mean_kcal_size_adj",
+        "mean_kcal_size_adj_weighted",
+        # "IQR_kcal_size_adj",
+        "IQR_kcal_size_adj_weighted",
     ]
     return kcal_cont_df
 
