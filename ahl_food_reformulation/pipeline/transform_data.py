@@ -36,6 +36,7 @@ def combine_files(
             "Volume",
             "Quantity",
             "Reported Volume",
+            "Gross Up Weight",
         ]
     ]  # .merge(
     rst_4_ext = prod_codes[prod_codes["Attribute Number"] == att_num].copy()
@@ -209,18 +210,19 @@ def kcal_contribution(purch_recs: pd.DataFrame):
     )
 
 
-def hh_kcal_per_prod(purch_recs: pd.DataFrame):
+def hh_kcal_per_prod(purch_recs: pd.DataFrame, kcal_col: str):
     """
     Unstacks df to show total kcal per product per household then normalises by household (rows)
 
     Args:
         purch_recs (pd.DataFrame): Pandas dataframe contains the purchase records of specified data
+        kcal_col (str): Energy Kcal column (weighted or unweighted)
 
     Returns:
         (pd.DateFrame): Kcal totals per product per household
     """
     purch_recs = (
-        purch_recs.set_index(["Panel Id", "att_vol"])[["Energy KCal"]]
+        purch_recs.set_index(["Panel Id", "att_vol"])[[kcal_col]]
         .unstack(["att_vol"])
         .fillna(0)
     )
