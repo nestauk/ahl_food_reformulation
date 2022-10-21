@@ -21,26 +21,27 @@ from ahl_food_reformulation.utils.altair_save_utils import (
 
 
 clean_variable_names = {
-    "number_products": "number_products",
-    "kcal_100_s": "high_energy_density_share",
-    "kcal_100_w": "high_energy_density_share_sales",
+    # "number_products": "number_products",
+    "kcal_100_s": "energy_density_average",
+    "kcal_100_w": "energy_density_average_weighted_by_sales",
     "percent_high_ed": "high_energy_density_products_share",
-    "percent_high_ed_sales_weighted": "high_energy_density_products_share_sales",
-    "mean_kcal_size_adj_weighted": "mean_kcal_sales_adjusted",
-    "median_kcal_size_adj_weighted": "median_kcal_sales_adjusted",
+    "percent_high_ed_sales_weighted": "high_energy_density_products_share_weighted_by_sales",
+    "mean_kcal_size_adj_weighted": "mean_kcal_sales_adjusted_by_size",
+    "median_kcal_size_adj_weighted": "median_kcal_sales_adjusted_by_size",
     "IQR_kcal_size_adj_weighted": "interquartile_range_kcal",
     "percent_kcal_contrib_weighted": "kcal_contribution_share",
-    "percent_kcal_contrib_size_adj_weighted": "kcal_contribution_share_adjusted",
+    "percent_kcal_contrib_size_adj_weighted": "kcal_contribution_share_adjusted_by_size",
     "variance": "kcal_density_variance",
     "variance_size_adj": "kcal_density_variance_normalised",
-    "variance_adj_scaled": "kcal_density_variance_adjusted_normalised",
-    "entropy": "nutrient_entropy",
-    "entropy_size_adj": "nutrient_entropy_normalised",
-    "share_sh": "share_population_impacted",
-    "share_adj": "share_population_impacted_adjusted_clusters",
-    "cluster_no_sh": "clusters_impacted_share_clusters",
-    "cluster_low_sh": "clusters_low_income_impacted_share_clusters",
-    "cluster_low_adj": "clusters_impacted_adjusted_clusers",
+    # "variance_adj_scaled": "kcal_density_variance_adjusted_normalised",
+    "entropy": "kcal_entropy",
+    "entropy_size_adj": "kcal_entropy_normalised",
+    "share_sh": "share_population_impacted_clusters_share",
+    "share_adj": "share_population_impacted_clusters_volume",
+    "cluster_no_sh": "clusters_impacted_clusters_share",
+    "cluster_no_adj": "clusters_impacted_clusters_volume",
+    "cluster_low_sh": "clusters_low_income_impacted_clusters_share",
+    "cluster_low_adj": "clusters_low_income_impacted_clusters_volume",
 }
 
 var_order = list(clean_variable_names.values())
@@ -51,21 +52,21 @@ plotting_order = list(plotting_names.values())
 
 # We will focus on these variables after the correlation analysis
 selected_vars = [
-    "high_energy_density_share_sales",
-    "kcal_contribution_share_adjusted",
+    "energy_density_average_weighted_by_sales",
+    "kcal_contribution_share",
     "kcal_density_variance_normalised",
-    "nutrient_entropy_normalised",
-    "clusters_low_income_impacted_share_clusters",
+    "kcal_entropy_normalised",
+    "clusters_low_income_impacted_clusters_share",
 ]
 
 # Lookup between clean variable names and categories
 var_category_lookup = {
-    "high_energy_density_share_sales": "Impact on Diets",
-    "kcal_contribution_share_adjusted": "Impact on Diets",
+    "energy_density_average_weighted_by_sales": "Impact on Diets",
+    "kcal_contribution_share": "Impact on Diets",
     "kcal_density_variance_normalised": "Feasibility",
-    "nutrient_entropy_normalised": "Feasibility",
-    "clusters_impacted_share_clusters": "Inclusion",
-    "clusters_low_income_impacted_share_clusters": "Inclusion",
+    "kcal_entropy_normalised": "Feasibility",
+    "clusters_impacted_clusters_share": "Inclusion",
+    "clusters_low_income_impacted_clusters_share": "Inclusion",
 }
 
 # Functions
@@ -214,8 +215,8 @@ def make_detailed_recommendations(
     high_level_cats: list,
     detailed_table: pd.DataFrame,
     variables: list = [
-        "nutrient_entropy_normalised",
-        "kcal_contribution_share_adjusted",
+        "kcal_entropy_normalised",
+        "kcal_contribution_share",
     ],
     thresholds: list = [30, 5],
 ) -> pd.DataFrame:
@@ -305,8 +306,8 @@ if __name__ == "__main__":
             ),
             configure_plots,
         )
-        .configure_axis(labelLimit=1000, labelFontSize=12)
-        .properties(width=200, height=800)
+        .configure_axis(labelLimit=1000, labelFontSize=13)
+        .properties(width=200, height=700)
     )
 
     save_altair(indicator_heatmap, "indicator_heatmap", driver=webdr)
