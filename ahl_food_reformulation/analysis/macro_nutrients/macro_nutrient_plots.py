@@ -26,7 +26,7 @@ if __name__ == "__main__":
     granular_category = "rst_4_extended"
 
     # Get chosen categories as dataframe
-    with open(f"{PROJECT_DIR}/outputs/reports/detailed_products.txt") as f:
+    with open(f"{PROJECT_DIR}/outputs/reports/detailed_products.json") as f:
         chosen_cats = pd.DataFrame(json.load(f)).melt(
             var_name=broader_category, value_name=granular_category
         )
