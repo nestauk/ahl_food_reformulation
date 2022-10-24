@@ -31,6 +31,7 @@ if __name__ == "__main__":
             var_name=broader_category, value_name=granular_category
         )
 
+    logging.info("Creating tables")
     # Create tables
     broad_macro_nut = nutrient.macro_nutrient_table(
         pur_recs, prod_meta, nut_recs, broader_category
@@ -67,23 +68,27 @@ if __name__ == "__main__":
         var_name="Macro nutrients",
         value_name="proportions",
     )
+    # Divide by 100 so can be displayed in % format in plot
+    gran_plot_df["proportions"] = gran_plot_df["proportions"] / 100
+    broad_plot_df["proportions"] = broad_plot_df["proportions"] / 100
 
+    logging.info("Creating plots")
     # Produce plots
     fig_broad, fig_gran = nutrient.plot_macro_proportions(
         broad_plot_df, gran_plot_df, driver, broad_cats
     )
 
+    logging.info("Saving plots")
     # Save plots
     save_altair(
         altair_text_resize(fig_broad).properties(width=250, height=250),
         "macro_prop_broad",
         driver=driver,
     )
-
     save_altair(
         altair_text_resize(fig_gran)
         .properties(width=200, height=150)
-        .resolve_scale(y="independent"),
+        .resolve_scale(x="independent", y="independent"),
         "macro_prop_gran",
         driver=driver,
     )

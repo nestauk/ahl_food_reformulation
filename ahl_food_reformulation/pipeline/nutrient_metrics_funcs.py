@@ -290,7 +290,7 @@ def plot_macro_proportions(
         .mark_bar()
         .encode(
             y=alt.Y("Categories", title="Categories", axis=alt.Axis(titlePadding=20)),
-            x="sum(proportions)",
+            x=alt.X("sum(proportions):Q", axis=alt.Axis(format="%")),
             color="Macro nutrients",
         )
     )
@@ -300,7 +300,7 @@ def plot_macro_proportions(
         "",
         16,
         20,
-        12,
+        16,
     )
     # Create granular cats plot
     fig_gran = (
@@ -308,7 +308,7 @@ def plot_macro_proportions(
         .mark_bar()
         .encode(
             y=alt.Y("Categories", title="Categories", axis=alt.Axis(titlePadding=20)),
-            x="sum(proportions)",
+            x=alt.X("sum(proportions):Q", axis=alt.Axis(format="%")),
             color="Macro nutrients",
             facet=alt.Facet("Market sector:N", columns=2),
         )
