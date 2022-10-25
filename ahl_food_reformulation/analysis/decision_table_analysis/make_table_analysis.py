@@ -9,7 +9,7 @@ from functools import partial
 import numpy as np
 import pandas as pd
 import altair as alt
-from typing import Union
+from typing import Union, List
 
 from ahl_food_reformulation import PROJECT_DIR
 from ahl_food_reformulation.utils.plotting import configure_plots
@@ -68,6 +68,8 @@ var_category_lookup = {
     "clusters_impacted_clusters_share": "Inclusion",
     "clusters_low_income_impacted_clusters_share": "Inclusion",
 }
+
+PROD_VAR = "rst_4_market_sector"
 
 # Functions
 
@@ -178,6 +180,38 @@ def make_indicator_heatmap(
     return heatmap + text
 
 
+def make_indicator_bubblechart(
+    report_table: pd.DataFrame,
+    axis_order: list,
+    var_names: list,
+    col_thres=2,
+) -> pd.DataFrame:
+    """Create a bubblechart to visualise the distribution of indicators"""
+
+    base = alt.Chart(
+        report_table.assign(abs_value=lambda df: [np.abs(x) for x in df[var_names[2]]])
+    ).encode(
+        x=alt.X(var_names[0], sort=axis_order, title=None),
+        y=alt.Y(
+            var_names[1],
+            title=None,
+            sort=alt.EncodingSortField(var_names[2], op="mean", order="descending"),
+        ),
+    )
+
+    heatmap = base.mark_point(stroke="black", filled=True, strokeWidth=0.5).encode(
+        color=alt.Color(
+            var_names[2],
+            title="Z-score",
+            scale=alt.Scale(scheme="redblue"),
+            sort="descending",
+        ),
+        size=alt.Size("abs_value", title="Absolute score"),
+    )
+
+    return heatmap
+
+
 def make_recommendations(
     report_table: pd.DataFrame, top_reccs: int = 5
 ) -> pd.DataFrame:
@@ -209,6 +243,111 @@ def make_recommendations(
             .values
         )
     )
+
+
+def make_sequential_table(
+    table: pd.DataFrame,
+    selection_sequence: List = ["Impact on Diets", "Feasibility", "Inclusion"],
+    selection_thresholds: List = [15, 10, 5],
+) -> pd.DataFrame:
+    """Creates a table with reformulation recommendations based on different indicators
+    and selection thresholds
+
+    Args:
+        table: Table with reformulation recommendations
+        selection_sequence: Sequence of selection criteria
+        selection_thresholds: Thresholds for each selection criteria
+
+    Returns:
+        A table with reformulation recommendations at different steps
+    """
+
+    table_copy = table.copy()
+
+    table_container = []
+
+    selected = [table_copy[PROD_VAR].unique()]
+
+    for n, crits in enumerate(zip(selection_sequence, selection_thresholds)):
+
+        t_filt = (
+            # Subsets a table on a selection criterion
+            table.query(f"category=='{crits[0]}'")
+            .reset_index(drop=True)
+            # Only keeps products that hadn't been filtered before
+            .assign(
+                z_score_filtered=lambda df: [
+                    z if prod in selected[n] else np.nan
+                    for prod, z in zip(df[PROD_VAR], df["z_score"])
+                ]
+            )
+            .sort_values("z_score_filtered", ascending=False)
+            # Only keep colour if the z-score is above the threshold
+            .assign(
+                color=lambda df: [
+                    z if n < crits[1] else np.nan
+                    for n, z in enumerate(df["z_score_filtered"])
+                ]
+            )
+            # Absolute value to make the size of the bubble proportional to the z-score
+            .assign(z_score_abs=lambda df: [np.abs(z) for z in df["z_score"]])
+            # Dummy to assign shape depending on whether the zscore is + or -
+            .assign(
+                shape=lambda df: [
+                    "Positive score" if z > 0 else "Negative score"
+                    for z in df["z_score"]
+                ]
+            )
+        )
+
+        # Selected criteria will be used for filtering the next table
+        selected.append(t_filt[PROD_VAR][: crits[1]].unique())
+
+        table_container.append(t_filt)
+
+    return pd.concat(table_container)
+
+
+def make_selection_chart(
+    decision_table: pd.DataFrame, sort_by: str = "Inclusion"
+) -> alt.Chart:
+    """Creates a chart to visualise the selection process
+
+    decision_table: Table with scores according to decision criteria
+    sort_by: Sort the table by a specific decision criteria
+    """
+
+    # How to sort the categories
+    sort_prod = (
+        seq_table.query(f"category=='{sort_by}'")
+        .sort_values("z_score_filtered", ascending=False)[PROD_VAR]
+        .tolist()
+    )
+
+    return (
+        alt.Chart(decision_table)
+        .mark_point(filled=True, strokeWidth=1)
+        .encode(
+            y=alt.Y(PROD_VAR, sort=sort_prod, title=None),
+            x=alt.X(
+                "category",
+                sort=["Impact on Diets", "Feasibility", "Inclusion"],
+                title=None,
+            ),
+            size=alt.Size("z_score_abs", title="Absolute score"),
+            shape=alt.Shape(
+                "shape",
+                scale=alt.Scale(range=["triangle-up", "triangle-down"]),
+                sort=["Positive score", "Negative Score"],
+            ),
+            color=alt.condition(
+                "datum.color !== null", alt.value("orange"), alt.value("white")
+            ),
+            stroke=alt.condition(
+                "datum.color !== null", alt.value("black"), alt.value("grey")
+            ),
+        )
+    ).properties(width=100, height=600)
 
 
 def make_detailed_recommendations(
@@ -312,12 +451,55 @@ if __name__ == "__main__":
 
     save_altair(indicator_heatmap, "indicator_heatmap", driver=webdr)
 
+    indicator_bubble_chart = (
+        pipe(
+            report_table_clean_long,
+            partial(relabel_names, columns=["clean_label"], clean_dict=plotting_names),
+            partial(
+                make_indicator_bubblechart,
+                axis_order=plotting_order,
+                var_names=["clean_label", "rst_4_market_sector", "z_score"],
+            ),
+            configure_plots,
+        )
+        .configure_axis(labelLimit=1000, labelFontSize=13)
+        .properties(width=300, height=700)
+    )
+
+    save_altair(
+        configure_plots(indicator_bubble_chart), "indicator_bubblechart", driver=webdr
+    )
+
     logging.info("Making high level recommendations")
     recc_table = make_recommendations(report_table_clean_long, 5).T
 
     logging.info(recc_table.head())
 
     recc_table.to_csv(f"{PROJECT_DIR}/outputs/reports/recommendation.csv")
+
+    logging.info("Implementing alternative decision-making criterion")
+
+    # Creates table for visualisation
+    seq_table = pipe(
+        report_table_clean_long.groupby(["rst_4_market_sector", "category"])["z_score"]
+        .mean()
+        .reset_index(name="z_score"),
+        make_sequential_table,
+    )
+
+    save_altair(
+        configure_plots(make_selection_chart(seq_table)),
+        "indicator_sequential_decision",
+        driver=webdr,
+    )
+
+    # The top criteria would be...
+    top_sequential_cats = (
+        seq_table.query("category=='Inclusion'")
+        .dropna(axis=0, subset=["color"])[PROD_VAR]
+        .tolist()
+    )
+    logging.info(f"Top sequential market sectors: {top_sequential_cats}")
 
     logging.info("Making detailed recommendations")
 
