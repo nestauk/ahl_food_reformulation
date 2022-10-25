@@ -310,7 +310,9 @@ def plot_macro_proportions(
             y=alt.Y("Categories", title="Categories", axis=alt.Axis(titlePadding=20)),
             x=alt.X("sum(proportions):Q", axis=alt.Axis(format="%")),
             color="Macro nutrients",
-            facet=alt.Facet("Market sector:N", columns=2),
+            facet=alt.Facet(
+                "Market sector:N", columns=2, header=alt.Header(labelFontSize=16)
+            ),
         )
     )
     configure_plots(
@@ -319,6 +321,6 @@ def plot_macro_proportions(
         "",
         16,
         20,
-        12,
+        16,
     )
     return fig_broad, fig_gran
