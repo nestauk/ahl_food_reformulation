@@ -6,6 +6,39 @@ from ahl_food_reformulation.pipeline import transform_data as transform
 import pandas as pd
 
 
+def hh_kcal_weight(
+    prod_cat: int,
+    pur_recs: pd.DataFrame,
+    nut_recs: pd.DataFrame,
+    prod_meta: pd.DataFrame,
+):
+    """
+    Create weighted hh kcal per cat
+
+    Args:
+        prod_category (int): one product category
+        pur_recs (pd.DataFrame): Pandas dataframe contains the purchase records of specified data
+        nut_recs (pd.DataFrame): Pandas dataframe with per purchase nutritional information
+        prod_meta (pd.DataFrame): Pandas dataframe with product descriptions
+    Returns:
+        pd.DataFrame: Table with metrics based on kcal contribution per category
+    """
+    comb_files = pur_recs.merge(
+        prod_meta[["product_code", prod_cat]],
+        left_on=["Product Code"],
+        right_on="product_code",
+        how="left",
+    )
+    comb_files = comb_files[
+        comb_files["Reported Volume"].notna()
+    ]  # Remove purchases with no volume
+    comb_files["att_vol"] = comb_files[prod_cat]
+    comb_files.drop("product_code", axis=1, inplace=True)
+    # Make household representations
+    purch_recs_comb = transform.make_purch_records(nut_recs, comb_files, ["att_vol"])
+    return transform.hh_kcal_per_prod(purch_recs_comb, "Gross_up_kcal")
+
+
 def kcal_contr_table(
     prod_cat: int,
     pan_ind: pd.DataFrame,
@@ -27,25 +60,10 @@ def kcal_contr_table(
     Returns:
         pd.DataFrame: Table with metrics based on kcal contribution per category
     """
+    hh_kcal_weighted = hh_kcal_weight(prod_cat, pur_recs, nut_recs, prod_meta)
+
     # Converted household size
     pan_conv = transform.hh_size_conv(pan_ind)
-
-    comb_files = pur_recs.merge(
-        prod_meta[["product_code", prod_cat]],
-        left_on=["Product Code"],
-        right_on="product_code",
-        how="left",
-    )
-    comb_files = comb_files[
-        comb_files["Reported Volume"].notna()
-    ]  # Remove purchases with no volume
-    comb_files["att_vol"] = comb_files[prod_cat]
-    comb_files.drop("product_code", axis=1, inplace=True)
-    # Make household representations
-    purch_recs_comb = transform.make_purch_records(nut_recs, comb_files, ["att_vol"])
-    # hh_kcal = transform.hh_kcal_per_prod(purch_recs_comb, "Energy KCal")
-    hh_kcal_weighted = transform.hh_kcal_per_prod(purch_recs_comb, "Gross_up_kcal")
-
     pan_conv_weighted = pan_conv.merge(
         panel_weight, left_on="Panel Id", right_on="panel_id", how="inner"
     )
@@ -54,7 +72,6 @@ def kcal_contr_table(
     )
     pan_conv_weighted = pan_conv_weighted[["Panel Id", "conversion"]]
 
-    # hh_kcal_conv = transform.apply_hh_conv(hh_kcal, pan_conv)
     hh_kcal_conv_weighted = transform.apply_hh_conv(
         hh_kcal_weighted, pan_conv_weighted
     ).dropna(axis=0)
@@ -62,29 +79,19 @@ def kcal_contr_table(
     # Create table
     kcal_cont_df = pd.concat(
         [
-            # (hh_kcal.sum() / hh_kcal.sum().sum()) * 100,
             (hh_kcal_weighted.sum() / hh_kcal_weighted.sum().sum()) * 100,
-            # (hh_kcal_conv.sum() / hh_kcal_conv.sum().sum()) * 100,
             (hh_kcal_conv_weighted.sum() / hh_kcal_conv_weighted.sum().sum()) * 100,
-            # (hh_kcal_conv.median()) / 365,
             (hh_kcal_conv_weighted.median()) / 365,
-            # (hh_kcal_conv.mean()) / 365,
             (hh_kcal_conv_weighted.mean()) / 365,
-            # (hh_kcal_conv.apply(util_func.iqr)) / 365,
             (hh_kcal_conv_weighted.apply(util_func.iqr)) / 365,
         ],
         axis=1,
     )
     kcal_cont_df.columns = [
-        # "percent_kcal_contrib",
         "percent_kcal_contrib_weighted",
-        # "percent_kcal_contrib_size_adj",
         "percent_kcal_contrib_size_adj_weighted",
-        # "median_kcal_size_adj",
         "median_kcal_size_adj_weighted",
-        # "mean_kcal_size_adj",
         "mean_kcal_size_adj_weighted",
-        # "IQR_kcal_size_adj",
         "IQR_kcal_size_adj_weighted",
     ]
     return kcal_cont_df
