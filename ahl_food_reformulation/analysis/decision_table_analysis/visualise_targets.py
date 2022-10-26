@@ -62,15 +62,14 @@ def decision_table_scatter(
     )
     text = (
         points.transform_filter(alt.datum.Categories != "Other categories")
-        # .mark_text(align="right", baseline="line-bottom", dx=15, dy=-5, fontSize=14)
-        # ["right", "line-bottom", 15, -5]
         .mark_text(
             align=alignment[0],
             baseline=alignment[1],
             dx=alignment[2],
             dy=alignment[3],
             fontSize=14,
-        ).encode(text="Categories")
+        )
+        .encode(text="Categories")
     )
     fig = points + text
     return configure_plots(
@@ -142,7 +141,7 @@ def facet_bar_perc_ed(
         .properties(width=150, height=120)
         .facet(
             facet=alt.Facet(
-                "Market sector", header=alt.Header(labelFontSize=16), title=None
+                "Market sector", header=alt.Header(labelFontSize=16), title=""
             ),
             columns=2,
             data=source,
