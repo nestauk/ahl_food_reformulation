@@ -258,7 +258,7 @@ if __name__ == "__main__":
     )
 
     save_altair(
-        altair_text_resize(fig2).properties(width=250, height=250),
+        altair_text_resize(fig3).properties(width=250, height=250),
         "cumplot_sequential",
         driver=driver,
     )
