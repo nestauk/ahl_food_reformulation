@@ -1,6 +1,8 @@
 # Import libraries
 from ahl_food_reformulation import PROJECT_DIR
 from ahl_food_reformulation.pipeline import transform_data as transform
+from ahl_food_reformulation.utils.plotting import configure_plots
+import altair as alt
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -267,3 +269,58 @@ def macro_nutrient_table(
     df_diversity = macro_diversity(pur_nut_info, cat).reset_index()
 
     return cat_nut_props.merge(df_diversity, on=cat)
+
+
+def plot_macro_proportions(
+    broad_plot_df: pd.DataFrame, gran_plot_df: pd.DataFrame, driver, broad_cats
+):
+    """
+    Plots proportions of macro nutrients for both categories as stacked bar charts
+    Args:
+        broad_plot_df (pd.DataFrame): Pandas dataframe of broad category proportions
+        gran_plot_df (pd.DataFrame): Pandas dataframe of granular category proportions
+        driver = google_chrome_driver_setup,
+        broad_cats (str): List of broad categories to use for title
+    Returns:
+        Saved plots
+    """
+    # Create broad cats plot
+    fig_broad = (
+        alt.Chart(broad_plot_df)
+        .mark_bar()
+        .encode(
+            y=alt.Y("Categories", title="Categories", axis=alt.Axis(titlePadding=20)),
+            x=alt.X("sum(proportions):Q", axis=alt.Axis(format="%")),
+            color="Macro nutrients",
+        )
+    )
+    configure_plots(
+        fig_broad,
+        "Macronutrient proportions for top candidates",
+        "",
+        16,
+        20,
+        16,
+    )
+    # Create granular cats plot
+    fig_gran = (
+        alt.Chart(gran_plot_df)
+        .mark_bar()
+        .encode(
+            y=alt.Y("Categories", title="Categories", axis=alt.Axis(titlePadding=20)),
+            x=alt.X("sum(proportions):Q", axis=alt.Axis(format="%")),
+            color="Macro nutrients",
+            facet=alt.Facet(
+                "Market sector:N", columns=2, header=alt.Header(labelFontSize=16)
+            ),
+        )
+    )
+    configure_plots(
+        fig_gran,
+        "Macronutrient proportions for " + broad_cats[0],
+        "",
+        16,
+        20,
+        16,
+    )
+    return fig_broad, fig_gran
