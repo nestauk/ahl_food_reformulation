@@ -27,17 +27,22 @@ if __name__ == "__main__":
     granular_category = "rst_4_extended"
 
     # read in shortliested products
-    with open(f"{PROJECT_DIR}/outputs/reports/detailed_products.json") as f:
-        chosen_cats = pd.DataFrame(json.load(f)).melt(
+    with open(f"{PROJECT_DIR}/outputs/reports/detailed_products_average.json") as f:
+        chosen_cats_average = pd.DataFrame(json.load(f)).melt(
             var_name=broader_category, value_name=granular_category
         )
 
-    logging.info("Merging data")
+    # with open(f"{PROJECT_DIR}/outputs/reports/detailed_products_sequential.json") as f:
+    with open(f"{PROJECT_DIR}/outputs/reports/detailed_products_average.json") as f:
+        chosen_cats_seq = pd.DataFrame(json.load(f)).melt(
+            var_name=broader_category, value_name=granular_category
+        )
 
-    purch_recs_comb_scenarios = kcal.make_impact(
-        chosen_cats,
+    logging.info("Merging data - Averages")
+
+    purch_recs_comb_scenarios_avg = kcal.make_impact(
+        chosen_cats_average,
         kcal_est,
-        pan_ind,
         val_fields,
         pur_recs,
         prod_codes,
@@ -46,12 +51,23 @@ if __name__ == "__main__":
         nut_rec,
     )
 
-    logging.info("Generating Descriptive Stats")
+    logging.info("Merging data - Sequential")
 
-    pd.concat(
+    purch_recs_comb_scenarios_seq = kcal.make_impact(
+        chosen_cats_seq,
+        kcal_est,
+        val_fields,
+        pur_recs,
+        prod_codes,
+        prod_vals,
+        prod_meta,
+        nut_rec,
+    )
+
+    hh_kcal_filter_avg = pd.concat(
         [
             kcal.kcal_day(
-                purch_recs_comb_scenarios,
+                purch_recs_comb_scenarios_avg,
                 pan_ind,
                 panel_weight,
                 "Gross_up_kcal",
@@ -59,7 +75,7 @@ if __name__ == "__main__":
                 0.95,
             ),
             kcal.kcal_day(
-                purch_recs_comb_scenarios,
+                purch_recs_comb_scenarios_avg,
                 pan_ind,
                 panel_weight,
                 "Gross_up_kcal_min",
@@ -67,7 +83,7 @@ if __name__ == "__main__":
                 0.95,
             ),
             kcal.kcal_day(
-                purch_recs_comb_scenarios,
+                purch_recs_comb_scenarios_avg,
                 pan_ind,
                 panel_weight,
                 "Gross_up_kcal_max",
@@ -76,7 +92,48 @@ if __name__ == "__main__":
             ),
         ],
         axis=1,
-    ).to_csv(
-        f"{PROJECT_DIR}/outputs/data/impact_on_kcal.csv",
+    )
+
+    hh_kcal_filter_seq = pd.concat(
+        [
+            kcal.kcal_day(
+                purch_recs_comb_scenarios_seq,
+                pan_ind,
+                panel_weight,
+                "Gross_up_kcal",
+                0.05,
+                0.95,
+            ),
+            kcal.kcal_day(
+                purch_recs_comb_scenarios_seq,
+                pan_ind,
+                panel_weight,
+                "Gross_up_kcal_min",
+                0.05,
+                0.95,
+            ),
+            kcal.kcal_day(
+                purch_recs_comb_scenarios_seq,
+                pan_ind,
+                panel_weight,
+                "Gross_up_kcal_max",
+                0.05,
+                0.95,
+            ),
+        ],
+        axis=1,
+    )
+
+    logging.info("Generating Descriptive Stats")
+
+    kcal.kcal_day_describe(hh_kcal_filter_avg).reset_index(level=0).to_csv(
+        f"{PROJECT_DIR}/outputs/data/impact_on_kcal_avg.csv",
         float_format="%.3f",
+        index=False,
+    )
+
+    kcal.kcal_day_describe(hh_kcal_filter_seq).reset_index(level=0).to_csv(
+        f"{PROJECT_DIR}/outputs/data/impact_on_kcal_seq.csv",
+        float_format="%.3f",
+        index=False,
     )

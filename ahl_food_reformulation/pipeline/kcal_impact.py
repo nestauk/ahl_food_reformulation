@@ -142,4 +142,22 @@ def kcal_day(purch_recs_comb_scenarios, pan_ind, panel_weight, scenario, low, hi
         & (hh_kcal_weighted[scenario + "_daily"] > q_low)
     ].copy()
 
-    return hh_kcal_filter[scenario + "_daily"].describe()
+    return hh_kcal_filter[scenario + "_daily"]
+
+
+def kcal_day_describe(hh_kcal_filter):
+    """
+    Descriptive statistics for the data parsed
+
+    Parameters
+    ----------
+    hh_kcal_filter : pd.DataFrame
+        pandas dataframe containing clean data of kcal/day under 3 scenarios
+
+    Returns
+    -------
+    pandas Dataframe with descriptive statistics
+
+    """
+
+    return hh_kcal_filter.describe()
