@@ -1,18 +1,18 @@
 # Import libraries
+from ahl_food_reformulation import PROJECT_DIR
 from ahl_food_reformulation.getters import kantar
 from ahl_food_reformulation.pipeline import energy_density as energy
+from ahl_food_reformulation.utils.plotting import configure_plots
 from ahl_food_reformulation.utils.altair_save_utils import (
     save_altair,
     google_chrome_driver_setup,
     altair_text_resize,
 )
-from ahl_food_reformulation.utils.plotting import configure_plots
 import altair as alt
 import logging
 import json
 import pandas as pd
 import numpy as np
-from ahl_food_reformulation import PROJECT_DIR
 
 # define cats
 broader_category = "rst_4_market_sector"
@@ -140,7 +140,13 @@ def facet_bar_perc_ed(
     final_plot = (
         (fig_gran + chart_two)
         .properties(width=150, height=120)
-        .facet("Market sector", columns=2, data=source)
+        .facet(
+            facet=alt.Facet(
+                "Market sector", header=alt.Header(labelFontSize=16), title=None
+            ),
+            columns=2,
+            data=source,
+        )
     )
     return configure_plots(
         final_plot.resolve_scale(x="independent", y="independent").configure_mark(
