@@ -30,6 +30,7 @@ def decision_table_scatter(
     y_title: str,
     NESTA_COLOURS: list,
     title: str,
+    alignment: list,
 ):
     """
     Plots altair scatter based on metrics in decision table for market sector
@@ -41,6 +42,7 @@ def decision_table_scatter(
         y_title (str): Title for y-axis
         NESTA_COLOURS (list): List of hex nesta colours
         title (st): Plot title
+        alignment (list): Specs for alignment of annotations
     Returns:
         Scatter plot
     """
@@ -60,8 +62,15 @@ def decision_table_scatter(
     )
     text = (
         points.transform_filter(alt.datum.Categories != "Other categories")
-        .mark_text(align="right", baseline="line-bottom", dx=15, dy=-5, fontSize=14)
-        .encode(text="Categories")
+        # .mark_text(align="right", baseline="line-bottom", dx=15, dy=-5, fontSize=14)
+        # ["right", "line-bottom", 15, -5]
+        .mark_text(
+            align=alignment[0],
+            baseline=alignment[1],
+            dx=alignment[2],
+            dy=alignment[3],
+            fontSize=14,
+        ).encode(text="Categories")
     )
     fig = points + text
     return configure_plots(
@@ -109,7 +118,12 @@ def facet_bar_perc_ed(
                 axis=alt.Axis(titlePadding=20),
                 sort=alt.EncodingSortField(col_x, order="descending"),
             ),
-            x=alt.X(col_x, title=x_label, axis=alt.Axis(format="%", grid=False)),
+            x=alt.X(
+                col_x,
+                title=x_label,
+                axis=alt.Axis(format="%", grid=False),
+                scale=alt.Scale(domain=[0, 1]),
+            ),
         )
     )
     chart_two = (
@@ -240,6 +254,9 @@ if __name__ == "__main__":
         broad_decision_clusters["Categories"],
     )
 
+if __name__ == "__main__":
+    driver = google_chrome_driver_setup()
+
     logging.info("Create plots")
     # Create plots
     figure_density_prod_sales = decision_table_scatter(
@@ -250,6 +267,7 @@ if __name__ == "__main__":
         "Kcal per 100g/l sales weighted",
         NESTA_COLOURS,
         "Kcal density products and sales weighted",
+        ["right", "line-bottom", 15, -5],
     )
     figure_cont_perc_ed = decision_table_scatter(
         broad_decision,
@@ -259,6 +277,7 @@ if __name__ == "__main__":
         "Percent kcal contribution",
         NESTA_COLOURS,
         "Kcal contribution vs rate of high energy density products",
+        ["left", "line-top", 6, 1],
     )
     figure_cluster_share = decision_table_scatter(
         broad_decision_clusters,
@@ -268,6 +287,7 @@ if __name__ == "__main__":
         "clusters low income impacted share",
         NESTA_COLOURS,
         "Share of clusters and low income clusters impacted",
+        ["right", "line-bottom", 15, -5],
     )
     figure_facet_sales_ed = facet_bar_perc_ed(
         gran_decision_subset,
