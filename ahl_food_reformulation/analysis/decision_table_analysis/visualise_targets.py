@@ -84,7 +84,7 @@ def decision_table_scatter(
 
 
 def facet_bar_perc_ed(
-    source: pd.DataFrame,
+    gran_decision_subset: pd.DataFrame,
     avg: int,
     avg_desc: str,
     col_x: str,
@@ -95,7 +95,7 @@ def facet_bar_perc_ed(
     """
     Plots altair scatter based on metrics in decision table for market sector
     Args:
-        source (pd.DataFrame): Pandas dataframe rst extended decision table
+        gran_decision_subset (pd.DataFrame): Pandas dataframe rst extended decision table
         avg (int): Average percent high energy density
         avg_desc (str): Avg description for legend
         col_x (str): x-axis column
@@ -105,6 +105,7 @@ def facet_bar_perc_ed(
     Returns:
         Facet bar plot
     """
+    source = gran_decision_subset.copy()
     source["mean"] = avg
     source["kind"] = avg_desc
     # Create granular cats plot
@@ -136,13 +137,13 @@ def facet_bar_perc_ed(
             ),
         )
     )
-    plot = (
+    final_plot = (
         (fig_gran + chart_two)
         .properties(width=150, height=120)
         .facet("Market sector", columns=2, data=source)
     )
     return configure_plots(
-        plot.resolve_scale(x="independent", y="independent").configure_mark(
+        final_plot.resolve_scale(x="independent", y="independent").configure_mark(
             color=hex_colour, opacity=0.8
         ),
         title,
@@ -254,9 +255,6 @@ if __name__ == "__main__":
         broad_decision_clusters["Categories"],
     )
 
-if __name__ == "__main__":
-    driver = google_chrome_driver_setup()
-
     logging.info("Create plots")
     # Create plots
     figure_density_prod_sales = decision_table_scatter(
@@ -302,7 +300,7 @@ if __name__ == "__main__":
         gran_decision_subset,
         mean_ed_prods,
         "Average % of products",
-        "Percent sales high ED",
+        "Percent products high ED",
         "Percent of products",
         "#EB003B",
         "Percent of Products as High Energy Density",
