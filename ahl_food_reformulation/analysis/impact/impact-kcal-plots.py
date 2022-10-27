@@ -34,13 +34,13 @@ if __name__ == "__main__":
     granular_category = "rst_4_extended"
 
     # read in shortliested products
-    with open(f"{PROJECT_DIR}/outputs/reports/detailed_products_average.json") as f:
+    with open(f"{PROJECT_DIR}/outputs/reports/detailed_products.json") as f:
         chosen_cats_average = pd.DataFrame(json.load(f)).melt(
             var_name=broader_category, value_name=granular_category
         )
 
-    # with open(f"{PROJECT_DIR}/outputs/reports/detailed_products_sequential.json") as f:
-    with open(f"{PROJECT_DIR}/outputs/reports/detailed_products_average.json") as f:
+    with open(f"{PROJECT_DIR}/outputs/reports/detailed_products_sequential.json") as f:
+        # with open(f"{PROJECT_DIR}/outputs/reports/detailed_products_average.json") as f:
         chosen_cats_seq = pd.DataFrame(json.load(f)).melt(
             var_name=broader_category, value_name=granular_category
         )
@@ -249,7 +249,7 @@ if __name__ == "__main__":
     )
 
     fig3 = configure_plots(
-        fig2,
+        fig3,
         "Distribution of Reduction in DPer Capita aily Calorie Compared to No Reformulation",
         "Sequential",
         16,
