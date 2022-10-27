@@ -6,12 +6,12 @@
     "Ambient Cakes Small Cakes",
     "Morning Goods Tortilla Wraps"
   ],
-  "Biscuits": [
-    "Chocolate Biscuit Bars",
-    "Everyday Treat Choc Digestives",
-    "Confect. & Oth Savoury Snacks",
-    "Everyday Treats Other Creams",
-    "Cereal Bars Chocolate"
+  "Chilled Convenience": [
+    "Chilled Ready Mea Meal Centre",
+    "Chilled Prepared Sld Coleslaw",
+    "Chilled Ready Vegetable Accom",
+    "Chilled Dips Single",
+    "Cooked Meats Continental Meat"
   ],
   "Sweet Home Cooking": [
     "Caster Sugar",
@@ -20,18 +20,18 @@
     "Icing Sugar",
     "Other Baking Ingredients"
   ],
+  "Frozen Prepared Foods": [
+    "Frozen Oven Chips",
+    "Frozen Pizzas Thin & Crispy",
+    "Frozen Potato Potato Products",
+    "Frozen Peas",
+    "Frozen Pizzas Deep Pan"
+  ],
   "Eggs and Butter": [
     "Eggs Hens Free Range",
     "Butter Slightly Sal Spreadable",
     "Dairy Spreads",
     "Butter Standard Block",
     "Pufa/Mufa Margarine/Spread"
-  ],
-  "Chilled Convenience": [
-    "Chilled Ready Mea Meal Centre",
-    "Chilled Prepared Sld Coleslaw",
-    "Chilled Ready Vegetable Accom",
-    "Chilled Dips Single",
-    "Cooked Meats Continental Meat"
   ]
 }

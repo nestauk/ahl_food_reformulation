@@ -178,51 +178,11 @@ if __name__ == "__main__":
         f"{PROJECT_DIR}/outputs/data/decision_table/decision_table_"
         + granular_category
         + ".csv"
-    )
+    ).rename({"Unnamed: 0": "rst_4_extended"}, axis=1)
     broad_decision = pd.read_csv(
         f"{PROJECT_DIR}/outputs/data/decision_table/decision_table_"
         + broader_category
         + ".csv"
-    )
-
-    # Set driver for altair
-    driver = google_chrome_driver_setup()
-
-    # Get chosen categories as dataframe
-    with open(f"{PROJECT_DIR}/outputs/reports/detailed_products.json") as f:
-        chosen_cats = pd.DataFrame(json.load(f)).melt(
-            var_name=broader_category, value_name=granular_category
-        )
-
-    logging.info("Create tables")
-    # Unique list of broad cats
-    broad_cats = list(chosen_cats.rst_4_market_sector.drop_duplicates())
-    # Broad plot table
-    broad_decision["Categories"] = np.where(
-        broad_decision["rst_4_market_sector"].isin(broad_cats),
-        broad_decision["rst_4_market_sector"],
-        "Other categories",
-    )
-    # Granular plot table
-    gran_decision.rename({"Unnamed: 0": "rst_4_extended"}, inplace=True, axis=1)
-    gran_decision_subset = chosen_cats.merge(
-        gran_decision[
-            ["rst_4_extended", "percent_high_ed_sales_weighted", "percent_high_ed"]
-        ],
-        on="rst_4_extended",
-        how="left",
-    )
-    gran_decision_subset.columns = [
-        "Market sector",
-        "Categories",
-        "Percent sales high ED",
-        "Percent products high ED",
-    ]
-    gran_decision_subset["Percent sales high ED"] = (
-        gran_decision_subset["Percent sales high ED"] / 100
-    )
-    gran_decision_subset["Percent products high ED"] = (
-        gran_decision_subset["Percent products high ED"] / 100
     )
 
     # Get avergaes for % high energy density
@@ -250,91 +210,141 @@ if __name__ == "__main__":
     mean_ed_sales = ed_cats_sales.high
     mean_ed_prods = ed_cats_num.high
 
-    # Group cats for plot with same values
-    broad_decision_clusters = broad_decision.copy()
-    broad_decision_clusters["Categories"] = np.where(
-        broad_decision_clusters["Categories"].isin(
-            ["Ambient Bakery Products", "Chilled Convenience"]
-        ),
-        "Ambient Bakery Products + Chilled Convenience",
-        broad_decision_clusters["Categories"],
-    )
+    # Unique list of chosen cat groups
+    chosen_cats_list = ["", "_sequential"]
 
-    logging.info("Create plots")
-    # Create plots
-    figure_density_prod_sales = decision_table_scatter(
-        broad_decision,
-        "kcal_100_s",
-        "kcal_100_w",
-        "Kcal per 100g/l",
-        "Kcal per 100g/l sales weighted",
-        NESTA_COLOURS,
-        "Kcal density products and sales weighted",
-        ["right", "line-bottom", 15, -5],
-    )
-    figure_cont_perc_ed = decision_table_scatter(
-        broad_decision,
-        "percent_high_ed",
-        "percent_kcal_contrib_weighted",
-        "Percent high energy density",
-        "Percent kcal contribution",
-        NESTA_COLOURS,
-        "Kcal contribution vs rate of high energy density products",
-        ["left", "line-top", 6, 1],
-    )
-    figure_cluster_share = decision_table_scatter(
-        broad_decision_clusters,
-        "cluster_no_sh",
-        "cluster_low_sh",
-        "clusters impacted share",
-        "clusters low income impacted share",
-        NESTA_COLOURS,
-        "Share of clusters and low income clusters impacted",
-        ["right", "line-bottom", 15, -5],
-    )
-    figure_facet_sales_ed = facet_bar_perc_ed(
-        gran_decision_subset,
-        mean_ed_sales,
-        "Average % of sales",
-        "Percent sales high ED",
-        "Percent of sales",
-        "#18A48C",
-        "Percent of Sales as High Energy Density",
-    )
-    figure_facet_prods_ed = facet_bar_perc_ed(
-        gran_decision_subset,
-        mean_ed_prods,
-        "Average % of products",
-        "Percent products high ED",
-        "Percent of products",
-        "#EB003B",
-        "Percent of Products as High Energy Density",
-    )
+    # Set driver for altair
+    driver = google_chrome_driver_setup()
 
-    logging.info("Save plots")
-    # Save plots
-    save_altair(
-        altair_text_resize(figure_density_prod_sales),
-        "scatter_density_prod_sales",
-        driver=driver,
-    )
-    save_altair(
-        altair_text_resize(figure_cont_perc_ed),
-        "scatter_cont_perc_ed",
-        driver=driver,
-    )
-    save_altair(
-        altair_text_resize(figure_cluster_share),
-        "scatter_clust_share",
-        driver=driver,
-    )
-    save_altair(
-        altair_text_resize(figure_facet_sales_ed),
-        "facet_sales_ed",
-        driver=driver,
-    )
-    save_altair(
-        altair_text_resize(figure_facet_prods_ed),
-        "facet_products_ed",
-        driver=driver,
-    )
+    for chosen_method in chosen_cats_list:
+        # Get chosen categories as dataframe
+        with open(
+            f"{PROJECT_DIR}/outputs/reports/detailed_products" + chosen_method + ".json"
+        ) as f:
+            chosen_cats = pd.DataFrame(json.load(f)).melt(
+                var_name=broader_category, value_name=granular_category
+            )
+
+        logging.info("Create tables for: " + chosen_method)
+        # df for broad_cats
+        broad_decision_subset = broad_decision.copy()
+        gran_decision_sub = gran_decision.copy()
+
+        # Unique list of broad cats
+        broad_cats = list(chosen_cats.rst_4_market_sector.drop_duplicates())
+
+        # Broad plot table
+        broad_decision_subset["Categories"] = np.where(
+            broad_decision_subset["rst_4_market_sector"].isin(broad_cats),
+            broad_decision_subset["rst_4_market_sector"],
+            "Other categories",
+        )
+        # Granular plot table
+        gran_decision_subset = chosen_cats.merge(
+            gran_decision_sub[
+                ["rst_4_extended", "percent_high_ed_sales_weighted", "percent_high_ed"]
+            ],
+            on="rst_4_extended",
+            how="left",
+        )
+        gran_decision_subset.columns = [
+            "Market sector",
+            "Categories",
+            "Percent sales high ED",
+            "Percent products high ED",
+        ]
+        gran_decision_subset["Percent sales high ED"] = (
+            gran_decision_subset["Percent sales high ED"] / 100
+        )
+        gran_decision_subset["Percent products high ED"] = (
+            gran_decision_subset["Percent products high ED"] / 100
+        )
+
+        # Group cats for plot with same values
+        broad_decision_clusters = broad_decision_subset.copy()
+        broad_decision_clusters["Categories"] = np.where(
+            broad_decision_clusters["Categories"].isin(
+                ["Ambient Bakery Products", "Chilled Convenience"]
+            ),
+            "Ambient Bakery Products + Chilled Convenience",
+            broad_decision_clusters["Categories"],
+        )
+
+        logging.info("Create plots")
+        # Create plots
+        figure_density_prod_sales = decision_table_scatter(
+            broad_decision_subset,
+            "kcal_100_s",
+            "kcal_100_w",
+            "Kcal per 100g/l",
+            "Kcal per 100g/l sales weighted",
+            NESTA_COLOURS,
+            "Kcal density products and sales weighted",
+            ["right", "line-bottom", 15, -5],
+        )
+        figure_cont_perc_ed = decision_table_scatter(
+            broad_decision_subset,
+            "percent_high_ed",
+            "percent_kcal_contrib_weighted",
+            "Percent high energy density",
+            "Percent kcal contribution",
+            NESTA_COLOURS,
+            "Kcal contribution vs rate of high energy density products",
+            ["left", "line-top", 6, 1],
+        )
+        figure_cluster_share = decision_table_scatter(
+            broad_decision_clusters,
+            "cluster_no_sh",
+            "cluster_low_sh",
+            "clusters impacted share",
+            "clusters low income impacted share",
+            NESTA_COLOURS,
+            "Share of clusters and low income clusters impacted",
+            ["right", "line-bottom", 15, -5],
+        )
+        figure_facet_sales_ed = facet_bar_perc_ed(
+            gran_decision_subset,
+            mean_ed_sales,
+            "Average % of sales",
+            "Percent sales high ED",
+            "Percent of sales",
+            "#18A48C",
+            "Percent of Sales as High Energy Density",
+        )
+        figure_facet_prods_ed = facet_bar_perc_ed(
+            gran_decision_subset,
+            mean_ed_prods,
+            "Average % of products",
+            "Percent products high ED",
+            "Percent of products",
+            "#EB003B",
+            "Percent of Products as High Energy Density",
+        )
+
+        logging.info("Save plots")
+        # Save plots
+        save_altair(
+            altair_text_resize(figure_density_prod_sales),
+            "scatter_density_prod_sales" + chosen_method,
+            driver=driver,
+        )
+        save_altair(
+            altair_text_resize(figure_cont_perc_ed),
+            "scatter_cont_perc_ed" + chosen_method,
+            driver=driver,
+        )
+        save_altair(
+            altair_text_resize(figure_cluster_share),
+            "scatter_clust_share" + chosen_method,
+            driver=driver,
+        )
+        save_altair(
+            altair_text_resize(figure_facet_sales_ed),
+            "facet_sales_ed" + chosen_method,
+            driver=driver,
+        )
+        save_altair(
+            altair_text_resize(figure_facet_prods_ed),
+            "facet_products_ed" + chosen_method,
+            driver=driver,
+        )
