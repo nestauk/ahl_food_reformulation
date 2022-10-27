@@ -363,7 +363,7 @@ def make_detailed_recommendations(
 
     detailed_products = {}
 
-    for t in top_cats:
+    for t in high_level_cats:
 
         detailed_products[t] = ", ".join(
             (
@@ -527,10 +527,25 @@ if __name__ == "__main__":
 
     detailed_reccs.to_csv(f"{PROJECT_DIR}/outputs/reports/detailed_recommendation.csv")
 
+    detailed_reccs_sec = pd.DataFrame(
+        make_detailed_recommendations(top_sequential_cats, report_table_detailed),
+        index=["Detailed recommendations"],
+    ).T
+
+    logging.info(detailed_reccs_sec.head())
+
     # Save an easier to parse version for the macro nutrient chart
 
     with open(f"{PROJECT_DIR}/outputs/reports/detailed_products.json", "w") as outfile:
         json.dump(
             detailed_reccs["Detailed recommendations"].str.split(", ").to_dict(),
+            outfile,
+        )
+
+    with open(
+        f"{PROJECT_DIR}/outputs/reports/detailed_products_sequential.json", "w"
+    ) as outfile:
+        json.dump(
+            detailed_reccs_sec["Detailed recommendations"].str.split(", ").to_dict(),
             outfile,
         )
