@@ -33,7 +33,7 @@ if __name__ == "__main__":
     logging.info("RST extended table (granular)")
     granular_table = report.create_report_table(
         report.kcal_contr_table(
-            granular_category, pan_ind, pur_recs, nut_recs, prod_meta
+            granular_category, pan_ind, pur_recs, nut_recs, prod_meta, panel_weight
         ),
         report.kcal_density_table(
             granular_category,
@@ -62,7 +62,7 @@ if __name__ == "__main__":
     logging.info("RST market sector table (broader)")
     broader_table = report.create_report_table(
         report.kcal_contr_table(
-            broader_category, pan_ind, pur_recs, nut_recs, prod_meta
+            broader_category, pan_ind, pur_recs, nut_recs, prod_meta, panel_weight
         ),
         report.kcal_density_table(
             broader_category,
@@ -94,6 +94,9 @@ if __name__ == "__main__":
         .drop_duplicates(subset=[granular_category])
         .set_index(granular_category)
     )
+
+    # Removing cat with less than 50 products (broader cat)
+    broader_table = broader_table[broader_table["number_products"] > 50].copy()
 
     logging.info("Saving tables")
     # Save tables

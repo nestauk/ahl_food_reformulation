@@ -324,6 +324,7 @@ def prod_meta_update():
     """
     prod_meta = product_metadata()
     prod_meta["rst_4_market_sector"] = rst_4_market_sector_update(prod_meta)
+    prod_meta.dropna(subset=["rst_4_extended"], inplace=True)
 
     return prod_meta[prod_meta["rst_4_market_sector"] != "Dairy Products"]
 

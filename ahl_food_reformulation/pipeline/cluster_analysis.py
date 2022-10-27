@@ -52,9 +52,9 @@ def mk_reg_df_share(
     purch_recs_comb = transform.make_purch_records(nut_rec, comb_update, ["att_vol"])
 
     # for each hh and category create share of kcal
-    purch_recs_comb["share"] = purch_recs_comb["Energy KCal"] / purch_recs_comb.groupby(
-        ["Panel Id"]
-    )["Energy KCal"].transform("sum")
+    purch_recs_comb["share"] = purch_recs_comb[
+        "Gross_up_kcal"
+    ] / purch_recs_comb.groupby(["Panel Id"])["Gross_up_kcal"].transform("sum")
 
     # clean category names
     purch_recs_comb["att_vol"] = (
@@ -91,6 +91,7 @@ def mk_reg_df_adj(
     prod_vals: pd.DataFrame,
     nut_rec: pd.DataFrame,
     prod_meta: pd.DataFrame,
+    panel_weight: pd.DataFrame,
     att_num: int,
 ):
     """
@@ -105,6 +106,7 @@ def mk_reg_df_adj(
     pur_recs (pd.DataFrame): Pandas dataframe contains the purchase records of specified data
     prod_codes (pd.DataFrame): Pandas dataframe contains the codes to link products to category information
     prod_vals (pd.DataFrame): Pandas dataframe contains the product category information
+    panel_weight (pd.DataFrame) : Pandas dataframe contains the demographic weights
     att_num (int): Product category type code number
 
     Returns
@@ -132,13 +134,15 @@ def mk_reg_df_adj(
     elif att_num == 2828:
         comb_update.rename(columns={"rst_4_market_sector": "att_vol"}, inplace=True)
 
-    purch_recs_comb = transform.make_purch_records(
-        nut_rec, comb_update, ["att_vol"]
-    ).merge(pan_conv, on="Panel Id")
+    purch_recs_comb = (
+        transform.make_purch_records(nut_rec, comb_update, ["att_vol"])
+        .merge(pan_conv, on="Panel Id")
+        .merge(panel_weight, left_on="Panel Id", right_on="panel_id", how="inner")
+    )
 
     # for each hh and category create adjusted kcal
-    purch_recs_comb["abs_adj"] = (
-        purch_recs_comb["Energy KCal"] / purch_recs_comb["conversion"]
+    purch_recs_comb["abs_adj"] = purch_recs_comb["Gross_up_kcal"] / (
+        purch_recs_comb["conversion"] * purch_recs_comb["demographic_weight"]
     )
 
     # clean category names
@@ -430,6 +434,7 @@ def cluster_table(
         prod_vals,
         nut_rec,
         prod_meta,
+        panel_weight,
         att_num,
     )
 
@@ -490,4 +495,5 @@ def cluster_table(
         tbl.merge(share_table, on="att_vol", how="left")
         .merge(adj_table, on="att_vol", how="left")
         .drop("att_vol", axis=1)
+        .fillna(0)
     ).set_index(cat)
