@@ -45,3 +45,7 @@ Running the script `cluster_households.py` produces figures depicting the cluste
 Running the script `ahl_food_reformulation/analysis/clustering_outputs_analysis.py` reproduces the charts and analysis presented internally in July 2022 (charts are saved in `outputs/figures/png`).
 
 You can modify the script to adapt it to new clustering outputs. Perhaps the cleanest strategy to do that is to change the `kantar.panel_clusters` table with new outputs so that households are automatically tagged with them when you read demographic information with `kantar.demog_clean()`. Another option would be to assign clusters in the script itself.
+
+### Analysis of decision table
+
+Run the script `ahl_food_reformulation/analysis/decision_table_analysis/make_table_analysis.py` to reproduce the figures and tables used in the final report, which will be saved in the `outputs/figures/png` and `outputs/reports` folders.
