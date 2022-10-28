@@ -262,3 +262,13 @@ if __name__ == "__main__":
         "cumplot_sequential",
         driver=driver,
     )
+
+    # Save distribution dfs for avg and seq
+    diff_avg.to_csv(
+        f"{PROJECT_DIR}/outputs/data/decision_table/distribution_reduction_avg.csv",
+        index=False,
+    )
+    diff_seq.to_csv(
+        f"{PROJECT_DIR}/outputs/data/decision_table/distribution_reduction_seq.csv",
+        index=False,
+    )
