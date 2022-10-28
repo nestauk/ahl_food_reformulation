@@ -41,7 +41,8 @@ clean_variable_names = {
     "cluster_no_sh": "clusters_impacted_clusters_share",
     "cluster_no_adj": "clusters_impacted_clusters_volume",
     "cluster_low_sh": "clusters_low_income_impacted_clusters_share",
-    "cluster_low_adj": "clusters_low_income_impacted_clusters_volume",}
+    "cluster_low_adj": "clusters_low_income_impacted_clusters_volume",
+}
 
 var_order = list(clean_variable_names.values())
 
@@ -446,7 +447,7 @@ if __name__ == "__main__":
         )
         .configure_axis(labelLimit=1000, labelFontSize=13)
         .properties(width=200, height=700)
-        .properties(width=200, height=800
+        .properties(width=200, height=800)
     )
 
     save_altair(indicator_heatmap, "indicator_heatmap", driver=webdr)
@@ -466,11 +467,27 @@ if __name__ == "__main__":
         .properties(width=300, height=700)
     )
 
+    logging.info("bubblechart with averaged indicators")
+    aggr_bubble_chart = pipe(
+        report_table_clean_long.groupby(["category", PROD_VAR])["z_score"]
+        .mean()
+        .reset_index(drop=False),
+        partial(
+            make_indicator_bubblechart,
+            axis_order=["Impact on Diets", "Feasibility", "Inclusion"],
+            var_names=["category", "rst_4_market_sector", "z_score"],
+        ),
+    ).properties(width=200)
+
+    save_altair(
+        configure_plots(aggr_bubble_chart), "indicator_bubblechart_aggr", driver=webdr
+    )
+
     save_altair(
         configure_plots(indicator_bubble_chart), "indicator_bubblechart", driver=webdr
     )
 
-logging.info("Making high level recommendations")
+    logging.info("Making high level recommendations")
     recc_table = make_recommendations(report_table_clean_long, 5).T
 
     logging.info(recc_table.head())
