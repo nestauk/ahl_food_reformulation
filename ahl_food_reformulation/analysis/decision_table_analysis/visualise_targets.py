@@ -1,7 +1,5 @@
 # Import libraries
 from ahl_food_reformulation import PROJECT_DIR
-from ahl_food_reformulation.getters import kantar
-from ahl_food_reformulation.pipeline import energy_density as energy
 from ahl_food_reformulation.utils.plotting import configure_plots
 from ahl_food_reformulation.utils.altair_save_utils import (
     save_altair,
@@ -90,6 +88,8 @@ def facet_bar_perc_ed(
     x_label: str,
     hex_colour: list,
     title: str,
+    max_scale: int,
+    y_type: str,
 ):
     """
     Plots altair scatter based on metrics in decision table for market sector
@@ -101,6 +101,8 @@ def facet_bar_perc_ed(
         x_label (str): Title for x-axis
         NESTA_COLOURS (list): List of hex nesta colours
         title (st): Plot title
+        max_scale (int): Maximum axis scale
+        y_type (str): Y format
     Returns:
         Facet bar plot
     """
@@ -121,8 +123,8 @@ def facet_bar_perc_ed(
             x=alt.X(
                 col_x,
                 title=x_label,
-                axis=alt.Axis(format="%", grid=False),
-                scale=alt.Scale(domain=[0, 1]),
+                axis=alt.Axis(format=y_type, grid=False),
+                scale=alt.Scale(domain=[0, max_scale]),
             ),
         )
     )
@@ -163,17 +165,6 @@ if __name__ == "__main__":
 
     logging.info("Reading data")
     # read data
-    pur_recs = kantar.purchase_records_updated()
-    nut_recs = kantar.nutrition()
-    prod_meta = kantar.prod_meta_update()
-    prod_meas = kantar.product_measurement()
-    pan_ind = kantar.household_ind()
-    prod_mast = kantar.product_master()
-    val_fields = kantar.val_fields()
-    uom = kantar.uom()
-    prod_codes = kantar.product_codes()
-    prod_vals = kantar.product_values()
-    panel_weight = kantar.panel_weights_year()
     gran_decision = pd.read_csv(
         f"{PROJECT_DIR}/outputs/data/decision_table/decision_table_"
         + granular_category
@@ -185,30 +176,9 @@ if __name__ == "__main__":
         + ".csv"
     )
 
-    # Get avergaes for % high energy density
-    df_prod_ed = energy.prod_energy_100(
-        broader_category,
-        pur_recs,
-        nut_recs,
-        prod_meta,
-        prod_meas,
-    )
-    df_prod_ed["energy_density_cat"] = energy.energy_density_score(
-        df_prod_ed["kcal_100g_ml"]
-    )
-    # Energy density sales
-    ed_cats_sales = (
-        df_prod_ed.groupby(["energy_density_cat"])["total_sale"].sum()
-        / df_prod_ed["total_sale"].sum()
-    )
-    # Energy density products
-    ed_cats_num = (
-        df_prod_ed.groupby(["energy_density_cat"]).size()
-        / df_prod_ed.groupby(["energy_density_cat"]).size().sum()
-    )
-    # Avg variables
-    mean_ed_sales = ed_cats_sales.high
-    mean_ed_prods = ed_cats_num.high
+    # Get averages
+    avg_kcal_cont = (gran_decision["percent_kcal_contrib_weighted"].mean()) / 100
+    avg_ed_sales = gran_decision["kcal_100_s"].mean()
 
     # Unique list of chosen cat groups
     chosen_cats_list = ["", "_sequential"]
@@ -242,7 +212,12 @@ if __name__ == "__main__":
         # Granular plot table
         gran_decision_subset = chosen_cats.merge(
             gran_decision_sub[
-                ["rst_4_extended", "percent_high_ed_sales_weighted", "percent_high_ed"]
+                [
+                    "rst_4_extended",
+                    "percent_kcal_contrib_weighted",
+                    "percent_kcal_contrib_size_adj_weighted",
+                    "kcal_100_s",
+                ]
             ],
             on="rst_4_extended",
             how="left",
@@ -250,14 +225,16 @@ if __name__ == "__main__":
         gran_decision_subset.columns = [
             "Market sector",
             "Categories",
-            "Percent sales high ED",
-            "Percent products high ED",
+            "Percent kcal contr",
+            "Percent kcal contr - size adj",
+            "Sales weight ED",
         ]
-        gran_decision_subset["Percent sales high ED"] = (
-            gran_decision_subset["Percent sales high ED"] / 100
+
+        gran_decision_subset["Percent kcal contr"] = (
+            gran_decision_subset["Percent kcal contr"] / 100
         )
-        gran_decision_subset["Percent products high ED"] = (
-            gran_decision_subset["Percent products high ED"] / 100
+        gran_decision_subset["Percent kcal contr - size adj"] = (
+            gran_decision_subset["Percent kcal contr - size adj"] / 100
         )
 
         # Group cats for plot with same values
@@ -302,23 +279,27 @@ if __name__ == "__main__":
             "Share of clusters and low income clusters impacted",
             ["right", "line-bottom", 15, -5],
         )
+        figure_facet_kcal_cont = facet_bar_perc_ed(
+            gran_decision_subset,
+            avg_kcal_cont,
+            "Average kcal contribution",
+            "Percent kcal contr",
+            "Percent kcal contribution",
+            "#18A48C",
+            "Kcal contribution per chosen product category",
+            0.05,
+            "%",
+        )
         figure_facet_sales_ed = facet_bar_perc_ed(
             gran_decision_subset,
-            mean_ed_sales,
-            "Average % of sales",
-            "Percent sales high ED",
-            "Percent of sales",
+            avg_ed_sales,
+            "Average energy density",
+            "Sales weight ED",
+            "Sales weight Energy Density",
             "#18A48C",
-            "Percent of Sales as High Energy Density",
-        )
-        figure_facet_prods_ed = facet_bar_perc_ed(
-            gran_decision_subset,
-            mean_ed_prods,
-            "Average % of products",
-            "Percent products high ED",
-            "Percent of products",
-            "#EB003B",
-            "Percent of Products as High Energy Density",
+            "Sales weighted Energy density per 100g/l",
+            700,
+            ".0f",
         )
 
         logging.info("Save plots")
@@ -339,12 +320,12 @@ if __name__ == "__main__":
             driver=driver,
         )
         save_altair(
-            altair_text_resize(figure_facet_sales_ed),
-            "facet_sales_ed" + chosen_method,
+            altair_text_resize(figure_facet_kcal_cont),
+            "facet_kcal_cont" + chosen_method,
             driver=driver,
         )
         save_altair(
-            altair_text_resize(figure_facet_prods_ed),
-            "facet_products_ed" + chosen_method,
+            altair_text_resize(figure_facet_sales_ed),
+            "facet_sales_weight_ed" + chosen_method,
             driver=driver,
         )
