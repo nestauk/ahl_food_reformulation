@@ -38,6 +38,7 @@ def nestafont():
             "axis": {"labelFont": FONT, "titleFont": FONT},
             "header": {"labelFont": FONT, "titleFont": FONT},
             "legend": {"labelFont": FONT, "titleFont": FONT},
+            "text": {"font": FONT},
             "range": {
                 "category": NESTA_COLOURS,
                 "ordinal": {
