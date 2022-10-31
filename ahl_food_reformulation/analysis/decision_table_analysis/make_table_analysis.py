@@ -9,7 +9,7 @@ from functools import partial
 import numpy as np
 import pandas as pd
 import altair as alt
-from typing import Union
+from typing import Union, List
 
 from ahl_food_reformulation import PROJECT_DIR
 from ahl_food_reformulation.utils.plotting import configure_plots
@@ -21,26 +21,27 @@ from ahl_food_reformulation.utils.altair_save_utils import (
 
 
 clean_variable_names = {
-    "number_products": "number_products",
-    "kcal_100_s": "high_energy_density_share",
-    "kcal_100_w": "high_energy_density_share_sales",
+    # "number_products": "number_products",
+    "kcal_100_s": "energy_density_average",
+    "kcal_100_w": "energy_density_average_weighted_by_sales",
     "percent_high_ed": "high_energy_density_products_share",
-    "percent_high_ed_sales_weighted": "high_energy_density_products_share_sales",
-    "mean_kcal_size_adj_weighted": "mean_kcal_sales_adjusted",
-    "median_kcal_size_adj_weighted": "median_kcal_sales_adjusted",
+    "percent_high_ed_sales_weighted": "high_energy_density_products_share_weighted_by_sales",
+    "mean_kcal_size_adj_weighted": "mean_kcal_sales_adjusted_by_size",
+    "median_kcal_size_adj_weighted": "median_kcal_sales_adjusted_by_size",
     "IQR_kcal_size_adj_weighted": "interquartile_range_kcal",
     "percent_kcal_contrib_weighted": "kcal_contribution_share",
-    "percent_kcal_contrib_size_adj_weighted": "kcal_contribution_share_adjusted",
+    "percent_kcal_contrib_size_adj_weighted": "kcal_contribution_share_adjusted_by_size",
     "variance": "kcal_density_variance",
     "variance_size_adj": "kcal_density_variance_normalised",
-    "variance_adj_scaled": "kcal_density_variance_adjusted_normalised",
-    "entropy": "nutrient_entropy",
-    "entropy_size_adj": "nutrient_entropy_normalised",
-    "share_sh": "share_population_impacted",
-    "share_adj": "share_population_impacted_adjusted_clusters",
-    "cluster_no_sh": "clusters_impacted_share_clusters",
-    "cluster_low_sh": "clusters_low_income_impacted_share_clusters",
-    "cluster_low_adj": "clusters_impacted_adjusted_clusers",
+    # "variance_adj_scaled": "kcal_density_variance_adjusted_normalised",
+    "entropy": "kcal_entropy",
+    "entropy_size_adj": "kcal_entropy_normalised",
+    "share_sh": "share_population_impacted_clusters_share",
+    "share_adj": "share_population_impacted_clusters_volume",
+    "cluster_no_sh": "clusters_impacted_clusters_share",
+    "cluster_no_adj": "clusters_impacted_clusters_volume",
+    "cluster_low_sh": "clusters_low_income_impacted_clusters_share",
+    "cluster_low_adj": "clusters_low_income_impacted_clusters_volume",
 }
 
 var_order = list(clean_variable_names.values())
@@ -51,22 +52,24 @@ plotting_order = list(plotting_names.values())
 
 # We will focus on these variables after the correlation analysis
 selected_vars = [
-    "high_energy_density_share_sales",
-    "kcal_contribution_share_adjusted",
+    "energy_density_average_weighted_by_sales",
+    "kcal_contribution_share",
     "kcal_density_variance_normalised",
-    "nutrient_entropy_normalised",
-    "clusters_low_income_impacted_share_clusters",
+    "kcal_entropy_normalised",
+    "clusters_low_income_impacted_clusters_share",
 ]
 
 # Lookup between clean variable names and categories
 var_category_lookup = {
-    "high_energy_density_share_sales": "Impact on Diets",
-    "kcal_contribution_share_adjusted": "Impact on Diets",
+    "energy_density_average_weighted_by_sales": "Impact on Diets",
+    "kcal_contribution_share": "Impact on Diets",
     "kcal_density_variance_normalised": "Feasibility",
-    "nutrient_entropy_normalised": "Feasibility",
-    "clusters_impacted_share_clusters": "Inclusion",
-    "clusters_low_income_impacted_share_clusters": "Inclusion",
+    "kcal_entropy_normalised": "Feasibility",
+    "clusters_impacted_clusters_share": "Inclusion",
+    "clusters_low_income_impacted_clusters_share": "Inclusion",
 }
+
+PROD_VAR = "rst_4_market_sector"
 
 # Functions
 
@@ -177,6 +180,38 @@ def make_indicator_heatmap(
     return heatmap + text
 
 
+def make_indicator_bubblechart(
+    report_table: pd.DataFrame,
+    axis_order: list,
+    var_names: list,
+    col_thres=2,
+) -> pd.DataFrame:
+    """Create a bubblechart to visualise the distribution of indicators"""
+
+    base = alt.Chart(
+        report_table.assign(abs_value=lambda df: [np.abs(x) for x in df[var_names[2]]])
+    ).encode(
+        x=alt.X(var_names[0], sort=axis_order, title=None),
+        y=alt.Y(
+            var_names[1],
+            title=None,
+            sort=alt.EncodingSortField(var_names[2], op="mean", order="descending"),
+        ),
+    )
+
+    heatmap = base.mark_point(stroke="black", filled=True, strokeWidth=0.5).encode(
+        color=alt.Color(
+            var_names[2],
+            title="Z-score",
+            scale=alt.Scale(scheme="redblue"),
+            sort="descending",
+        ),
+        size=alt.Size("abs_value", title="Absolute score"),
+    )
+
+    return heatmap
+
+
 def make_recommendations(
     report_table: pd.DataFrame, top_reccs: int = 5
 ) -> pd.DataFrame:
@@ -210,12 +245,117 @@ def make_recommendations(
     )
 
 
+def make_sequential_table(
+    table: pd.DataFrame,
+    selection_sequence: List = ["Impact on Diets", "Feasibility", "Inclusion"],
+    selection_thresholds: List = [15, 10, 5],
+) -> pd.DataFrame:
+    """Creates a table with reformulation recommendations based on different indicators
+    and selection thresholds
+
+    Args:
+        table: Table with reformulation recommendations
+        selection_sequence: Sequence of selection criteria
+        selection_thresholds: Thresholds for each selection criteria
+
+    Returns:
+        A table with reformulation recommendations at different steps
+    """
+
+    table_copy = table.copy()
+
+    table_container = []
+
+    selected = [table_copy[PROD_VAR].unique()]
+
+    for n, crits in enumerate(zip(selection_sequence, selection_thresholds)):
+
+        t_filt = (
+            # Subsets a table on a selection criterion
+            table.query(f"category=='{crits[0]}'")
+            .reset_index(drop=True)
+            # Only keeps products that hadn't been filtered before
+            .assign(
+                z_score_filtered=lambda df: [
+                    z if prod in selected[n] else np.nan
+                    for prod, z in zip(df[PROD_VAR], df["z_score"])
+                ]
+            )
+            .sort_values("z_score_filtered", ascending=False)
+            # Only keep colour if the z-score is above the threshold
+            .assign(
+                color=lambda df: [
+                    z if n < crits[1] else np.nan
+                    for n, z in enumerate(df["z_score_filtered"])
+                ]
+            )
+            # Absolute value to make the size of the bubble proportional to the z-score
+            .assign(z_score_abs=lambda df: [np.abs(z) for z in df["z_score"]])
+            # Dummy to assign shape depending on whether the zscore is + or -
+            .assign(
+                shape=lambda df: [
+                    "Positive score" if z > 0 else "Negative score"
+                    for z in df["z_score"]
+                ]
+            )
+        )
+
+        # Selected criteria will be used for filtering the next table
+        selected.append(t_filt[PROD_VAR][: crits[1]].unique())
+
+        table_container.append(t_filt)
+
+    return pd.concat(table_container)
+
+
+def make_selection_chart(
+    decision_table: pd.DataFrame, sort_by: str = "Inclusion"
+) -> alt.Chart:
+    """Creates a chart to visualise the selection process
+
+    decision_table: Table with scores according to decision criteria
+    sort_by: Sort the table by a specific decision criteria
+    """
+
+    # How to sort the categories
+    sort_prod = (
+        seq_table.query(f"category=='{sort_by}'")
+        .sort_values("z_score_filtered", ascending=False)[PROD_VAR]
+        .tolist()
+    )
+
+    return (
+        alt.Chart(decision_table)
+        .mark_point(filled=True, strokeWidth=1)
+        .encode(
+            y=alt.Y(PROD_VAR, sort=sort_prod, title=None),
+            x=alt.X(
+                "category",
+                sort=["Impact on Diets", "Feasibility", "Inclusion"],
+                title=None,
+            ),
+            size=alt.Size("z_score_abs", title="Absolute score"),
+            shape=alt.Shape(
+                "shape",
+                scale=alt.Scale(range=["triangle-up", "triangle-down"]),
+                sort=["Positive score", "Negative Score"],
+            ),
+            color=alt.condition(
+                "datum.color !== null", alt.value("orange"), alt.value("white")
+            ),
+            stroke=alt.condition(
+                "datum.color !== null", alt.value("black"), alt.value("grey")
+            ),
+        )
+    ).properties(width=100, height=600)
+
+
 def make_detailed_recommendations(
     high_level_cats: list,
     detailed_table: pd.DataFrame,
     variables: list = [
-        "nutrient_entropy_normalised",
-        "kcal_contribution_share_adjusted",
+        "kcal_entropy_normalised",
+        "kcal_contribution_share",
     ],
     thresholds: list = [30, 5],
 ) -> pd.DataFrame:
@@ -223,7 +363,7 @@ def make_detailed_recommendations(
 
     detailed_products = {}
 
-    for t in top_cats:
+    for t in high_level_cats:
 
         detailed_products[t] = ", ".join(
             (
@@ -305,11 +445,31 @@ if __name__ == "__main__":
             ),
             configure_plots,
         )
-        .configure_axis(labelLimit=1000, labelFontSize=12)
+        .configure_axis(labelLimit=1000, labelFontSize=13)
+        .properties(width=200, height=700)
         .properties(width=200, height=800)
     )
 
     save_altair(indicator_heatmap, "indicator_heatmap", driver=webdr)
+
+    indicator_bubble_chart = (
+        pipe(
+            report_table_clean_long,
+            partial(relabel_names, columns=["clean_label"], clean_dict=plotting_names),
+            partial(
+                make_indicator_bubblechart,
+                axis_order=plotting_order,
+                var_names=["clean_label", "rst_4_market_sector", "z_score"],
+            ),
+            configure_plots,
+        )
+        .configure_axis(labelLimit=1000, labelFontSize=13)
+        .properties(width=300, height=700)
+    )
+
+    save_altair(
+        configure_plots(indicator_bubble_chart), "indicator_bubblechart", driver=webdr
+    )
 
     logging.info("Making high level recommendations")
     recc_table = make_recommendations(report_table_clean_long, 5).T
@@ -317,6 +477,30 @@ if __name__ == "__main__":
     logging.info(recc_table.head())
 
     recc_table.to_csv(f"{PROJECT_DIR}/outputs/reports/recommendation.csv")
+
+    logging.info("Implementing alternative decision-making criterion")
+
+    # Creates table for visualisation
+    seq_table = pipe(
+        report_table_clean_long.groupby(["rst_4_market_sector", "category"])["z_score"]
+        .mean()
+        .reset_index(name="z_score"),
+        make_sequential_table,
+    )
+
+    save_altair(
+        configure_plots(make_selection_chart(seq_table)),
+        "indicator_sequential_decision",
+        driver=webdr,
+    )
+
+    # The top criteria would be...
+    top_sequential_cats = (
+        seq_table.query("category=='Inclusion'")
+        .dropna(axis=0, subset=["color"])[PROD_VAR]
+        .tolist()
+    )
+    logging.info(f"Top sequential market sectors: {top_sequential_cats}")
 
     logging.info("Making detailed recommendations")
 
@@ -344,10 +528,25 @@ if __name__ == "__main__":
 
     detailed_reccs.to_csv(f"{PROJECT_DIR}/outputs/reports/detailed_recommendation.csv")
 
+    detailed_reccs_sec = pd.DataFrame(
+        make_detailed_recommendations(top_sequential_cats, report_table_detailed),
+        index=["Detailed recommendations"],
+    ).T
+
+    logging.info(detailed_reccs_sec.head())
+
     # Save an easier to parse version for the macro nutrient chart
 
     with open(f"{PROJECT_DIR}/outputs/reports/detailed_products.json", "w") as outfile:
         json.dump(
             detailed_reccs["Detailed recommendations"].str.split(", ").to_dict(),
+            outfile,
+        )
+
+    with open(
+        f"{PROJECT_DIR}/outputs/reports/detailed_products_sequential.json", "w"
+    ) as outfile:
+        json.dump(
+            detailed_reccs_sec["Detailed recommendations"].str.split(", ").to_dict(),
             outfile,
         )
