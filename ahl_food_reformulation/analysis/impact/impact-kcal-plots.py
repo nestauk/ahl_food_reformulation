@@ -133,7 +133,7 @@ if __name__ == "__main__":
 
     driver = google_chrome_driver_setup()
 
-    df = pd.read_csv(f"{PROJECT_DIR}/outputs/data/impact_on_kcal.csv")
+    df = pd.read_csv(f"{PROJECT_DIR}/outputs/data/impact_on_kcal_avg.csv")
 
     df.columns = ["index", "0% Reformulation", "5% Reformulation", "10% Reformulation"]
 
@@ -191,7 +191,11 @@ if __name__ == "__main__":
         .mark_line()
         .encode(
             x=alt.X("index", axis=alt.Axis(format="%", title="Percentile")),
-            y=alt.Y("value", axis=alt.Axis(title="kcal/day")),
+            y=alt.Y(
+                "value",
+                axis=alt.Axis(title="kcal/day"),
+                scale=alt.Scale(domain=[-70, 0]),
+            ),
             color=alt.Color(
                 "Reformulation Level",
                 scale={"range": list(pu.NESTA_COLOURS[x] for x in [0, 1])},
@@ -201,8 +205,8 @@ if __name__ == "__main__":
 
     fig2 = configure_plots(
         fig2,
-        "Distribution of Reduction in Per Capita Daily Calorie Compared to No Reformulation",
-        "Average",
+        "",
+        "",
         16,
         20,
         16,
@@ -240,7 +244,11 @@ if __name__ == "__main__":
         .mark_line()
         .encode(
             x=alt.X("index", axis=alt.Axis(format="%", title="Percentile")),
-            y=alt.Y("value", axis=alt.Axis(title="kcal/day")),
+            y=alt.Y(
+                "value",
+                axis=alt.Axis(title="kcal/day"),
+                scale=alt.Scale(domain=[-70, 0]),
+            ),
             color=alt.Color(
                 "Reformulation Level",
                 scale={"range": list(pu.NESTA_COLOURS[x] for x in [0, 1])},
@@ -250,8 +258,8 @@ if __name__ == "__main__":
 
     fig3 = configure_plots(
         fig3,
-        "Distribution of Reduction in DPer Capita aily Calorie Compared to No Reformulation",
-        "Sequential",
+        "",
+        "",
         16,
         20,
         16,
