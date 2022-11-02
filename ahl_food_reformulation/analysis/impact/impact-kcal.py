@@ -51,6 +51,10 @@ if __name__ == "__main__":
         nut_rec,
     )
 
+    hh_kcal_filter_avg = kcal.compare_scenarios(
+        panel_weight, purch_recs_comb_scenarios_avg, pan_ind
+    )
+
     logging.info("Merging data - Sequential")
 
     purch_recs_comb_scenarios_seq = kcal.make_impact(
@@ -64,64 +68,8 @@ if __name__ == "__main__":
         nut_rec,
     )
 
-    hh_kcal_filter_avg = pd.concat(
-        [
-            kcal.kcal_day(
-                purch_recs_comb_scenarios_avg,
-                pan_ind,
-                panel_weight,
-                "Gross_up_kcal",
-                0.05,
-                0.95,
-            ),
-            kcal.kcal_day(
-                purch_recs_comb_scenarios_avg,
-                pan_ind,
-                panel_weight,
-                "Gross_up_kcal_min",
-                0.05,
-                0.95,
-            ),
-            kcal.kcal_day(
-                purch_recs_comb_scenarios_avg,
-                pan_ind,
-                panel_weight,
-                "Gross_up_kcal_max",
-                0.05,
-                0.95,
-            ),
-        ],
-        axis=1,
-    )
-
-    hh_kcal_filter_seq = pd.concat(
-        [
-            kcal.kcal_day(
-                purch_recs_comb_scenarios_seq,
-                pan_ind,
-                panel_weight,
-                "Gross_up_kcal",
-                0.05,
-                0.95,
-            ),
-            kcal.kcal_day(
-                purch_recs_comb_scenarios_seq,
-                pan_ind,
-                panel_weight,
-                "Gross_up_kcal_min",
-                0.05,
-                0.95,
-            ),
-            kcal.kcal_day(
-                purch_recs_comb_scenarios_seq,
-                pan_ind,
-                panel_weight,
-                "Gross_up_kcal_max",
-                0.05,
-                0.95,
-            ),
-        ],
-        axis=1,
+    hh_kcal_filter_seq = kcal.compare_scenarios(
+        panel_weight, purch_recs_comb_scenarios_seq, pan_ind
     )
 
     logging.info("Generating Descriptive Stats")

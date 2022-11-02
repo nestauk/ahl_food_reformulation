@@ -1,4 +1,6 @@
 from ahl_food_reformulation.pipeline import transform_data as transform
+from functools import reduce
+import pandas as pd
 
 
 def make_impact(
@@ -109,12 +111,13 @@ def kcal_day(purch_recs_comb_scenarios, pan_ind, panel_weight, scenario, low, hi
     pandas Series with descriptive statistics for daily kcal distribution
 
     """
+
+    panel_weight.rename(columns={"panel_id": "Panel Id"}, inplace=True)
+
     # generate conversion factor
     pan_conv = transform.hh_size_conv(pan_ind)
 
-    pan_conv_weighted = pan_conv.merge(
-        panel_weight, left_on="Panel Id", right_on="panel_id", how="inner"
-    )
+    pan_conv_weighted = pan_conv.merge(panel_weight, on="Panel Id", how="inner")
     pan_conv_weighted["conversion"] = (
         pan_conv_weighted["conversion"] * pan_conv_weighted["demographic_weight"]
     )
@@ -142,7 +145,7 @@ def kcal_day(purch_recs_comb_scenarios, pan_ind, panel_weight, scenario, low, hi
         & (hh_kcal_weighted[scenario + "_daily"] > q_low)
     ].copy()
 
-    return hh_kcal_filter[scenario + "_daily"]
+    return hh_kcal_filter[["Panel Id", scenario + "_daily"]]
 
 
 def kcal_day_describe(hh_kcal_filter):
@@ -161,3 +164,65 @@ def kcal_day_describe(hh_kcal_filter):
     """
 
     return hh_kcal_filter.describe()
+
+
+def compare_scenarios(panel_weight, purch_recs_comb_scenarios, pan_ind):
+    """
+
+
+    Parameters
+    ----------
+    panel_weight : TYPE
+        DESCRIPTION.
+     : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    None.
+
+    """
+
+    panel_weight.rename(columns={"panel_id": "Panel Id"}, inplace=True)
+
+    data_frames = [
+        kcal_day(
+            purch_recs_comb_scenarios,
+            pan_ind,
+            panel_weight,
+            "Gross_up_kcal",
+            0.05,
+            0.95,
+        ),
+        kcal_day(
+            purch_recs_comb_scenarios,
+            pan_ind,
+            panel_weight,
+            "Gross_up_kcal_min",
+            0.05,
+            0.95,
+        ),
+        kcal_day(
+            purch_recs_comb_scenarios,
+            pan_ind,
+            panel_weight,
+            "Gross_up_kcal_max",
+            0.05,
+            0.95,
+        ),
+        panel_weight,
+    ]
+
+    df_merged = reduce(
+        lambda left, right: pd.merge(left, right, on=["Panel Id"], how="outer"),
+        data_frames,
+    )
+
+    df_merged["pos_diff_5"] = (
+        df_merged["Gross_up_kcal_daily"] - df_merged["Gross_up_kcal_min_daily"]
+    )
+    df_merged["pos_diff_10"] = (
+        df_merged["Gross_up_kcal_daily"] - df_merged["Gross_up_kcal_max_daily"]
+    )
+
+    return df_merged
