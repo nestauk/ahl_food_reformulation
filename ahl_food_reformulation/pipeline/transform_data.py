@@ -270,7 +270,7 @@ def hh_kcal_per_category(
     """
     purch_recs_comb = make_purch_records(nut, comb_files, ["att_vol"])
     return scale_hh(
-        hh_kcal_per_prod(purch_recs_comb), scaler_type
+        hh_kcal_per_prod(purch_recs_comb, "Energy KCal"), scaler_type
     )  # Scale the hh purchases 0 to 1
 
 
@@ -522,7 +522,7 @@ def hh_kcal_volume_converted(
     comb_files: pd.DataFrame,
 ):
     """
-    Applies a scaler to each row of household purchases.
+    Converts the Applies a scaler to each row of household purchases.
     Args:
         nut (pd.DataFrame): Nutritional info per purchase
         pan_conv (pd.DataFrame): Pandas dataframe of households converted totals
@@ -532,7 +532,7 @@ def hh_kcal_volume_converted(
         pd.DateFrame: Household converted total kcal purchased scaled
     """
     purch_recs_comb = make_purch_records(nut, comb_files, ["att_vol"])
-    hh_kcal = hh_kcal_per_prod(purch_recs_comb)
+    hh_kcal = hh_kcal_per_prod(purch_recs_comb, "Energy KCal")
     hh_kcal_conv = apply_hh_conv(hh_kcal, pan_conv)
     return scale_df(scaler, hh_kcal_conv)
 

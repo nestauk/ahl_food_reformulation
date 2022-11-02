@@ -1,4 +1,10 @@
-# ahl-food-reformulation
+<!-- #region -->
+
+# Identifying targets for reformulation using the Kantar dataset
+
+## Welcome :wave:
+
+Intro text
 
 ## Setup
 
@@ -10,12 +16,26 @@
   - Configure pre-commit
   - Configure metaflow to use AWS
 
-## Contributor guidelines
+## Installation and running the code
 
-[Technical and working style guidelines](https://github.com/nestauk/ds-cookiecutter/blob/master/GUIDELINES.md)
+### Clone and set up the repo
 
----
+1. Follow the below steps to setup the project.
 
-<small><p>Project based on <a target="_blank" href="https://github.com/nestauk/ds-cookiecutter">Nesta's data science project template</a>
-(<a href="http://nestauk.github.io/ds-cookiecutter">Read the docs here</a>).
-</small>
+```shell
+$ git clone https://github.com/nestauk/ahl_food_reformulation
+$ cd ahl_food_reformulation
+```
+
+2. Run the command `make install` to create the virtual environment and install dependencies
+
+### Download and save the data
+
+Download the data from the `latest_data` folder in [ahl-private-data](https://s3.console.aws.amazon.com/s3/buckets/ahl-private-data?prefix=kantar%2Fdata_v3%2F&region=eu-west-2&showversions=false#) s3 bucket and save to following folders:
+
+- `inputs/data`
+- `outputs/data`
+
+The data in `latest_data` should be inside `inputs` and `outputs` folders.
+
+<!-- #endregion -->
