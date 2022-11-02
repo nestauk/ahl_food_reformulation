@@ -13,25 +13,25 @@
     "Everyday Treats Other Creams",
     "Cereal Bars Chocolate"
   ],
-  "Sweet Home Cooking": [
-    "Caster Sugar",
-    "Home Baking Baking Fruits",
-    "Home Baking Snacking Fruits",
-    "Icing Sugar",
-    "Other Baking Ingredients"
-  ],
-  "Eggs and Butter": [
-    "Eggs Hens Free Range",
-    "Butter Slightly Sal Spreadable",
-    "Dairy Spreads",
-    "Butter Standard Block",
-    "Pufa/Mufa Margarine/Spread"
-  ],
   "Chilled Convenience": [
     "Chilled Ready Mea Meal Centre",
     "Chilled Prepared Sld Coleslaw",
     "Chilled Ready Vegetable Accom",
     "Chilled Dips Single",
     "Cooked Meats Continental Meat"
+  ],
+  "Take Home Confectionery": [
+    "Chocolate Conf Multipack Choco",
+    "Choc Confctnry Block Chocolate",
+    "Sugar Confectio Sugar Sharing",
+    "Choc Confctnry Boxes+Gifting",
+    "Chocolate Confection Bitesize"
+  ],
+  "Chilled Bakery Products": [
+    "Chilled Cakes Small Cakes",
+    "Chilled Breads Garlic Slices",
+    "Chilled Cakes Small Tarts",
+    "Chilled Cakes Cheesecake",
+    "Chilled Cakes Large Tarts"
   ]
 }
