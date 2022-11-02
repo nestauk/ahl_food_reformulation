@@ -1,6 +1,6 @@
-<!-- #region -->
-
 # Identifying targets for reformulation using the Kantar dataset
+
+**_Repository for hosting the analysis that contributes to the report [insert link]_**
 
 ## Welcome :wave:
 
@@ -37,5 +37,3 @@ Download the data from the `latest_data` folder in [ahl-private-data](https://s3
 - `outputs/data`
 
 The data in `latest_data` should be inside `inputs` and `outputs` folders.
-
-<!-- #endregion -->

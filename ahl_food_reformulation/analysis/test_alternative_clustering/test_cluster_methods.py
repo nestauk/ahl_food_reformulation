@@ -36,18 +36,22 @@ if __name__ == "__main__":
     # Converted household size
     pan_conv = transform.hh_size_conv(pan_ind)
 
+    # Add volume measurement
+    pur_vol_sub = transform.vol_for_purch(purch_recs_subset, val_fields, prod_mast, uom)
+    pur_vol_year = transform.vol_for_purch(purch_recs_year, val_fields, prod_mast, uom)
+
     # Combine files
     comb_files_broad_sub = transform.combine_files(
-        val_fields, purch_recs_subset, prod_mast, uom, prod_codes, prod_vals, 2829
+        val_fields, pur_vol_sub, prod_codes, prod_vals, 2829
     )
     comb_files_broad_year = transform.combine_files(
-        val_fields, purch_recs_year, prod_mast, uom, prod_codes, prod_vals, 2829
+        val_fields, pur_vol_year, prod_codes, prod_vals, 2829
     )
     comb_files_gran_sub = transform.combine_files(
-        val_fields, purch_recs_subset, prod_mast, uom, prod_codes, prod_vals, 2907
+        val_fields, pur_vol_sub, prod_codes, prod_vals, 2907
     )
     comb_files_gran_year = transform.combine_files(
-        val_fields, purch_recs_year, prod_mast, uom, prod_codes, prod_vals, 2907
+        val_fields, pur_vol_year, prod_codes, prod_vals, 2907
     )
 
     # Broader category
@@ -84,7 +88,7 @@ if __name__ == "__main__":
         for scaler in scalers
     ]
     kcal_share_year = [
-        transform.hh_kcal_per_category(nut_subset, scaler, comb_files_gran_year)
+        transform.hh_kcal_per_category(nut_year, scaler, comb_files_gran_year)
         for scaler in scalers
     ]
 
@@ -182,7 +186,7 @@ if __name__ == "__main__":
         "centroid",
         "median",
     ]
-    print("Ocotber Subset, share of kcal, minmax scaler")
+    print("October Subset, share of kcal, minmax scaler")
     s_scores_sub, c_coef_sub = cluster.test_methods(
         methods, umap_share_sub[0], n_clusters
     )
@@ -226,7 +230,9 @@ if __name__ == "__main__":
     assigned_labels.set_index("Panel Id", inplace=True)
 
     # Plot 6 clusters
-    cluster.plot_clusters(6, umap_share_sub[0], assigned_labels.centroid_labels.values)
+    cluster.plot_clusters(
+        6, umap_share_sub[0], assigned_labels.centroid_labels.values, "centroids"
+    )
 
     # Save dataframe
     # Create path if doesn't exist and save file
