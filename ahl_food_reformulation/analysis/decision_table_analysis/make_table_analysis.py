@@ -386,7 +386,7 @@ if __name__ == "__main__":
     report_table_clean = (
         load_s3_data(
             "ahl-private-data",
-            "kantar/data_outputs/decision_table/decision_table_rst_4_market_sector.csv",
+            "kantar/data_outputs/decision_table/decision_table_rst_4_market_sector_reduced.csv",
         )
         .drop(axis=1, labels=["chosen_unit"])
         .melt(id_vars="rst_4_market_sector")
@@ -523,7 +523,7 @@ if __name__ == "__main__":
     report_table_detailed = pipe(
         load_s3_data(
             "ahl-private-data",
-            "kantar/data_outputs/decision_table/decision_table_rst_4_extended.csv",
+            "kantar/data_outputs/decision_table/decision_table_rst_4_extended_reduced.csv",
         ).rename(columns={"Unnamed: 0": "product"}),
         lambda df: df.rename(
             columns={
