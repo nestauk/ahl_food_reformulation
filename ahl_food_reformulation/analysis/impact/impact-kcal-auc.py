@@ -42,6 +42,8 @@ seq_5 = diff_seq[diff_seq["Reformulation Level"] == "5%"].dropna()
 seq_10 = diff_seq[diff_seq["Reformulation Level"] == "10%"].dropna()
 
 # calculate total number of calories removed from population
+print("AVERAGE METHOD")
+print("-------------")
 
 print(
     "The total number of daily calories removed from the population is "
@@ -51,6 +53,9 @@ print(
     "The total number of daily calories removed from the population is "
     + millify((avg_10["demographic_weight"] * avg_10["value"]).sum())
 )
+
+print("SEQUENTIAL METHOD")
+print("-------------")
 
 print(
     "The total number of daily calories removed from the population is "
