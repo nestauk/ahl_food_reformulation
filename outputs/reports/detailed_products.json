@@ -20,18 +20,18 @@
     "Chilled Dips Single",
     "Cooked Meats Continental Meat"
   ],
-  "Take Home Confectionery": [
-    "Chocolate Conf Multipack Choco",
-    "Choc Confctnry Block Chocolate",
-    "Sugar Confectio Sugar Sharing",
-    "Choc Confctnry Boxes+Gifting",
-    "Chocolate Confection Bitesize"
-  ],
   "Chilled Bakery Products": [
     "Chilled Cakes Small Cakes",
     "Chilled Breads Garlic Slices",
     "Chilled Cakes Small Tarts",
     "Chilled Cakes Cheesecake",
     "Chilled Cakes Large Tarts"
+  ],
+  "Take Home Confectionery": [
+    "Chocolate Conf Multipack Choco",
+    "Choc Confctnry Block Chocolate",
+    "Sugar Confectio Sugar Sharing",
+    "Choc Confctnry Boxes+Gifting",
+    "Chocolate Confection Bitesize"
   ]
 }
