@@ -1,37 +1,37 @@
 {
-  "Ambient Bakery Products": [
-    "Wrapped Bread White",
-    "Soft Bread Rolls",
-    "Wrapped Bread Wholemeal",
+  "Ambient Cakes+Pastries": [
     "Ambient Cakes Small Cakes",
-    "Morning Goods Tortilla Wraps"
+    "Ambient Cakes Large Whole Cake",
+    "Ambient Cakes+Past Mince Pies",
+    "Ambient Cakes Slices",
+    "Ambient Cakes Malt/Fruit Loave"
   ],
-  "Chilled Convenience": [
-    "Chilled Ready Mea Meal Centre",
-    "Chilled Prepared Sld Coleslaw",
-    "Chilled Ready Vegetable Accom",
-    "Chilled Dips Single",
-    "Cooked Meats Continental Meat"
+  "Everyday Treats": [
+    "Everyday Treat Choc Digestives",
+    "Everyday Treats Other Creams",
+    "Everyday Treats Jaffa Cakes",
+    "Everyday Treats Choc Oat",
+    "Everyday Treats Shortbread"
   ],
-  "Sweet Home Cooking": [
-    "Caster Sugar",
-    "Home Baking Baking Fruits",
-    "Home Baking Snacking Fruits",
-    "Icing Sugar",
-    "Other Baking Ingredients"
+  "Chocolate Confectionery": [
+    "Chocolate Conf Multipack Choco",
+    "Choc Confctnry Block Chocolate",
+    "Choc Confctnry Boxes+Gifting",
+    "Chocolate Confection Bitesize",
+    "Chclte Conf Egg+Nvlty+Seasonal"
   ],
-  "Frozen Prepared Foods": [
-    "Frozen Oven Chips",
-    "Frozen Pizzas Thin & Crispy",
-    "Frozen Potato Potato Products",
-    "Frozen Peas",
-    "Frozen Pizzas Deep Pan"
+  "Everyday Biscuits": [
+    "Everyday Biscuits Digestives",
+    "Everyday Biscu Custard Creams",
+    "Everyday Biscuits Rich Tea",
+    "Everyday Biscu Bourbon Creams",
+    "Everyday Biscuits Cookies"
   ],
-  "Eggs and Butter": [
-    "Eggs Hens Free Range",
-    "Butter Slightly Sal Spreadable",
-    "Dairy Spreads",
-    "Butter Standard Block",
-    "Pufa/Mufa Margarine/Spread"
+  "Nuts": [
+    "Nuts Standard Peanuts",
+    "Nuts Mixtures",
+    "Nuts Cashews",
+    "Nuts Almonds",
+    "Nuts Dry Roast Peanuts"
   ]
 }
