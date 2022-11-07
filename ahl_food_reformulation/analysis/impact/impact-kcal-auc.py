@@ -15,6 +15,20 @@ millnames = ["", " Thousand", " Million", " Billion", " Trillion"]
 
 
 def millify(n):
+    """
+    Return an easier to read version of a number
+
+    Parameters
+    ----------
+    n : float
+    number
+
+    Returns
+    -------
+    string
+        number in thousand, million, billion or trillion
+
+    """
     n = float(n)
     millidx = max(
         0,
@@ -46,11 +60,11 @@ print("AVERAGE METHOD")
 print("-------------")
 
 print(
-    "The total number of daily calories removed from the population is "
+    "Under 5% kcal reduction the total number of daily calories removed from the population is "
     + millify((avg_5["demographic_weight"] * avg_5["value"]).sum())
 )
 print(
-    "The total number of daily calories removed from the population is "
+    "Under 10% kcal reduction the total number of daily calories removed from the population is "
     + millify((avg_10["demographic_weight"] * avg_10["value"]).sum())
 )
 
@@ -58,11 +72,11 @@ print("SEQUENTIAL METHOD")
 print("-------------")
 
 print(
-    "The total number of daily calories removed from the population is "
+    "Under 5% kcal reduction the total number of daily calories removed from the population is "
     + millify((seq_5["demographic_weight"] * seq_5["value"]).sum())
 )
 print(
-    "The total number of daily calories removed from the population is "
+    "Under 10% kcal reduction the total number of daily calories removed from the population is "
     + millify((seq_10["demographic_weight"] * seq_10["value"]).sum())
 )
 
