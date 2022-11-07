@@ -386,7 +386,7 @@ if __name__ == "__main__":
     report_table_clean = (
         load_s3_data(
             "ahl-private-data",
-            "kantar/data_outputs/decision_table/decision_table_rst_4_market_sector.csv",
+            "kantar/data_outputs/decision_table/decision_table_rst_4_market_sector_reduced.csv",
         )
         .drop(axis=1, labels=["chosen_unit"])
         .melt(id_vars="rst_4_market_sector")
@@ -467,6 +467,22 @@ if __name__ == "__main__":
         .properties(width=300, height=700)
     )
 
+    logging.info("bubblechart with averaged indicators")
+    aggr_bubble_chart = pipe(
+        report_table_clean_long.groupby(["category", PROD_VAR])["z_score"]
+        .mean()
+        .reset_index(drop=False),
+        partial(
+            make_indicator_bubblechart,
+            axis_order=["Impact on Diets", "Feasibility", "Inclusion"],
+            var_names=["category", "rst_4_market_sector", "z_score"],
+        ),
+    ).properties(width=200)
+
+    save_altair(
+        configure_plots(aggr_bubble_chart), "indicator_bubblechart_aggr", driver=webdr
+    )
+
     save_altair(
         configure_plots(indicator_bubble_chart), "indicator_bubblechart", driver=webdr
     )
@@ -507,7 +523,7 @@ if __name__ == "__main__":
     report_table_detailed = pipe(
         load_s3_data(
             "ahl-private-data",
-            "kantar/data_outputs/decision_table/decision_table_rst_4_extended.csv",
+            "kantar/data_outputs/decision_table/decision_table_rst_4_extended_reduced.csv",
         ).rename(columns={"Unnamed: 0": "product"}),
         lambda df: df.rename(
             columns={
