@@ -95,7 +95,7 @@ if __name__ == "__main__":
     )
     # Unique categories combined
     unique_cats = (
-        prod_meta[[broad_cat_str, granular_cat_str]]
+        prod_meta[["rst_4_market_sector", "rst_4_market", granular_cat_str]]
         .drop_duplicates(subset=[granular_cat_str])
         .set_index(granular_cat_str)
     )
