@@ -13,25 +13,25 @@
     "Chilled Dips Single",
     "Cooked Meats Continental Meat"
   ],
-  "Sweet Home Cooking": [
-    "Caster Sugar",
-    "Home Baking Baking Fruits",
-    "Home Baking Snacking Fruits",
-    "Icing Sugar",
-    "Other Baking Ingredients"
-  ],
   "Frozen Prepared Foods": [
     "Frozen Oven Chips",
     "Frozen Pizzas Thin & Crispy",
     "Frozen Potato Potato Products",
-    "Frozen Peas",
-    "Frozen Pizzas Deep Pan"
+    "Frozen Pizzas Deep Pan",
+    "Frzn Processed Poultry Bites"
   ],
-  "Eggs and Butter": [
-    "Eggs Hens Free Range",
-    "Butter Slightly Sal Spreadable",
-    "Dairy Spreads",
-    "Butter Standard Block",
-    "Pufa/Mufa Margarine/Spread"
+  "Ice Cream": [
+    "Lollies",
+    "Premium Ice-Cream",
+    "Filled Ice-Cream Cones",
+    "2 Litre Standard Ice-Cream",
+    "Choc Ices"
+  ],
+  "Chilled Bakery Products": [
+    "Chilled Cakes Small Cakes",
+    "Chilled Breads Garlic Slices",
+    "Chilled Cakes Small Tarts",
+    "Chilled Cakes Cheesecake",
+    "Chilled Cakes Large Tarts"
   ]
 }

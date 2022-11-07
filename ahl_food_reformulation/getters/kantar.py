@@ -367,3 +367,20 @@ def cluster_adj_size():
     return pd.read_csv(
         f"{PROJECT_DIR}/outputs/data/alternative_clusters/panel_clusters_adj_size.csv"
     )
+
+
+def kcal_reduction():
+    """
+
+    Getter for the list of min and max plausible estimates of reduction in kcal by category
+
+    Args:
+        None
+
+    Returns
+    -------
+        df (pd.DataFrame) : rst_4_market_sectors mapped to min and max
+
+    """
+
+    return pd.read_csv(f"{PROJECT_DIR}/inputs/data/kcal_reduction.csv")
