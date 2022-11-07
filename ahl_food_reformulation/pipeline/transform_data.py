@@ -562,3 +562,38 @@ def rst_4_market_sector_update(df: pd.DataFrame):
     ]
     choices = ["Cheese", "Eggs and Butter", "Yoghurt", "Milk and Cream", "Ice Cream"]
     return np.select(conditions, choices, default=df["rst_4_market_sector"])
+
+
+def rst_4_market_update(df: pd.DataFrame):
+    """
+    Updates rst_4_market values to split out bread and cakes from particular cat
+
+    Args:
+        df (pd.DataFrame): Df of products with rst_4_market and rst_4_extended values
+
+    Returns:
+        df (pd.DataFrame): prod_meta df with updated rst_4_market_sector values
+
+    """
+    conditions = [
+        df["rst_4_market"].eq("Morning Goods")
+        & df["rst_4_extended"].isin(
+            [
+                "Crusty Bread Rolls",
+                "Lavash Bread",
+                "Morning Goods Bagels",
+                "Morning Goods Baguettes",
+                "Morning Goods Ciabatta",
+                "Morning Goods Flatbread",
+                "Morning Goods Sub Roll",
+                "Morning Goods Tortilla Wraps",
+                "Naan Bread",
+                "Other Bread Rolls/Baps",
+                "Part Baked Bread",
+                "Pitta Bread",
+                "Soft Bread Rolls",
+            ]
+        ),
+    ]
+    choices = ["Total Bread"]
+    return np.select(conditions, choices, default=df["rst_4_market"])
