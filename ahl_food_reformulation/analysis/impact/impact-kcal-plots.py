@@ -116,7 +116,7 @@ if __name__ == "__main__":
             y=alt.Y(
                 "value",
                 axis=alt.Axis(title="kcal/day"),
-                scale=alt.Scale(domain=[-70, 0]),
+                scale=alt.Scale(domain=[-150, 0]),
             ),
             color=alt.Color(
                 "Reformulation Level",
@@ -169,7 +169,7 @@ if __name__ == "__main__":
             y=alt.Y(
                 "value",
                 axis=alt.Axis(title="kcal/day"),
-                scale=alt.Scale(domain=[-70, 0]),
+                scale=alt.Scale(domain=[-150, 0]),
             ),
             color=alt.Color(
                 "Reformulation Level",
@@ -214,7 +214,7 @@ if __name__ == "__main__":
             y=alt.Y(
                 "value",
                 axis=alt.Axis(title="kcal/day"),
-                scale=alt.Scale(domain=[0, 70]),
+                scale=alt.Scale(domain=[0, 150]),
             ),
             color=alt.Color(
                 "Reformulation Level",
@@ -257,7 +257,7 @@ if __name__ == "__main__":
             y=alt.Y(
                 "value",
                 axis=alt.Axis(title="kcal/day"),
-                scale=alt.Scale(domain=[0, 70]),
+                scale=alt.Scale(domain=[0, 150]),
             ),
             color=alt.Color(
                 "Reformulation Level",
@@ -444,8 +444,8 @@ if __name__ == "__main__":
     logging.info("Option 5 - Stochastic Dominance")
     # stochastic dominance
 
-    cum_df_avg["type"] = "avg"
-    cum_df_seq["type"] = "seq"
+    cum_df_avg["Method"] = "Average"
+    cum_df_seq["Method"] = "Sequential Filtering"
 
     df = pd.concat([cum_df_avg, cum_df_seq])
 
@@ -455,14 +455,15 @@ if __name__ == "__main__":
             "value",
             as_=["value", "density"],
             cumulative=True,
-            groupby=["Reformulation Level", "type"],
+            groupby=["Reformulation Level", "Method"],
         )
         .mark_line()
         .encode(
             x=alt.X("value:Q", axis=alt.X(title="kcal/day")),
             y=alt.Y("density:Q", axis=alt.Axis(title="Cumulative Density")),
             color=alt.Color(
-                "type", scale={"range": list(pu.NESTA_COLOURS[x] for x in range(0, 2))}
+                "Method",
+                scale={"range": list(pu.NESTA_COLOURS[x] for x in range(0, 2))},
             ),
         )
         .facet(facet="Reformulation Level", columns=2)
