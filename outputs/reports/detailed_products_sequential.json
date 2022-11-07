@@ -6,19 +6,18 @@
     "Ambient Cakes Slices",
     "Ambient Cakes Malt/Fruit Loave"
   ],
+  "Confect. & Other Exclusions": [
+    "Confect. & Oth Savoury Snacks",
+    "Confect+Other Other Cnfctnry",
+    "Confect. & Other Other Sweet",
+    "Confect+Other Choc Bisc"
+  ],
   "Everyday Treats": [
     "Everyday Treat Choc Digestives",
     "Everyday Treats Other Creams",
     "Everyday Treats Jaffa Cakes",
     "Everyday Treats Choc Oat",
     "Everyday Treats Shortbread"
-  ],
-  "Chocolate Confectionery": [
-    "Chocolate Conf Multipack Choco",
-    "Choc Confctnry Block Chocolate",
-    "Choc Confctnry Boxes+Gifting",
-    "Chocolate Confection Bitesize",
-    "Chclte Conf Egg+Nvlty+Seasonal"
   ],
   "Everyday Biscuits": [
     "Everyday Biscuits Digestives",
@@ -27,11 +26,11 @@
     "Everyday Biscu Bourbon Creams",
     "Everyday Biscuits Cookies"
   ],
-  "Nuts": [
-    "Nuts Standard Peanuts",
-    "Nuts Mixtures",
-    "Nuts Cashews",
-    "Nuts Almonds",
-    "Nuts Dry Roast Peanuts"
+  "Morning Goods": [
+    "Crumpets/Pikelets",
+    "Hotcross Buns",
+    "Croissants",
+    "Scones",
+    "Morning Goods Pain Au Choc"
   ]
 }

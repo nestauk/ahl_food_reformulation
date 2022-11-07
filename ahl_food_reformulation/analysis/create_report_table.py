@@ -44,7 +44,7 @@ if __name__ == "__main__":
             nut_recs,
             prod_meta,
             prod_meas,
-            50,  # sample size
+            25,  # sample size
         ),
         cluster_table(
             val_fields,
@@ -74,7 +74,7 @@ if __name__ == "__main__":
             nut_recs,
             prod_meta,
             prod_meas,
-            50,  # sample size
+            25,  # sample size
         ),
         cluster_table(
             val_fields,
@@ -110,7 +110,7 @@ if __name__ == "__main__":
         unique_cats_broad, how="left", on=broad_cat_str
     )
 
-    # Removing cat with less than 50 products (broader cat)
+    # Removing cat with less than 25 products (broader cat)
     broader_table = broader_table[broader_table["number_products"] > 25].copy()
 
     logging.info("Saving tables")
