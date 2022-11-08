@@ -346,10 +346,9 @@ def make_detailed_recommendations(
     detailed_table: pd.DataFrame,
     broad_cat_str: str,
     variables: list = [
-        "kcal_entropy_normalised",
         "kcal_contribution_share",
     ],
-    thresholds: list = [30, 5],
+    threshold: int = 5,
 ) -> pd.DataFrame:
     """Function to make detailed recommendations about products to reformulate"""
 
@@ -360,10 +359,11 @@ def make_detailed_recommendations(
         detailed_products[t] = ", ".join(
             (
                 detailed_table[detailed_table[broad_cat_str] == t]
-                # detailed_table.query(f"{0}=='{t}'".format(broad_cat_str))
-                # This beging by sorting by out "top criterion" and then the second
-                .sort_values(variables[0], ascending=False)[: thresholds[0]]
-                .sort_values(variables[1], ascending=False)["product"][: thresholds[1]]
+                .dropna()
+                .sort_values(variables[0], ascending=False)
+                .assign(cum=lambda x: np.cumsum(x[variables[0]]))
+                .query(f"cum <= @threshold")
+                .sort_values("cum", ascending=False)["product"]
                 .values
             )
         )
@@ -471,7 +471,7 @@ if __name__ == "__main__":
         partial(
             make_indicator_bubblechart,
             axis_order=["Impact on Diets", "Feasibility", "Inclusion"],
-            var_names=["category", "rst_4_market_sector", "z_score"],
+            var_names=["category", broad_cat_str, "z_score"],
         ),
     ).properties(width=200)
 
