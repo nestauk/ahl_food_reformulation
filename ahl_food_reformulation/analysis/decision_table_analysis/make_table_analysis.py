@@ -471,7 +471,7 @@ if __name__ == "__main__":
         partial(
             make_indicator_bubblechart,
             axis_order=["Impact on Diets", "Feasibility", "Inclusion"],
-            var_names=["category", "rst_4_market_sector", "z_score"],
+            var_names=["category", broad_cat_str, "z_score"],
         ),
     ).properties(width=200)
 
