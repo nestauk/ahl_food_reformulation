@@ -34,7 +34,7 @@ if __name__ == "__main__":
     kcal_est = kantar.kcal_reduction()
 
     # define cats
-    broader_category = "rst_4_market_sector"
+    broader_category = "rst_4_market"
     granular_category = "rst_4_extended"
 
     # read in shortliested products
@@ -44,7 +44,6 @@ if __name__ == "__main__":
         )
 
     with open(f"{PROJECT_DIR}/outputs/reports/detailed_products_sequential.json") as f:
-        # with open(f"{PROJECT_DIR}/outputs/reports/detailed_products_average.json") as f:
         chosen_cats_seq = pd.DataFrame(json.load(f)).melt(
             var_name=broader_category, value_name=granular_category
         )
