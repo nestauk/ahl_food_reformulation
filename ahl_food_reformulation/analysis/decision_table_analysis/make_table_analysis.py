@@ -433,9 +433,21 @@ if __name__ == "__main__":
         .assign(category=lambda df: df["clean_label"].map(var_category_lookup))
     )
 
+    # Reduce number to top 30 for plot
+    reduced_cats = list(
+        report_table_clean_long.groupby(["rst_4_market"])["z_score"]
+        .mean()
+        .sort_values(ascending=False)
+        .head(30)
+        .index
+    )
+    avg_table_plots = report_table_clean_long[
+        report_table_clean_long["rst_4_market"].isin(reduced_cats)
+    ]
+
     indicator_heatmap = (
         pipe(
-            report_table_clean_long,
+            avg_table_plots,
             partial(relabel_names, columns=["clean_label"], clean_dict=plotting_names),
             partial(
                 make_indicator_heatmap,
@@ -453,7 +465,7 @@ if __name__ == "__main__":
 
     indicator_bubble_chart = (
         pipe(
-            report_table_clean_long,
+            avg_table_plots,
             partial(relabel_names, columns=["clean_label"], clean_dict=plotting_names),
             partial(
                 make_indicator_bubblechart,
@@ -487,8 +499,20 @@ if __name__ == "__main__":
         make_sequential_table,
     )
 
+    # Take top 30 products
+    seq_plot_table = seq_table[
+        seq_table[broad_cat_str].isin(
+            (
+                seq_table.query(f"category=='Inclusion'")
+                .sort_values("z_score_filtered", ascending=False)[broad_cat_str]
+                .head(30)
+                .tolist()
+            )
+        )
+    ].copy()
+
     save_altair(
-        configure_plots(make_selection_chart(seq_table)),
+        configure_plots(make_selection_chart(seq_plot_table)),
         "indicator_sequential_decision",
         driver=webdr,
     )
