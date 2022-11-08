@@ -5,13 +5,16 @@ import pandas as pd
 
 def make_impact(
     chosen_cats,
-    kcal_est,
+    # kcal_est,
     val_fields,
     pur_recs,
     prod_codes,
     prod_vals,
     prod_meta,
     nut_rec,
+    prod_broad,
+    prod_gran,
+    gran_int,
 ):
     """
     Generate data needed to determine impact of reformulation on the population.
@@ -34,6 +37,9 @@ def make_impact(
         Pandas dataframe contains the product information
     nut_rec : pd.DataFrame
         Pandas dataframe contains the nutritional information of specified data.
+    prod_broad (str): Broad category level
+    prod_gran (str): Granular category level
+    cat_int (int): Category code
 
     Returns
     -------
@@ -41,20 +47,23 @@ def make_impact(
 
     """
 
-    target_red = chosen_cats.merge(kcal_est, on="rst_4_market_sector")
+    # target_red = chosen_cats.merge(kcal_est, on=prod_broad)
+    target_red = chosen_cats.copy()
+    target_red["min"] = 0.05
+    target_red["max"] = 0.1
 
     # Purchase and product info combined
     comb_files = transform.combine_files(
-        val_fields, pur_recs, prod_codes, prod_vals, 2907
+        val_fields, pur_recs, prod_codes, prod_vals, gran_int
     ).drop("att_vol", axis=1)
 
     comb_update = comb_files.merge(
-        prod_meta[["product_code", "rst_4_extended", "rst_4_market_sector"]],
+        prod_meta[["product_code", prod_gran, prod_broad]],
         left_on="Product Code",
         right_on="product_code",
     )
 
-    comb_update.rename(columns={"rst_4_extended": "att_vol"}, inplace=True)
+    comb_update.rename(columns={prod_gran: "att_vol"}, inplace=True)
 
     # get number of periods each hh is present
     period_n = (
@@ -71,7 +80,7 @@ def make_impact(
 
     purch_recs_comb_scenarios = (
         purch_recs_comb.merge(
-            target_red, right_on="rst_4_extended", left_on="att_vol", how="left"
+            target_red, right_on=prod_gran, left_on="att_vol", how="left"
         )
         .fillna(0)
         .merge(period_n, on="Panel Id")

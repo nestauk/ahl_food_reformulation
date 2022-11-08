@@ -31,34 +31,42 @@ if __name__ == "__main__":
     prod_vals = kantar.product_values()
     panel_weight = kantar.panel_weights_year()
     prod_meta = kantar.prod_meta_update()
-    kcal_est = kantar.kcal_reduction()
+    # kcal_est = kantar.kcal_reduction()
 
     # define cats
     broader_category = "rst_4_market"
     granular_category = "rst_4_extended"
 
-    # read in shortliested products
     with open(f"{PROJECT_DIR}/outputs/reports/detailed_products.json") as f:
-        chosen_cats_average = pd.DataFrame(json.load(f)).melt(
-            var_name=broader_category, value_name=granular_category
+        chosen_cats_average = (
+            pd.DataFrame.from_dict(json.load(f), orient="index")
+            .transpose()
+            .melt(var_name=broader_category, value_name=granular_category)
+            .dropna()
         )
 
     with open(f"{PROJECT_DIR}/outputs/reports/detailed_products_sequential.json") as f:
-        chosen_cats_seq = pd.DataFrame(json.load(f)).melt(
-            var_name=broader_category, value_name=granular_category
+        chosen_cats_seq = (
+            pd.DataFrame.from_dict(json.load(f), orient="index")
+            .transpose()
+            .melt(var_name=broader_category, value_name=granular_category)
+            .dropna()
         )
 
     logging.info("Merging data - Averages")
 
     purch_recs_comb_scenarios_avg = kcal.make_impact(
         chosen_cats_average,
-        kcal_est,
+        # kcal_est,
         val_fields,
         pur_recs,
         prod_codes,
         prod_vals,
         prod_meta,
         nut_rec,
+        broader_category,
+        granular_category,
+        2907,
     )
 
     hh_kcal_filter_avg = kcal.compare_scenarios(
@@ -69,13 +77,16 @@ if __name__ == "__main__":
 
     purch_recs_comb_scenarios_seq = kcal.make_impact(
         chosen_cats_seq,
-        kcal_est,
+        # kcal_est,
         val_fields,
         pur_recs,
         prod_codes,
         prod_vals,
         prod_meta,
         nut_rec,
+        broader_category,
+        granular_category,
+        2907,
     )
 
     hh_kcal_filter_seq = kcal.compare_scenarios(
