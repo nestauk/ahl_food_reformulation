@@ -22,7 +22,12 @@ if __name__ == "__main__":
     cl_adj_size = kantar.cluster_adj_size()
     prod_meta = kantar.prod_meta_update()
 
-    rst_4_market_sector = 2828
+    # Defining categories
+    # 2827 = market, 2828 = market sector
+    broad_cat_number = 2827
+    broad_cat_str = "rst_4_market"
+    granular_cat_num = 2907
+    granular_cat_str = "rst_4_extended"
 
     out_mkt = cl.cluster_table(
         val_fields,
@@ -35,19 +40,19 @@ if __name__ == "__main__":
         cl_kcal_share,
         cl_adj_size,
         pan_ind,
-        att_num=rst_4_market_sector,
+        att_num=broad_cat_number,
         sig_level=0.05,
         top=0.25,
     )
 
-    logging.info("Saving table - market sector")
+    logging.info("Saving table - broader category")
 
     out_mkt.to_csv(
-        f"{PROJECT_DIR}/outputs/data/decision_table/table_cluster_rst_4_market_sector.csv",
+        f"{PROJECT_DIR}/outputs/data/decision_table/table_cluster_"
+        + broad_cat_str
+        + ".csv",
         float_format="%.3f",
     )
-
-    rst_4_extended = 2907
 
     out_ext = cl.cluster_table(
         val_fields,
@@ -60,14 +65,16 @@ if __name__ == "__main__":
         cl_kcal_share,
         cl_adj_size,
         pan_ind,
-        att_num=rst_4_extended,
+        att_num=granular_cat_num,
         sig_level=0.05,
         top=0.25,
     )
 
-    logging.info("Saving table - extended")
+    logging.info("Saving table - granular catgeory")
 
     out_ext.to_csv(
-        f"{PROJECT_DIR}/outputs/data/decision_table/table_cluster_rst_4_extended.csv",
+        f"{PROJECT_DIR}/outputs/data/decision_table/table_cluster_"
+        + granular_cat_str
+        + ".csv",
         float_format="%.3f",
     )

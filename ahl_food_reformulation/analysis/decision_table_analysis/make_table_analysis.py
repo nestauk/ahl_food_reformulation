@@ -1,7 +1,5 @@
 import logging
 import re
-
-
 import json
 from scipy.stats import zscore
 from toolz import pipe
@@ -9,7 +7,7 @@ from functools import partial
 import numpy as np
 import pandas as pd
 import altair as alt
-from typing import Union, List
+from typing import List
 
 from ahl_food_reformulation import PROJECT_DIR
 from ahl_food_reformulation.utils.plotting import configure_plots
@@ -19,9 +17,7 @@ from ahl_food_reformulation.utils.altair_save_utils import (
     save_altair,
 )
 
-
 clean_variable_names = {
-    # "number_products": "number_products",
     "kcal_100_s": "energy_density_average",
     "kcal_100_w": "energy_density_average_weighted_by_sales",
     "percent_high_ed": "high_energy_density_products_share",
@@ -33,7 +29,6 @@ clean_variable_names = {
     "percent_kcal_contrib_size_adj_weighted": "kcal_contribution_share_adjusted_by_size",
     "variance": "kcal_density_variance",
     "variance_size_adj": "kcal_density_variance_normalised",
-    # "variance_adj_scaled": "kcal_density_variance_adjusted_normalised",
     "entropy": "kcal_entropy",
     "entropy_size_adj": "kcal_entropy_normalised",
     "share_sh": "share_population_impacted_clusters_share",
@@ -69,11 +64,7 @@ var_category_lookup = {
     "clusters_low_income_impacted_clusters_share": "Inclusion",
 }
 
-PROD_VAR = "rst_4_market_sector"
-
 # Functions
-
-
 def drop_diag(table: pd.DataFrame) -> pd.DataFrame:
     """Quick and dirty way to remove diagonal from correlation matrix"""
 
@@ -219,7 +210,7 @@ def make_recommendations(
     and the mean of different indicators"""
 
     report_table_aggregated = (
-        report_table.groupby(["category", "rst_4_market_sector"])["z_score"]
+        report_table.groupby(["category", broad_cat_str])["z_score"]
         .mean()
         .reset_index(drop=False)
     )
@@ -231,12 +222,12 @@ def make_recommendations(
         top_candidates[cat] = ", ".join(
             report_table_aggregated.query(f"category=='{cat}'").sort_values(
                 "z_score", ascending=False
-            )["rst_4_market_sector"][:top_reccs]
+            )[broad_cat_str][:top_reccs]
         )
 
     return pd.DataFrame(top_candidates, index=["Top candidates"]).assign(
         Average=", ".join(
-            report_table_aggregated.groupby("rst_4_market_sector")["z_score"]
+            report_table_aggregated.groupby(broad_cat_str)["z_score"]
             .mean()
             .sort_values(ascending=False)
             .index[:top_reccs]
@@ -266,7 +257,7 @@ def make_sequential_table(
 
     table_container = []
 
-    selected = [table_copy[PROD_VAR].unique()]
+    selected = [table_copy[broad_cat_str].unique()]
 
     for n, crits in enumerate(zip(selection_sequence, selection_thresholds)):
 
@@ -278,7 +269,7 @@ def make_sequential_table(
             .assign(
                 z_score_filtered=lambda df: [
                     z if prod in selected[n] else np.nan
-                    for prod, z in zip(df[PROD_VAR], df["z_score"])
+                    for prod, z in zip(df[broad_cat_str], df["z_score"])
                 ]
             )
             .sort_values("z_score_filtered", ascending=False)
@@ -301,7 +292,7 @@ def make_sequential_table(
         )
 
         # Selected criteria will be used for filtering the next table
-        selected.append(t_filt[PROD_VAR][: crits[1]].unique())
+        selected.append(t_filt[broad_cat_str][: crits[1]].unique())
 
         table_container.append(t_filt)
 
@@ -320,7 +311,7 @@ def make_selection_chart(
     # How to sort the categories
     sort_prod = (
         seq_table.query(f"category=='{sort_by}'")
-        .sort_values("z_score_filtered", ascending=False)[PROD_VAR]
+        .sort_values("z_score_filtered", ascending=False)[broad_cat_str]
         .tolist()
     )
 
@@ -328,7 +319,7 @@ def make_selection_chart(
         alt.Chart(decision_table)
         .mark_point(filled=True, strokeWidth=1)
         .encode(
-            y=alt.Y(PROD_VAR, sort=sort_prod, title=None),
+            y=alt.Y(broad_cat_str, sort=sort_prod, title=None),
             x=alt.X(
                 "category",
                 sort=["Impact on Diets", "Feasibility", "Inclusion"],
@@ -353,6 +344,7 @@ def make_selection_chart(
 def make_detailed_recommendations(
     high_level_cats: list,
     detailed_table: pd.DataFrame,
+    broad_cat_str: str,
     variables: list = [
         "kcal_entropy_normalised",
         "kcal_contribution_share",
@@ -367,7 +359,8 @@ def make_detailed_recommendations(
 
         detailed_products[t] = ", ".join(
             (
-                detailed_table.query(f"rst_4_market_sector=='{t}'")
+                detailed_table[detailed_table[broad_cat_str] == t]
+                # detailed_table.query(f"{0}=='{t}'".format(broad_cat_str))
                 # This beging by sorting by out "top criterion" and then the second
                 .sort_values(variables[0], ascending=False)[: thresholds[0]]
                 .sort_values(variables[1], ascending=False)["product"][: thresholds[1]]
@@ -380,21 +373,27 @@ def make_detailed_recommendations(
 
 if __name__ == "__main__":
 
+    # Defining categories
+    broad_cat_str = "rst_4_market"
+    granular_cat_str = "rst_4_extended"
+
     webdr = google_chrome_driver_setup()
 
     logging.info("Reading data")
     report_table_clean = (
         load_s3_data(
             "ahl-private-data",
-            "kantar/data_outputs/decision_table/decision_table_rst_4_market_sector_reduced.csv",
+            "kantar/data_outputs/decision_table/decision_table_"
+            + broad_cat_str
+            + "_reduced.csv",
         )
         .drop(axis=1, labels=["chosen_unit"])
-        .melt(id_vars="rst_4_market_sector")
+        .melt(id_vars=broad_cat_str)
         .assign(clean_label=lambda df: df["variable"].map(clean_variable_names))
         .reset_index(drop=True)
-        .pivot_table(
-            index="rst_4_market_sector", columns="clean_label", values="value"
-        )[var_order]
+        .pivot_table(index=broad_cat_str, columns="clean_label", values="value")[
+            var_order
+        ]
     )
 
     logging.info("Calculating correlation matrix")
@@ -434,14 +433,26 @@ if __name__ == "__main__":
         .assign(category=lambda df: df["clean_label"].map(var_category_lookup))
     )
 
+    # Reduce number to top 30 for plot
+    reduced_cats = list(
+        report_table_clean_long.groupby(["rst_4_market"])["z_score"]
+        .mean()
+        .sort_values(ascending=False)
+        .head(30)
+        .index
+    )
+    avg_table_plots = report_table_clean_long[
+        report_table_clean_long["rst_4_market"].isin(reduced_cats)
+    ]
+
     indicator_heatmap = (
         pipe(
-            report_table_clean_long,
+            avg_table_plots,
             partial(relabel_names, columns=["clean_label"], clean_dict=plotting_names),
             partial(
                 make_indicator_heatmap,
                 axis_order=plotting_order,
-                var_names=["clean_label", "rst_4_market_sector", "z_score"],
+                var_names=["clean_label", broad_cat_str, "z_score"],
             ),
             configure_plots,
         )
@@ -452,24 +463,9 @@ if __name__ == "__main__":
 
     save_altair(indicator_heatmap, "indicator_heatmap", driver=webdr)
 
-    indicator_bubble_chart = (
-        pipe(
-            report_table_clean_long,
-            partial(relabel_names, columns=["clean_label"], clean_dict=plotting_names),
-            partial(
-                make_indicator_bubblechart,
-                axis_order=plotting_order,
-                var_names=["clean_label", "rst_4_market_sector", "z_score"],
-            ),
-            configure_plots,
-        )
-        .configure_axis(labelLimit=1000, labelFontSize=13)
-        .properties(width=300, height=700)
-    )
-
     logging.info("bubblechart with averaged indicators")
     aggr_bubble_chart = pipe(
-        report_table_clean_long.groupby(["category", PROD_VAR])["z_score"]
+        avg_table_plots.groupby(["category", broad_cat_str])["z_score"]
         .mean()
         .reset_index(drop=False),
         partial(
@@ -481,6 +477,21 @@ if __name__ == "__main__":
 
     save_altair(
         configure_plots(aggr_bubble_chart), "indicator_bubblechart_aggr", driver=webdr
+    )
+
+    indicator_bubble_chart = (
+        pipe(
+            avg_table_plots,
+            partial(relabel_names, columns=["clean_label"], clean_dict=plotting_names),
+            partial(
+                make_indicator_bubblechart,
+                axis_order=plotting_order,
+                var_names=["clean_label", broad_cat_str, "z_score"],
+            ),
+            configure_plots,
+        )
+        .configure_axis(labelLimit=1000, labelFontSize=13)
+        .properties(width=300, height=700)
     )
 
     save_altair(
@@ -498,14 +509,26 @@ if __name__ == "__main__":
 
     # Creates table for visualisation
     seq_table = pipe(
-        report_table_clean_long.groupby(["rst_4_market_sector", "category"])["z_score"]
+        report_table_clean_long.groupby([broad_cat_str, "category"])["z_score"]
         .mean()
         .reset_index(name="z_score"),
         make_sequential_table,
     )
 
+    # Take top 30 products
+    seq_plot_table = seq_table[
+        seq_table[broad_cat_str].isin(
+            (
+                seq_table.query(f"category=='Inclusion'")
+                .sort_values("z_score_filtered", ascending=False)[broad_cat_str]
+                .head(30)
+                .tolist()
+            )
+        )
+    ].copy()
+
     save_altair(
-        configure_plots(make_selection_chart(seq_table)),
+        configure_plots(make_selection_chart(seq_plot_table)),
         "indicator_sequential_decision",
         driver=webdr,
     )
@@ -513,7 +536,7 @@ if __name__ == "__main__":
     # The top criteria would be...
     top_sequential_cats = (
         seq_table.query("category=='Inclusion'")
-        .dropna(axis=0, subset=["color"])[PROD_VAR]
+        .dropna(axis=0, subset=["color"])[broad_cat_str]
         .tolist()
     )
     logging.info(f"Top sequential market sectors: {top_sequential_cats}")
@@ -523,7 +546,9 @@ if __name__ == "__main__":
     report_table_detailed = pipe(
         load_s3_data(
             "ahl-private-data",
-            "kantar/data_outputs/decision_table/decision_table_rst_4_extended_reduced.csv",
+            "kantar/data_outputs/decision_table/decision_table_"
+            + granular_cat_str
+            + "_reduced.csv",
         ).rename(columns={"Unnamed: 0": "product"}),
         lambda df: df.rename(
             columns={
@@ -531,12 +556,12 @@ if __name__ == "__main__":
                 for v in df.columns
             }
         ),
-    )[["product", "rst_4_market_sector"] + selected_vars]
+    )[["product", broad_cat_str] + selected_vars]
 
     top_cats = recc_table.loc["Average", "Top candidates"].split(", ")
 
     detailed_reccs = pd.DataFrame(
-        make_detailed_recommendations(top_cats, report_table_detailed),
+        make_detailed_recommendations(top_cats, report_table_detailed, broad_cat_str),
         index=["Detailed recommendations"],
     ).T
 
@@ -545,7 +570,9 @@ if __name__ == "__main__":
     detailed_reccs.to_csv(f"{PROJECT_DIR}/outputs/reports/detailed_recommendation.csv")
 
     detailed_reccs_sec = pd.DataFrame(
-        make_detailed_recommendations(top_sequential_cats, report_table_detailed),
+        make_detailed_recommendations(
+            top_sequential_cats, report_table_detailed, broad_cat_str
+        ),
         index=["Detailed recommendations"],
     ).T
 

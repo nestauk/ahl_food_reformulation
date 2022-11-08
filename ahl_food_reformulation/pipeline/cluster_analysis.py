@@ -2,7 +2,8 @@ from ahl_food_reformulation.getters import kantar
 from ahl_food_reformulation.pipeline import transform_data as transform
 from ahl_food_reformulation.pipeline import hh_income_class
 import pandas as pd
-from patsy.contrasts import Sum
+
+# from patsy.contrasts import Sum
 import statsmodels.api as sm
 import patsy
 from ahl_food_reformulation.pipeline import cluster_analysis as cl
@@ -17,6 +18,7 @@ def mk_reg_df_share(
     nut_rec: pd.DataFrame,
     prod_meta: pd.DataFrame,
     att_num: int,
+    att_name: str,
 ):
     """
     Generates dataset to use for regression analysis. It is a dataset in wide format where each row is a hh and each column the share of kcal consumed by that household for a category
@@ -27,6 +29,7 @@ def mk_reg_df_share(
         prod_codes (pd.DataFrame): Pandas dataframe contains the codes to link products to category information
         prod_vals (pd.DataFrame): Pandas dataframe contains the product category information
         att_num (int): Product category type code number
+        att_name (str): Product category name
 
     Returns
     -------
@@ -39,15 +42,14 @@ def mk_reg_df_share(
     ).drop("att_vol", axis=1)
 
     comb_update = comb_files.merge(
-        prod_meta[["product_code", "rst_4_extended", "rst_4_market_sector"]],
+        prod_meta[
+            ["product_code", "rst_4_extended", "rst_4_market_sector", "rst_4_market"]
+        ],
         left_on="Product Code",
         right_on="product_code",
     )
 
-    if att_num == 2907:
-        comb_update.rename(columns={"rst_4_extended": "att_vol"}, inplace=True)
-    elif att_num == 2828:
-        comb_update.rename(columns={"rst_4_market_sector": "att_vol"}, inplace=True)
+    comb_update.rename(columns={att_name: "att_vol"}, inplace=True)
 
     purch_recs_comb = transform.make_purch_records(nut_rec, comb_update, ["att_vol"])
 
@@ -93,6 +95,7 @@ def mk_reg_df_adj(
     prod_meta: pd.DataFrame,
     panel_weight: pd.DataFrame,
     att_num: int,
+    att_name: str,
 ):
     """
     Generates dataset to use for regression analysis. It is a dataset in wide format where each row is a hh and each column the absolute value of kcal consumed by that household for a category
@@ -108,6 +111,7 @@ def mk_reg_df_adj(
     prod_vals (pd.DataFrame): Pandas dataframe contains the product category information
     panel_weight (pd.DataFrame) : Pandas dataframe contains the demographic weights
     att_num (int): Product category type code number
+    att_name (str): Product category name
 
     Returns
     -------
@@ -124,15 +128,14 @@ def mk_reg_df_adj(
     ).drop("att_vol", axis=1)
 
     comb_update = comb_files.merge(
-        prod_meta[["product_code", "rst_4_extended", "rst_4_market_sector"]],
+        prod_meta[
+            ["product_code", "rst_4_extended", "rst_4_market_sector", "rst_4_market"]
+        ],
         left_on="Product Code",
         right_on="product_code",
     )
 
-    if att_num == 2907:
-        comb_update.rename(columns={"rst_4_extended": "att_vol"}, inplace=True)
-    elif att_num == 2828:
-        comb_update.rename(columns={"rst_4_market_sector": "att_vol"}, inplace=True)
+    comb_update.rename(columns={att_name: "att_vol"}, inplace=True)
 
     purch_recs_comb = (
         transform.make_purch_records(nut_rec, comb_update, ["att_vol"])
@@ -387,6 +390,7 @@ def cluster_table(
     cl_adj_size: pd.DataFrame,
     pan_ind: pd.DataFrame,
     att_num: int,
+    att_name: str,
     sig_level: float,
     top: float,
 ):
@@ -403,6 +407,7 @@ def cluster_table(
     nut_rec (pd.DataFrame): Pandas dataframe of purchase level nutritional information
     prod_meta (pd.DataFrame) : Pandas data frame of products with categories
     att_num (int): Product category type code number
+    att_name (str): Product category name
     sig_level (float): significance level to retain coefficients (e.g 0.05 for 5%).
     top (float): percentile to identify top x% poorest clusters. E.g. to get the top 20% poorest clusters input 0.2
     panel_weight (pd.DataFrame) demographic weights.
@@ -424,6 +429,7 @@ def cluster_table(
         nut_rec,
         prod_meta,
         att_num,
+        att_name,
     )
 
     purch_recs_wide_abs = cl.mk_reg_df_adj(
@@ -436,6 +442,7 @@ def cluster_table(
         prod_meta,
         panel_weight,
         att_num,
+        att_name,
     )
 
     logging.info("Running regression")
@@ -448,17 +455,12 @@ def cluster_table(
         cl_adj_size, panel_weight, purch_recs_wide_abs, sig_level, top
     )[["category", "share", "cluster_no", "cluster_low_income"]]
 
-    if att_num == 2907:
-        cat = "rst_4_extended"
-    elif att_num == 2828:
-        cat = "rst_4_market_sector"
-
     logging.info("Mergin tables")
 
-    tbl = pd.DataFrame(prod_meta[cat].unique(), columns=[cat])
+    tbl = pd.DataFrame(prod_meta[att_name].unique(), columns=[att_name])
 
     tbl["att_vol"] = (
-        tbl[cat]
+        tbl[att_name]
         .str.replace(" ", "", regex=True)
         .str.replace("/", "", regex=True)
         .str.replace("-", "", regex=True)
@@ -496,4 +498,4 @@ def cluster_table(
         .merge(adj_table, on="att_vol", how="left")
         .drop("att_vol", axis=1)
         .fillna(0)
-    ).set_index(cat)
+    ).set_index(att_name)
