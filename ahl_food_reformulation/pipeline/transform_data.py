@@ -594,6 +594,28 @@ def rst_4_market_update(df: pd.DataFrame):
                 "Soft Bread Rolls",
             ]
         ),
+        df["rst_4_market"].eq("Frozen Bread")
+        & df["rst_4_extended"].isin(
+            [
+                "Frozen Bread Baguettes",
+                "Frozen Bread Ciabatta",
+                "Frozen Bread Partbaked",
+                "Frozen Bread Soft",
+                "Frozen Naan Bread",
+                "Frozen Other Bread Rolls",
+            ]
+        ),
+        df["rst_4_market"].eq("Frozen Bread")
+        & df["rst_4_extended"].eq("Frozen Pain Au Chocolate"),
+        df["rst_4_market"].eq("Chilled Breads"),
+        df["rst_4_market"].eq("Frozen Bread")
+        & df["rst_4_extended"].eq("Frozen Garlic Bread"),
     ]
-    choices = ["Total Bread"]
+    choices = [
+        "Total Bread",
+        "Total Bread",
+        "Frozen Confectionery",
+        "Total Bread",
+        "Frozen Savoury Bakery",
+    ]
     return np.select(conditions, choices, default=df["rst_4_market"])
