@@ -463,6 +463,22 @@ if __name__ == "__main__":
 
     save_altair(indicator_heatmap, "indicator_heatmap", driver=webdr)
 
+    logging.info("bubblechart with averaged indicators")
+    aggr_bubble_chart = pipe(
+        avg_table_plots.groupby(["category", broad_cat_str])["z_score"]
+        .mean()
+        .reset_index(drop=False),
+        partial(
+            make_indicator_bubblechart,
+            axis_order=["Impact on Diets", "Feasibility", "Inclusion"],
+            var_names=["category", "rst_4_market_sector", "z_score"],
+        ),
+    ).properties(width=200)
+
+    save_altair(
+        configure_plots(aggr_bubble_chart), "indicator_bubblechart_aggr", driver=webdr
+    )
+
     indicator_bubble_chart = (
         pipe(
             avg_table_plots,
