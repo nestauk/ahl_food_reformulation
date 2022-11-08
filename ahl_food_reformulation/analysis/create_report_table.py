@@ -24,24 +24,27 @@ if __name__ == "__main__":
     cl_kcal_share = kantar.cluster_kcal_share()
     cl_adj_size = kantar.cluster_adj_size()
 
-    # Define categories
-    granular_category = "rst_4_extended"  # Granular category
-    broader_category = "rst_4_market_sector"  # Broader category
+    # Defining categories
+    # 2827 = market, 2828 = market sector
+    broad_cat_number = 2827
+    broad_cat_str = "rst_4_market"
+    granular_cat_num = 2907
+    granular_cat_str = "rst_4_extended"
 
     logging.info("Creating tables")
     # Create tables
-    logging.info("RST extended table (granular)")
+    logging.info("Granular")
     granular_table = report.create_report_table(
         report.kcal_contr_table(
-            granular_category, pan_ind, pur_recs, nut_recs, prod_meta, panel_weight
+            granular_cat_str, pan_ind, pur_recs, nut_recs, prod_meta, panel_weight
         ),
         report.kcal_density_table(
-            granular_category,
+            granular_cat_str,
             pur_recs,
             nut_recs,
             prod_meta,
             prod_meas,
-            50,  # sample size
+            25,  # sample size
         ),
         cluster_table(
             val_fields,
@@ -54,23 +57,24 @@ if __name__ == "__main__":
             cl_kcal_share,
             cl_adj_size,
             pan_ind,
-            att_num=2907,
+            granular_cat_num,
+            granular_cat_str,
             sig_level=0.05,
             top=0.25,
         ),
     )
-    logging.info("RST market sector table (broader)")
+    logging.info("Broader")
     broader_table = report.create_report_table(
         report.kcal_contr_table(
-            broader_category, pan_ind, pur_recs, nut_recs, prod_meta, panel_weight
+            broad_cat_str, pan_ind, pur_recs, nut_recs, prod_meta, panel_weight
         ),
         report.kcal_density_table(
-            broader_category,
+            broad_cat_str,
             pur_recs,
             nut_recs,
             prod_meta,
             prod_meas,
-            50,  # sample size
+            25,  # sample size
         ),
         cluster_table(
             val_fields,
@@ -83,20 +87,31 @@ if __name__ == "__main__":
             cl_kcal_share,
             cl_adj_size,
             pan_ind,
-            att_num=2828,
+            broad_cat_number,
+            broad_cat_str,
             sig_level=0.05,
             top=0.25,
         ),
     )
     # Unique categories combined
     unique_cats = (
-        prod_meta[[broader_category, granular_category]]
-        .drop_duplicates(subset=[granular_category])
-        .set_index(granular_category)
+        prod_meta[["rst_4_market_sector", "rst_4_market", granular_cat_str]]
+        .drop_duplicates(subset=[granular_cat_str])
+        .set_index(granular_cat_str)
     )
 
-    # Removing cat with less than 50 products (broader cat)
-    broader_table = broader_table[broader_table["number_products"] > 50].copy()
+    # If using rst market sector cat then comment this section out
+    # Unique categories combined
+    broader_table.index.names = [broad_cat_str]
+    unique_cats_broad = prod_meta[
+        ["rst_4_market_sector", broad_cat_str]
+    ].drop_duplicates(subset=[broad_cat_str])
+    broader_table = broader_table.reset_index().merge(
+        unique_cats_broad, how="left", on=broad_cat_str
+    )
+
+    # Removing cat with less than 25 products (broader cat)
+    broader_table = broader_table[broader_table["number_products"] > 25].copy()
 
     logging.info("Saving tables")
     # Save tables
@@ -105,13 +120,14 @@ if __name__ == "__main__":
     )
     granular_table.merge(unique_cats, left_index=True, right_index=True).to_csv(
         f"{PROJECT_DIR}/outputs/data/decision_table/decision_table_"
-        + granular_category
+        + granular_cat_str
         + ".csv",
         float_format="%.3f",
     )
     broader_table.to_csv(
         f"{PROJECT_DIR}/outputs/data/decision_table/decision_table_"
-        + broader_category
+        + broad_cat_str
         + ".csv",
         float_format="%.3f",
+        index=False,
     )

@@ -7,7 +7,10 @@ from typing import Tuple, Dict
 from toolz import pipe
 from ahl_food_reformulation.getters.miscelaneous import postcode_region_lookup
 from ahl_food_reformulation.utils.lookups import product_table
-from ahl_food_reformulation.pipeline.transform_data import rst_4_market_sector_update
+from ahl_food_reformulation.pipeline.transform_data import (
+    rst_4_market_sector_update,
+    rst_4_market_update,
+)
 
 
 def purchase_records():
@@ -324,6 +327,7 @@ def prod_meta_update():
     """
     prod_meta = product_metadata()
     prod_meta["rst_4_market_sector"] = rst_4_market_sector_update(prod_meta)
+    prod_meta["rst_4_market"] = rst_4_market_update(prod_meta)
     prod_meta.dropna(subset=["rst_4_extended"], inplace=True)
 
     return prod_meta[prod_meta["rst_4_market_sector"] != "Dairy Products"]
