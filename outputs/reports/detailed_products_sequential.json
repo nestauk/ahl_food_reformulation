@@ -1,4 +1,13 @@
 {
+  "Everyday Biscuits": [
+    "Everyday Biscui Packet Wafers",
+    "Everyday Biscuit Coconut/Nice",
+    "Everyday Biscuits Other Sweet",
+    "Everyday Biscuits Ginger",
+    "Everyday Biscuits Cookies",
+    "Everyday Biscu Custard Creams",
+    "Everyday Biscuits Digestives"
+  ],
   "Ambient Cakes+Pastries": [
     "Ambient Cakes Sponge Sandwich",
     "Meringue/Other Ambient Dessert",
@@ -17,41 +26,19 @@
     "Ambient Cakes Large Whole Cake",
     "Ambient Cakes Small Cakes"
   ],
-  "Confect. & Other Exclusions": [
-    "Confect+Other Other Cnfctnry",
-    "Confect. & Oth Savoury Snacks"
+  "Chocolate Confectionery": [
+    "Chocolate Conf Single Chocolat",
+    "Chclte Conf Egg+Nvlty+Seasonal",
+    "Chocolate Confection Bitesize",
+    "Choc Confctnry Boxes+Gifting",
+    "Choc Confctnry Block Chocolate",
+    "Chocolate Conf Multipack Choco"
   ],
-  "Everyday Treats": [
-    "Everyday Treats Other Sweet",
-    "Everyday Treats Half Coated",
-    "Everyday Treats Choc Mallows",
-    "Everyday Treats Cookies",
-    "Everyday Treats Shortbread",
-    "Everyday Treats Jaffa Cakes",
-    "Everyday Treats Other Creams",
-    "Everyday Treat Choc Digestives"
+  "Savoury Snacks": [
+    "Savoury Snacks Standard",
+    "Savoury Snacks Maxi",
+    "Savoury Snacks Multi-Pack",
+    "Savoury Snacks Family"
   ],
-  "Everyday Biscuits": [
-    "Everyday Biscui Packet Wafers",
-    "Everyday Biscuit Coconut/Nice",
-    "Everyday Biscuits Other Sweet",
-    "Everyday Biscuits Ginger",
-    "Everyday Biscuits Cookies",
-    "Everyday Biscu Custard Creams",
-    "Everyday Biscuits Digestives"
-  ],
-  "Morning Goods": [
-    "Unfruited Iced Buns",
-    "Potato Cakes/Soda Farl",
-    "Muffins",
-    "Teacakes",
-    "Unfruited Other Buns",
-    "Pancakes/Griddle Scones",
-    "Waffles",
-    "Morning Goods Pain Au Choc",
-    "Scones",
-    "Croissants",
-    "Hotcross Buns",
-    "Crumpets/Pikelets"
-  ]
+  "Total Bread": ["Wrapped Bread White"]
 }

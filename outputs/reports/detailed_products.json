@@ -1,4 +1,5 @@
 {
+  "Total Bread": ["Wrapped Bread White"],
   "Ambient Cakes+Pastries": [
     "Ambient Cakes Sponge Sandwich",
     "Meringue/Other Ambient Dessert",
@@ -17,6 +18,15 @@
     "Ambient Cakes Large Whole Cake",
     "Ambient Cakes Small Cakes"
   ],
+  "Chilled Cakes": [
+    "Chilled Cake Portions",
+    "Chilled Cakes Large Whole Cake",
+    "Chilled Cakes Large Tarts",
+    "Chilled Cakes Cheesecake",
+    "Chilled Cakes Small Tarts",
+    "Chilled Cakes Small Cakes"
+  ],
+  "Eggs": ["Eggs Hens Free Range"],
   "Morning Goods": [
     "Unfruited Iced Buns",
     "Potato Cakes/Soda Farl",
@@ -31,6 +41,22 @@
     "Hotcross Buns",
     "Crumpets/Pikelets"
   ],
+  "Everyday Biscuits": [
+    "Everyday Biscui Packet Wafers",
+    "Everyday Biscuit Coconut/Nice",
+    "Everyday Biscuits Other Sweet",
+    "Everyday Biscuits Ginger",
+    "Everyday Biscuits Cookies",
+    "Everyday Biscu Custard Creams",
+    "Everyday Biscuits Digestives"
+  ],
+  "Ambient Condiments": [
+    "Ambient Cndmnt Horseradish Sce",
+    "Ambient Cndmnt Mint Sce/Jlly",
+    "Ambient Cndmnt Apple Sce",
+    "Ambient Cndmnt Cranberry Sce",
+    "Ambient Cndmnt Tartare Sce"
+  ],
   "Chocolate Confectionery": [
     "Chocolate Conf Single Chocolat",
     "Chclte Conf Egg+Nvlty+Seasonal",
@@ -39,17 +65,201 @@
     "Choc Confctnry Block Chocolate",
     "Chocolate Conf Multipack Choco"
   ],
-  "Chilled Cakes": [
-    "Chilled Cake Portions",
-    "Chilled Cakes Large Whole Cake",
-    "Chilled Cakes Large Tarts",
-    "Chilled Cakes Cheesecake",
-    "Chilled Cakes Small Tarts",
-    "Chilled Cakes Small Cakes"
+  "Chilled Desserts": [
+    "Chilled Desserts Jelly",
+    "Chilled Desserts Sundaes",
+    "Chilled Desser Traditional Des",
+    "Chilled Desser Pancakes/Crepes",
+    "Chilled Desserts Tiramisu",
+    "Chilled Other Dessert Types",
+    "Chilled Rice Puddings Desserts",
+    "Chilled Mousse Desserts",
+    "Chilled Desser Sponge Puddings",
+    "Chilled Cheesecake Desserts",
+    "Chilled Trifle Desserts",
+    "Chilled Desser Flavoured Desse"
+  ],
+  "Chilled Black+White Pudng": ["Chilled Black+White Pudding"],
+  "P/P Fresh Meat+Veg+Pastry": [
+    "PP Fsh Mt+Vg Non Meat Pasties",
+    "PP Fsh Mt+Vg Scotch Eggs",
+    "PP Fsh Mt+Vg Quiches/Flans",
+    "PP Fsh Mt+Vg Pasties",
+    "PP Fsh Mt+Vg Hot Pies",
+    "PP Fsh Mt+Vg Sausage Rolls",
+    "PP Fsh Mt+Vg Pork Pies"
+  ],
+  "Yoghurt": [
+    "Yoghurt Kids Handheld",
+    "Yoghurt Soya/Dairy Free",
+    "Yoghurt Active Health",
+    "Yoghurt Standard",
+    "Yoghurt Big Pot Flavoured",
+    "Yoghurt Luxury",
+    "Yoghurt Fat Free",
+    "Yoghurt Split Pots",
+    "Yoghurt Big Pot Plain"
+  ],
+  "Everyday Treats": [
+    "Everyday Treats Other Sweet",
+    "Everyday Treats Half Coated",
+    "Everyday Treats Choc Mallows",
+    "Everyday Treats Cookies",
+    "Everyday Treats Shortbread",
+    "Everyday Treats Jaffa Cakes",
+    "Everyday Treats Other Creams",
+    "Everyday Treat Choc Digestives"
+  ],
+  "Fresh Cream": [
+    "Fresh Cream Alcoholic Flvrd",
+    "Fresh Cream Soured",
+    "Fresh Cream Single",
+    "Fresh Cream Creme Fraiche",
+    "Fresh Cream Double"
+  ],
+  "Meat Extract": [
+    "Meat Extract R.T.S. Gravy",
+    "Meat Extract Cubes",
+    "Mt Extrct Pastes/Savoury Drink",
+    "Meat Extract Gravy Powder/Gran"
+  ],
+  "Chilled Ready Meals": [
+    "Chilled Read Ready To Co Fish",
+    "Chilled R Ready To Meal Centr",
+    "Chilled Re Ready To C Chicken",
+    "Chilled Rea Ready To Co Mixed",
+    "Chilled Read Ready To Co Pork",
+    "Chilled Ready Breaded-Kievs/E",
+    "Chilled Ready Burger in a Bun",
+    "Chilled Ready Vegetable Accom",
+    "Chilled Ready Mea Meal Centre",
+    "Chilled Ready M Complete Meal"
+  ],
+  "Dry Pulses+Cereal": ["Dry Pulses+Cereal"],
+  "Margarine": [
+    "Other Soft Margarine",
+    "Non Pufa Low Fat Spread",
+    "Pufa/Mufa Margarine/Spread",
+    "Dairy Spreads"
+  ],
+  "Fruit": [
+    "Fruit Berries+Currant Blckbrry",
+    "Fruit Apricot",
+    "Fruit Dates",
+    "Fruit Kiwi",
+    "Fruit Cherries",
+    "Fruit Plums Plums Red",
+    "Fruit Berries+Currant Rspbrry",
+    "Fruit Lemon",
+    "Black Seedless Grapes",
+    "Fruit Nectarine Nectarines Yel",
+    "Mixed Pack Seedless Grapes",
+    "Fruit Berries+Currant Blbrry",
+    "Fruit Orange Other",
+    "Fruit Berries+Currant Strwbry",
+    "Fruit Pears",
+    "White Seedless Grape",
+    "Fruit Esy Plrs Clementines",
+    "Red Seedless Grapes",
+    "Fruit Dessert Apples"
   ],
   "Ambnt Salad Accompanimet": [
     "Amb Salad Acc Pourable Drssing",
     "Ambient Salad Cream",
     "Ambnt Salad Accomp Mayonnaise"
+  ],
+  "Fresh Bacon Rashers": [
+    "Fresh Bacon Rashers Lardons",
+    "Fresh Bacon Rasher Medallions",
+    "Fresh Bacon Rasher Streaky",
+    "Fresh Bacon Rasher Back"
+  ],
+  "Frozen Ready Meals": [
+    "Frozen Ready Meals Mexican",
+    "Frozen Ready Meals French",
+    "Frozen Ready Meals American",
+    "Frozen Ready Meals Chinese",
+    "Frozen Read Other Europ Kievs",
+    "Frozen Ready Meals Indian",
+    "Frozen Ready Meals Italian",
+    "Frozen Ready Meals English"
+  ],
+  "Total Milk": [
+    "Milk Skimmed U.H.T.",
+    "Milk Other Type",
+    "Milk Semi-Skimmed U.H.T.",
+    "Milk Skimmed Pasteurised",
+    "Milk Whole Pasteurised",
+    "Milk Semi-Skimmed Pasteurised"
+  ],
+  "Special Treats": [
+    "Spcl Trts  Shortbread",
+    "Special Treats Other Sweet",
+    "Spcl Trts  Half Coated",
+    "Spcl Trts  Cookies",
+    "Spcl Trts  Fully Coated"
+  ],
+  "Chilled Processed Poultry": [
+    "Chilled Prcssd Poultry Burgers",
+    "Chilled Prcssd Poultry Snacks",
+    "Chilled Prcssd Poultry Bites",
+    "Chilled Prcssd Poultry Goujons",
+    "Chilled Prcssd Breasts+Fillets",
+    "Chilled Prcssd Pltry Marinades",
+    "Chilled Proces Breaded-Kievs/E"
+  ],
+  "Instant Coffee": [
+    "Instant Coffee Micro Ground",
+    "Decaf Freeze Dried Inst Coffee",
+    "Instant Coffee Powder",
+    "Instant Coffee Granules",
+    "Freeze Dried Instant Coffee",
+    "Spclty Instant Coffee"
+  ],
+  "Breakfast Cereals": [
+    "Breakfast Cere Breakfast Drink",
+    "Instant Porridge",
+    "Breakfast Cereals Granola",
+    "Breakfast Cereals Muesli",
+    "Porridge Oat",
+    "Ready To Eat Cereals"
+  ],
+  "Chilled Prepared Salad": [
+    "Chilled Prepared Snack For Now",
+    "Other Prepared Salad",
+    "Chilled Prepared Potato Salad",
+    "Chilled Prepared Pasta Salad",
+    "Chilled Prepared Sld Coleslaw"
+  ],
+  "Total Ice Cream": [
+    "Ice Cream Sorbet",
+    "Ice Cream Cups/Tubs",
+    "Other Ice-Cream Multipacks",
+    "Ice Cream Healthy",
+    "1 Litre Standard Ice-Cream",
+    "Choc Ices",
+    "2 Litre Standard Ice-Cream",
+    "Filled Ice-Cream Cones",
+    "Premium Ice-Cream",
+    "Lollies"
+  ],
+  "Defined Milk+Cream Prd(B)": ["Evaporated Milk"],
+  "Frozen Confectionery": [
+    "Frozen Pastry",
+    "Frozen Pies/Tarts/Flans",
+    "Frozen Small Cakes/Pastry Cake",
+    "Frozen Other Bakery Products",
+    "Frozen Gateaux/Layer Cake",
+    "Frozen Cheesecake",
+    "Frozen Fruit"
+  ],
+  "Sugar Confectionery": [
+    "Sugar Confectio Sugar Singles",
+    "Sugar Confecti Sugar Multipack",
+    "Sugar Confectio Sugar Sharing"
+  ],
+  "Confect. & Other Exclusions": [
+    "Confect+Other Other Cnfctnry",
+    "Confect. & Oth Savoury Snacks"
   ]
 }
