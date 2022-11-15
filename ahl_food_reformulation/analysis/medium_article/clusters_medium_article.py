@@ -33,6 +33,13 @@ from matplotlib import pyplot as plt
 from sklearn.preprocessing import MinMaxScaler
 import seaborn as sns
 import numpy as np
+import time
+import pandas as pd
+
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.preprocessing import label_binarize
+from sklearn.cluster import KMeans
+import shap
 
 # %% [markdown]
 # ### Making household representations
@@ -160,79 +167,85 @@ medium.plot_clusters(
 )
 
 # %% [markdown]
-# ### Temp - trialing other methods
-
-# %%
-from sklearn import mixture
-
-gmm = mixture.GaussianMixture(n_components=50).fit(umap_share_sub)
-gmm_labels = gmm.predict(umap_share_sub)
-
-# Plot clusters
-medium.plot_clusters("Share of kcal:", 50, umap_share_sub, gmm_labels)
-
-# %%
-import hdbscan
-
-hdb = hdbscan.HDBSCAN(min_cluster_size=100)
-hdb_clust = hdb.fit(umap_share_sub)
-hdb_clust.labels_
-
-# %%
-from sklearn.metrics import silhouette_samples, silhouette_score
-
-silhouette_score(umap_share_sub, hdb_labels)
-
-# %%
-from sklearn.cluster import SpectralClustering
-
-spc = SpectralClustering(n_clusters=50)
-spc_labels = spc.fit_predict(umap_share_sub)
-
-# Plot clusters
-medium.plot_clusters("Share of kcal:", 50, umap_share_sub, spc_labels)
-
-# %% [markdown]
 # ### Deep dive into best performing clusters
 
 # %% [markdown]
-# #### Testing SHAP
+# #### Testing SHAP values on a sample
 
 # %%
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.preprocessing import label_binarize
-from sklearn.cluster import KMeans
-import shap
-
-# %%
+# Using share of kcal clusters / transformations
 kmeanModel = KMeans(n_clusters=no_clusters[np.argmax(scores_share)])
 y = kmeanModel.fit(umap_share_sub).labels_
 y = label_binarize(y, classes=list(range(no_clusters[np.argmax(scores_share)])))
+
+# %%
 clf = RandomForestClassifier()
 clf.fit(kcal_share_subset, y)
 
-# %%
-shap.initjs()
+# Sample of 10
+kcal_share_sample = pd.concat(
+    [kcal_share_subset.reset_index(), pd.DataFrame(y)], axis=1
+).sample(n=10, random_state=1)
+kcal_share_sample.set_index("Panel Id", inplace=True)
+
+y_test = kcal_share_sample.iloc[:, -50:]
+X_test = kcal_share_sample.iloc[:, :-50]
+
+logging.info("Creating SHAP values")
+t0 = time.time()
+shap_values = shap.TreeExplainer(clf).shap_values(X_test)
+print((t1 - t0) / 60, "minutes")
 
 # %%
+X_test.shape
+
+# %%
+kcal_share_subset.shape
+
+# %% [markdown]
+# #### Testing SHAP values with umap
+
+# %%
+# Using share of kcal clusters / transformations
+kmeanModel = KMeans(n_clusters=no_clusters[np.argmax(scores_share)])
+y = kmeanModel.fit(umap_share_sub).labels_
+y = label_binarize(y, classes=list(range(no_clusters[np.argmax(scores_share)])))
+
+# %%
+clf = RandomForestClassifier()
+clf.fit(umap_share_sub, y)
+
+# %%
+shap.initjs()
 explainer = shap.TreeExplainer(clf)
 
 # %%
-# shap_values = explainer(kcal_share_subset).values # Very slow / does not complete
+logging.info("Creating SHAP values")
+t0 = time.time()
+shap_values = explainer(umap_share_sub).values
+print((t1 - t0) / 60, "minutes")
 
 # %%
-# shap.summary_plot(shap_values, X, plot_type='bar')
+umap_share_sub
 
 # %%
-# visualize the first prediction’s explanation
-# shap.force_plot(explainer.expected_value[0], shap_values[0])
+shap.force_plot(explainer.expected_value[1], shap_values[1])
+
+# %%
+# the waterfall_plot shows how we get from shap_values.base_values to model.predict(X)[sample_ind]
+shap.plots._waterfall.waterfall_legacy(explainer.expected_value[0], shap_values[65][1])
 
 # %% [markdown]
-# ##### NOTES
+# ### NOTES
 #
 # - Currently cannot get shap values using explainer on whole dataset (very slow). Need to explore alternative option.
-#     - Tried reducing to broader category but still very slow / not completing
-#     - Trying with market sector category (stopped after 10 mins or so...)
-# - One option could be to use the PCA components and altair plots (suggested in article) to explain the PCA components?
+#     - Tried reducing to different broader categories but still very slow / not completing
+#     - Tried with 1,000 sample: failed with the below error (unsure why this is as dfs passed are the same)
+#     - Tried with UMAP components but struggled to interpret the results
+# - Another option could be to use the PCA components and altair plots (suggested in article) to explain the PCA components?
+#     - Issue here is that there is still a gap between PCA and UMAP results that are used in k-means
+
+# %% [markdown]
+# ExplainerError: Additivity check failed in TreeExplainer! Please ensure the data matrix you passed to the explainer is the same shape that the model was trained on. If your data shape is correct then please report this on GitHub. Consider retrying with the feature_perturbation='interventional' option. This check failed because for one of the samples the sum of the SHAP values was -30589659.908800, while the model output was 0.017069. If this difference is acceptable you can set check_additivity=False to disable this check.
 
 # %%
