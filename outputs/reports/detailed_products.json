@@ -1,0 +1,45 @@
+{
+  "Total Bread": [
+    "Wrapped Bread White",
+    "Soft Bread Rolls",
+    "Wrapped Bread Wholemeal",
+    "Morning Goods Tortilla Wraps",
+    "Wrapped Bread Brown"
+  ],
+  "Ambient Cakes+Pastries": [
+    "Ambient Cakes Small Cakes",
+    "Ambient Cakes Large Whole Cake",
+    "Ambient Cakes+Past Mince Pies",
+    "Ambient Cakes Malt/Fruit Loave",
+    "Ambient Cakes Small Tarts"
+  ],
+  "Chilled Cakes": [
+    "Chilled Cakes Small Cakes",
+    "Chilled Cakes Small Tarts",
+    "Chilled Cakes Cheesecake",
+    "Chilled Cakes Large Tarts",
+    "Chilled Cakes Large Whole Cake"
+  ],
+  "Eggs": ["Eggs Hens Free Range"],
+  "Morning Goods": [
+    "Crumpets/Pikelets",
+    "Hotcross Buns",
+    "Croissants",
+    "Scones",
+    "Morning Goods Pain Au Choc"
+  ],
+  "Everyday Biscuits": [
+    "Everyday Biscuits Digestives",
+    "Everyday Biscu Custard Creams",
+    "Everyday Biscuits Cookies",
+    "Everyday Biscuits Ginger",
+    "Everyday Biscuits Other Sweet"
+  ],
+  "Ambient Condiments": [
+    "Ambient Cndmnt Tartare Sce",
+    "Ambient Cndmnt Cranberry Sce",
+    "Ambient Cndmnt Apple Sce",
+    "Ambient Cndmnt Mint Sce/Jlly",
+    "Ambient Cndmnt Horseradish Sce"
+  ]
+}

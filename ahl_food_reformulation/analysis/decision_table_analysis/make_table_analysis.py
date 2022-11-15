@@ -9,6 +9,7 @@ import pandas as pd
 import altair as alt
 from typing import List
 
+from ahl_food_reformulation.utils import plotting as pu
 from ahl_food_reformulation import PROJECT_DIR
 from ahl_food_reformulation.utils.plotting import configure_plots
 from ahl_food_reformulation.utils.io import load_s3_data
@@ -204,7 +205,7 @@ def make_indicator_bubblechart(
 
 
 def make_recommendations(
-    report_table: pd.DataFrame, top_reccs: int = 5
+    report_table: pd.DataFrame, report_table_clean: pd.DataFrame, top_reccs: int = 20
 ) -> pd.DataFrame:
     """Creates a table with reformulation recommendations based on different indicators
     and the mean of different indicators"""
@@ -213,7 +214,7 @@ def make_recommendations(
         report_table.groupby(["category", broad_cat_str])["z_score"]
         .mean()
         .reset_index(drop=False)
-    )
+    ).merge(report_table_clean["kcal_contribution_share"], on=broad_cat_str)
 
     top_candidates = {}
 
@@ -222,15 +223,23 @@ def make_recommendations(
         top_candidates[cat] = ", ".join(
             report_table_aggregated.query(f"category=='{cat}'").sort_values(
                 "z_score", ascending=False
-            )[broad_cat_str][:top_reccs]
+            )[broad_cat_str]
         )
 
     return pd.DataFrame(top_candidates, index=["Top candidates"]).assign(
         Average=", ".join(
             report_table_aggregated.groupby(broad_cat_str)["z_score"]
             .mean()
-            .sort_values(ascending=False)
-            .index[:top_reccs]
+            .reset_index()
+            .merge(
+                report_table_aggregated[[broad_cat_str, "kcal_contribution_share"]],
+                on=broad_cat_str,
+            )
+            .drop_duplicates()
+            .sort_values("z_score", ascending=False)
+            .assign(cum=lambda x: np.cumsum(x["kcal_contribution_share"]))
+            .query(f"cum <= @top_reccs")
+            .sort_values("z_score", ascending=False)[broad_cat_str]
             .values
         )
     )
@@ -360,15 +369,138 @@ def make_detailed_recommendations(
             (
                 detailed_table[detailed_table[broad_cat_str] == t]
                 .dropna()
-                .sort_values(variables[0], ascending=False)
-                .assign(cum=lambda x: np.cumsum(x[variables[0]]))
-                .query(f"cum <= @threshold")
-                .sort_values("cum", ascending=False)["product"]
+                .sort_values(variables[0], ascending=False)["product"][:threshold]
+                # .assign(cum=lambda x: np.cumsum(x[variables[0]]))
+                # .query(f"cum <= @threshold")
+                # .sort_values("cum", ascending=False)["product"]
                 .values
             )
         )
 
     return detailed_products
+
+
+def make_pareto_chart(
+    report_table: pd.DataFrame, report_table_clean: pd.DataFrame, top_reccs: int = 0.50
+):
+    """Creates a chart to visualise the cumulative contirbution of selected categories to shopping baskets"""
+    report_table_aggregated = (
+        report_table.groupby(["category", broad_cat_str])["z_score"]
+        .mean()
+        .reset_index(drop=False)
+    ).merge(report_table_clean["kcal_contribution_share"], on=broad_cat_str)
+
+    chart_df = (
+        report_table_aggregated.groupby(broad_cat_str)["z_score"]
+        .mean()
+        .reset_index()
+        .merge(
+            report_table_aggregated[[broad_cat_str, "kcal_contribution_share"]],
+            on=broad_cat_str,
+        )
+        .drop_duplicates()
+        .sort_values("z_score", ascending=False)
+        .assign(cum=lambda x: np.cumsum(x["kcal_contribution_share"] / 100))
+        .query(f"cum <= @top_reccs")
+        .sort_values("z_score", ascending=False)
+    )
+
+    chart_df["share"] = chart_df["kcal_contribution_share"] / 100
+
+    sort_order = chart_df["rst_4_market"].tolist()
+
+    base = alt.Chart(chart_df).encode(
+        x=alt.X("rst_4_market:O", sort=sort_order, title="Market Category"),
+    )
+
+    bars = base.mark_bar(size=20, color=pu.NESTA_COLOURS[0]).encode(
+        y=alt.Y("z_score:Q"),
+    )
+
+    # Create the line chart with length encoded along the Y axis
+    line = base.mark_line(strokeWidth=1.5, color="#000000").encode(
+        y=alt.Y("cum:Q", title="Cumulative kcal Share", axis=alt.Axis(format=".0%")),
+        text=alt.Text("cum:Q"),
+    )
+
+    # Mark the percentage values on the line with Circle marks
+    points = base.mark_circle(strokeWidth=3, color="#000000").encode(
+        y=alt.Y("cum:Q", axis=None),
+    )
+
+    # Mark the bar marks with the value text
+    bar_text = bars.mark_text(
+        align="left",
+        baseline="middle",
+        dx=-10,  # the dx and dy can be manipulated to position text
+        dy=-10,  # relative to the bar
+    ).encode(
+        y=alt.Y("z_score:Q", title="Z Score", axis=None),
+        # we'll use the percentage as the text
+        text=alt.Text("z_score:Q", format=".1f"),
+        color=alt.value("#000000"),
+    )
+    # Mark the Circle marks with the value text
+    point_text = points.mark_text(
+        align="left",
+        baseline="middle",
+        dx=-10,
+        dy=-10,
+    ).encode(
+        y=alt.Y("cum:Q", axis=None),
+        # we'll use the percentage as the text
+        text=alt.Text("cum:Q", format="0.0%"),
+        color=alt.value("#000000"),
+    )
+    # Layer all the elements together
+
+    return (
+        (bars + bar_text + line + points + point_text)
+        .resolve_scale(y="independent")
+        .properties(width=800, height=400)
+    )
+
+
+def make_bar_chart(detailed_reccs: pd.DataFrame, report_table_detailed: pd.DataFrame):
+    """
+    Returns a chart to visualise the distribution of kcal contribution for the detailed recommendations
+
+    """
+    keep = (
+        detailed_reccs["Detailed recommendations"]
+        .str.split(
+            ",",
+            expand=True,
+        )
+        .T
+    )
+
+    keep[keep.columns] = keep.apply(lambda x: x.str.strip())
+
+    cat = keep.columns
+
+    selected_df = []
+
+    for i in cat:
+        selected_df.append(
+            report_table_detailed[report_table_detailed["product"].isin(keep[i])]
+        )
+
+    print(selected_df)
+
+    select = pd.concat(selected_df)
+
+    sort_order = select.sort_values(by=["kcal_contribution_share"], ascending=False)[
+        "product"
+    ].to_list()
+
+    return (
+        alt.Chart(select)
+        .mark_bar()
+        .encode(x=alt.X("product", sort=sort_order), y="kcal_contribution_share")
+        .facet(facet="rst_4_market", columns=3)
+        .resolve_scale(x="independent", y="independent")
+    )
 
 
 if __name__ == "__main__":
@@ -385,7 +517,8 @@ if __name__ == "__main__":
             "ahl-private-data",
             "kantar/data_outputs/decision_table/decision_table_"
             + broad_cat_str
-            + "_reduced.csv",
+            + ".csv",
+            # + "_reduced.csv",
         )
         .drop(axis=1, labels=["chosen_unit"])
         .melt(id_vars=broad_cat_str)
@@ -499,7 +632,7 @@ if __name__ == "__main__":
     )
 
     logging.info("Making high level recommendations")
-    recc_table = make_recommendations(report_table_clean_long, 5).T
+    recc_table = make_recommendations(report_table_clean_long, report_table_clean, 20).T
 
     logging.info(recc_table.head())
 
@@ -541,6 +674,12 @@ if __name__ == "__main__":
     )
     logging.info(f"Top sequential market sectors: {top_sequential_cats}")
 
+    logging.info("pareto chart")
+
+    pareto_chart = make_pareto_chart(report_table_clean_long, report_table_clean, 0.50)
+
+    save_altair(configure_plots(pareto_chart), "pareto_chart", driver=webdr)
+
     logging.info("Making detailed recommendations")
 
     report_table_detailed = pipe(
@@ -548,7 +687,8 @@ if __name__ == "__main__":
             "ahl-private-data",
             "kantar/data_outputs/decision_table/decision_table_"
             + granular_cat_str
-            + "_reduced.csv",
+            + ".csv",
+            # + "_reduced.csv",
         ).rename(columns={"Unnamed: 0": "product"}),
         lambda df: df.rename(
             columns={
@@ -566,6 +706,12 @@ if __name__ == "__main__":
     ).T
 
     logging.info(detailed_reccs.head())
+
+    logging.info("Bar chart for detailed reccs")
+
+    bar_chart = make_bar_chart(detailed_reccs, report_table_detailed)
+
+    save_altair(configure_plots(bar_chart), "bar_chart", driver=webdr)
 
     detailed_reccs.to_csv(f"{PROJECT_DIR}/outputs/reports/detailed_recommendation.csv")
 
