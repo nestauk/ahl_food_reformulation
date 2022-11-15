@@ -59,7 +59,11 @@ pan_conv = transform.hh_size_conv(pan_ind)
 pur_vol = transform.vol_for_purch(purch_recs_subset, val_fields, prod_mast, uom)
 # Purchase and product info combined
 comb_files = transform.combine_files(
-    val_fields, pur_vol, prod_codes, prod_vals, 2829  # granular == 2907
+    val_fields,
+    pur_vol,
+    prod_codes,
+    prod_vals,
+    2907,  # 2828 (market sector) # granular == 2907, 2829 less granular
 )
 # Household kcal per category adjusted for size - Make representation
 kcal_adj_subset = transform.hh_kcal_volume_converted(
@@ -156,6 +160,39 @@ medium.plot_clusters(
 )
 
 # %% [markdown]
+# ### Temp - trialing other methods
+
+# %%
+from sklearn import mixture
+
+gmm = mixture.GaussianMixture(n_components=50).fit(umap_share_sub)
+gmm_labels = gmm.predict(umap_share_sub)
+
+# Plot clusters
+medium.plot_clusters("Share of kcal:", 50, umap_share_sub, gmm_labels)
+
+# %%
+import hdbscan
+
+hdb = hdbscan.HDBSCAN(min_cluster_size=100)
+hdb_clust = hdb.fit(umap_share_sub)
+hdb_clust.labels_
+
+# %%
+from sklearn.metrics import silhouette_samples, silhouette_score
+
+silhouette_score(umap_share_sub, hdb_labels)
+
+# %%
+from sklearn.cluster import SpectralClustering
+
+spc = SpectralClustering(n_clusters=50)
+spc_labels = spc.fit_predict(umap_share_sub)
+
+# Plot clusters
+medium.plot_clusters("Share of kcal:", 50, umap_share_sub, spc_labels)
+
+# %% [markdown]
 # ### Deep dive into best performing clusters
 
 # %% [markdown]
@@ -173,7 +210,6 @@ y = kmeanModel.fit(umap_share_sub).labels_
 y = label_binarize(y, classes=list(range(no_clusters[np.argmax(scores_share)])))
 clf = RandomForestClassifier()
 clf.fit(kcal_share_subset, y)
-# clf.fit(kcal_share_subset.head(50), y[:50]) # testing smaller sample
 
 # %%
 shap.initjs()
@@ -182,16 +218,21 @@ shap.initjs()
 explainer = shap.TreeExplainer(clf)
 
 # %%
-shap_values = explainer(kcal_share_subset).values
+# shap_values = explainer(kcal_share_subset).values # Very slow / does not complete
 
 # %%
-# X = kcal_share_subset
+# shap.summary_plot(shap_values, X, plot_type='bar')
 
 # %%
 # visualize the first prediction’s explanation
 # shap.force_plot(explainer.expected_value[0], shap_values[0])
 
-# %%
-# shap.summary_plot(shap_values, X, plot_type='bar')
+# %% [markdown]
+# ##### NOTES
+#
+# - Currently cannot get shap values using explainer on whole dataset (very slow). Need to explore alternative option.
+#     - Tried reducing to broader category but still very slow / not completing
+#     - Trying with market sector category (stopped after 10 mins or so...)
+# - One option could be to use the PCA components and altair plots (suggested in article) to explain the PCA components?
 
 # %%
