@@ -205,7 +205,7 @@ def make_indicator_bubblechart(
 
 
 def make_recommendations(
-    report_table: pd.DataFrame, report_table_clean: pd.DataFrame, top_reccs: int = 50
+    report_table: pd.DataFrame, report_table_clean: pd.DataFrame, top_reccs: int = 20
 ) -> pd.DataFrame:
     """Creates a table with reformulation recommendations based on different indicators
     and the mean of different indicators"""
@@ -369,10 +369,10 @@ def make_detailed_recommendations(
             (
                 detailed_table[detailed_table[broad_cat_str] == t]
                 .dropna()
-                .sort_values(variables[0], ascending=False)
-                .assign(cum=lambda x: np.cumsum(x[variables[0]]))
-                .query(f"cum <= @threshold")
-                .sort_values("cum", ascending=False)["product"]
+                .sort_values(variables[0], ascending=False)["product"][:threshold]
+                # .assign(cum=lambda x: np.cumsum(x[variables[0]]))
+                # .query(f"cum <= @threshold")
+                # .sort_values("cum", ascending=False)["product"]
                 .values
             )
         )
@@ -410,21 +410,21 @@ def make_pareto_chart(
     sort_order = chart_df["rst_4_market"].tolist()
 
     base = alt.Chart(chart_df).encode(
-        x=alt.X("rst_4_market:O", sort=sort_order),
+        x=alt.X("rst_4_market:O", sort=sort_order, title="Market Category"),
     )
 
-    bars = base.mark_bar(size=20).encode(
-        y=alt.Y("share:Q"),
+    bars = base.mark_bar(size=20, color=pu.NESTA_COLOURS[0]).encode(
+        y=alt.Y("z_score:Q"),
     )
 
     # Create the line chart with length encoded along the Y axis
-    line = base.mark_line(strokeWidth=1.5, color=pu.NESTA_COLOURS[0]).encode(
-        y=alt.Y("cum:Q", title="Cumulative Share", axis=alt.Axis(format=".0%")),
+    line = base.mark_line(strokeWidth=1.5, color="#000000").encode(
+        y=alt.Y("cum:Q", title="Cumulative kcal Share", axis=alt.Axis(format=".0%")),
         text=alt.Text("cum:Q"),
     )
 
     # Mark the percentage values on the line with Circle marks
-    points = base.mark_circle(strokeWidth=3, color=pu.NESTA_COLOURS[1]).encode(
+    points = base.mark_circle(strokeWidth=3, color="#000000").encode(
         y=alt.Y("cum:Q", axis=None),
     )
 
@@ -435,9 +435,9 @@ def make_pareto_chart(
         dx=-10,  # the dx and dy can be manipulated to position text
         dy=-10,  # relative to the bar
     ).encode(
-        y=alt.Y("share:Q", axis=None),
+        y=alt.Y("z_score:Q", title="Z Score", axis=None),
         # we'll use the percentage as the text
-        text=alt.Text("share:Q", format="0.1%"),
+        text=alt.Text("z_score:Q", format=".1f"),
         color=alt.value("#000000"),
     )
     # Mark the Circle marks with the value text
@@ -450,7 +450,7 @@ def make_pareto_chart(
         y=alt.Y("cum:Q", axis=None),
         # we'll use the percentage as the text
         text=alt.Text("cum:Q", format="0.0%"),
-        color=alt.value(pu.NESTA_COLOURS[0]),
+        color=alt.value("#000000"),
     )
     # Layer all the elements together
 
@@ -458,6 +458,48 @@ def make_pareto_chart(
         (bars + bar_text + line + points + point_text)
         .resolve_scale(y="independent")
         .properties(width=800, height=400)
+    )
+
+
+def make_bar_chart(detailed_reccs: pd.DataFrame, report_table_detailed: pd.DataFrame):
+    """
+    Returns a chart to visualise the distribution of kcal contribution for the detailed recommendations
+
+    """
+    keep = (
+        detailed_reccs["Detailed recommendations"]
+        .str.split(
+            ",",
+            expand=True,
+        )
+        .T
+    )
+
+    keep[keep.columns] = keep.apply(lambda x: x.str.strip())
+
+    cat = keep.columns
+
+    selected_df = []
+
+    for i in cat:
+        selected_df.append(
+            report_table_detailed[report_table_detailed["product"].isin(keep[i])]
+        )
+
+    print(selected_df)
+
+    select = pd.concat(selected_df)
+
+    sort_order = select.sort_values(by=["kcal_contribution_share"], ascending=False)[
+        "product"
+    ].to_list()
+
+    return (
+        alt.Chart(select)
+        .mark_bar()
+        .encode(x=alt.X("product", sort=sort_order), y="kcal_contribution_share")
+        .facet(facet="rst_4_market", columns=3)
+        .resolve_scale(x="independent", y="independent")
     )
 
 
@@ -590,7 +632,7 @@ if __name__ == "__main__":
     )
 
     logging.info("Making high level recommendations")
-    recc_table = make_recommendations(report_table_clean_long, report_table_clean, 50).T
+    recc_table = make_recommendations(report_table_clean_long, report_table_clean, 20).T
 
     logging.info(recc_table.head())
 
@@ -664,6 +706,12 @@ if __name__ == "__main__":
     ).T
 
     logging.info(detailed_reccs.head())
+
+    logging.info("Bar chart for detailed reccs")
+
+    bar_chart = make_bar_chart(detailed_reccs, report_table_detailed)
+
+    save_altair(configure_plots(bar_chart), "bar_chart", driver=webdr)
 
     detailed_reccs.to_csv(f"{PROJECT_DIR}/outputs/reports/detailed_recommendation.csv")
 

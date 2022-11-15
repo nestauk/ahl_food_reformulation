@@ -1,44 +1,36 @@
 {
   "Everyday Biscuits": [
-    "Everyday Biscui Packet Wafers",
-    "Everyday Biscuit Coconut/Nice",
-    "Everyday Biscuits Other Sweet",
-    "Everyday Biscuits Ginger",
-    "Everyday Biscuits Cookies",
+    "Everyday Biscuits Digestives",
     "Everyday Biscu Custard Creams",
-    "Everyday Biscuits Digestives"
+    "Everyday Biscuits Cookies",
+    "Everyday Biscuits Ginger",
+    "Everyday Biscuits Other Sweet"
   ],
   "Ambient Cakes+Pastries": [
-    "Ambient Cakes Sponge Sandwich",
-    "Meringue/Other Ambient Dessert",
-    "Ambient Cakes Flapjack",
-    "Ambient Cakes+Danish Pastries",
-    "Ambient Cakes Slab/Cut Cakes",
-    "Ambient Cakes Small Pies",
-    "Ambient Cakes Large Swiss Roll",
-    "Ambient Cakes Cake Bars",
-    "Ambient Cakes Muffins",
-    "Ambient Cakes ISB Cookies",
-    "Ambient Cakes Small Swiss Roll",
-    "Ambient Cakes Small Tarts",
-    "Ambient Cakes Malt/Fruit Loave",
-    "Ambient Cakes+Past Mince Pies",
+    "Ambient Cakes Small Cakes",
     "Ambient Cakes Large Whole Cake",
-    "Ambient Cakes Small Cakes"
+    "Ambient Cakes+Past Mince Pies",
+    "Ambient Cakes Malt/Fruit Loave",
+    "Ambient Cakes Small Tarts"
   ],
   "Chocolate Confectionery": [
-    "Chocolate Conf Single Chocolat",
-    "Chclte Conf Egg+Nvlty+Seasonal",
-    "Chocolate Confection Bitesize",
-    "Choc Confctnry Boxes+Gifting",
+    "Chocolate Conf Multipack Choco",
     "Choc Confctnry Block Chocolate",
-    "Chocolate Conf Multipack Choco"
+    "Choc Confctnry Boxes+Gifting",
+    "Chocolate Confection Bitesize",
+    "Chclte Conf Egg+Nvlty+Seasonal"
   ],
   "Savoury Snacks": [
-    "Savoury Snacks Standard",
-    "Savoury Snacks Maxi",
+    "Savoury Snacks Family",
     "Savoury Snacks Multi-Pack",
-    "Savoury Snacks Family"
+    "Savoury Snacks Maxi",
+    "Savoury Snacks Standard"
   ],
-  "Total Bread": ["Wrapped Bread White"]
+  "Total Bread": [
+    "Wrapped Bread White",
+    "Soft Bread Rolls",
+    "Wrapped Bread Wholemeal",
+    "Morning Goods Tortilla Wraps",
+    "Wrapped Bread Brown"
+  ]
 }
