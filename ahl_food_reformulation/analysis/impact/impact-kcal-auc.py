@@ -45,7 +45,7 @@ diff_avg = pd.read_csv(
     f"{PROJECT_DIR}/outputs/data/decision_table/distribution_reduction_avg.csv"
 )
 diff_seq = pd.read_csv(
-    f"{PROJECT_DIR}/outputs/data/decision_table/distribution_reduction_seq.csv"
+    f"{PROJECT_DIR}/outputs/data/decision_table/distribution_reduction_red.csv"
 )
 
 
@@ -67,8 +67,8 @@ print(
     "Under 10% kcal reduction the total number of daily calories removed from the population is "
     + millify((avg_10["demographic_weight"] * avg_10["value"]).sum())
 )
-
-print("SEQUENTIAL METHOD")
+print("        ")
+print("EGGS AND BREAD REMOVED")
 print("-------------")
 
 print(

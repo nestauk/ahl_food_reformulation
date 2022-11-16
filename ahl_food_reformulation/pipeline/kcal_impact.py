@@ -5,7 +5,6 @@ import pandas as pd
 
 def make_impact(
     chosen_cats,
-    # kcal_est,
     val_fields,
     pur_recs,
     prod_codes,
@@ -13,7 +12,6 @@ def make_impact(
     prod_meta,
     nut_rec,
     prod_broad,
-    # prod_gran,
     cat_int,
 ):
     """
@@ -47,11 +45,6 @@ def make_impact(
 
     """
 
-    # target_red = chosen_cats.merge(kcal_est, on=prod_broad)
-    # target_red = chosen_cats.copy()
-    # target_red["min"] = 0.05
-    # target_red["max"] = 0.1
-
     target_red = pd.DataFrame(
         {
             prod_broad: chosen_cats,
@@ -66,13 +59,11 @@ def make_impact(
     ).drop("att_vol", axis=1)
 
     comb_update = comb_files.merge(
-        # prod_meta[["product_code", prod_gran, prod_broad]],
         prod_meta[["product_code", prod_broad]],
         left_on="Product Code",
         right_on="product_code",
     )
 
-    # comb_update.rename(columns={prod_gran: "att_vol"}, inplace=True)
     comb_update.rename(columns={prod_broad: "att_vol"}, inplace=True)
 
     # get number of periods each hh is present
