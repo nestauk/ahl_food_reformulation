@@ -83,15 +83,25 @@ if __name__ == "__main__":
 
     logging.info("Option 1 - negative difference and deciles")
 
-    no_reform_avg = hh_kcal_filter_avg["Gross_up_kcal_daily"].quantile(
-        [x / 10 for x in range(11)]
+    hh_kcal_filter_avg["no_reform_avg"] = pd.qcut(
+        hh_kcal_filter_avg["Gross_up_kcal_daily"], 10, labels=False
     )
-    low_reform_avg = hh_kcal_filter_avg["Gross_up_kcal_min_daily"].quantile(
-        [x / 10 for x in range(11)]
+    hh_kcal_filter_avg["low_reform_avg"] = pd.qcut(
+        hh_kcal_filter_avg["Gross_up_kcal_min_daily"], 10, labels=False
     )
-    high_reform_avg = hh_kcal_filter_avg["Gross_up_kcal_max_daily"].quantile(
-        [x / 10 for x in range(11)]
+    hh_kcal_filter_avg["high_reform_avg"] = pd.qcut(
+        hh_kcal_filter_avg["Gross_up_kcal_max_daily"], 10, labels=False
     )
+
+    no_reform_avg = hh_kcal_filter_avg.groupby("no_reform_avg")[
+        "Gross_up_kcal_daily"
+    ].mean()
+    low_reform_avg = hh_kcal_filter_avg.groupby("low_reform_avg")[
+        "Gross_up_kcal_min_daily"
+    ].mean()
+    high_reform_avg = hh_kcal_filter_avg.groupby("high_reform_avg")[
+        "Gross_up_kcal_max_daily"
+    ].mean()
 
     diff_high_avg = pd.DataFrame(
         high_reform_avg - no_reform_avg, columns=["value"]
@@ -102,17 +112,29 @@ if __name__ == "__main__":
     ).reset_index()
     diff_low_avg["Reformulation Level"] = "5%"
 
+    diff_high_avg.rename(columns={"high_reform_avg": "decile"}, inplace=True)
+    diff_low_avg.rename(columns={"low_reform_avg": "decile"}, inplace=True)
+
     diff_avg = pd.concat([diff_high_avg, diff_low_avg])
+    diff_avg["decileQ"] = (diff_avg["decile"] + 1) / 10
+
+    logging.info("save decile for average")
+    diff_avg.to_csv(
+        f"{PROJECT_DIR}/outputs/data/decision_table/decile_average.csv",
+        index=False,
+    )
 
     fig1a = (
         alt.Chart(diff_avg)
-        .mark_line()
+        .mark_line(point=True)
         .encode(
-            x=alt.X("index", axis=alt.Axis(format="%", title="Percentile")),
+            x=alt.X(
+                "decileQ:O", axis=alt.Axis(format=".0%", title="Decile", tickCount=10)
+            ),
             y=alt.Y(
                 "value",
                 axis=alt.Axis(title="kcal/day"),
-                scale=alt.Scale(domain=[-150, 0]),
+                scale=alt.Scale(domain=[-100, 0]),
             ),
             color=alt.Color(
                 "Reformulation Level",
@@ -136,15 +158,25 @@ if __name__ == "__main__":
         driver=driver,
     )
 
-    no_reform_red = hh_kcal_filter_red["Gross_up_kcal_daily"].quantile(
-        [x / 10 for x in range(11)]
+    hh_kcal_filter_red["no_reform_red"] = pd.qcut(
+        hh_kcal_filter_red["Gross_up_kcal_daily"], 10, labels=False
     )
-    low_reform_red = hh_kcal_filter_red["Gross_up_kcal_min_daily"].quantile(
-        [x / 10 for x in range(11)]
+    hh_kcal_filter_red["low_reform_red"] = pd.qcut(
+        hh_kcal_filter_red["Gross_up_kcal_min_daily"], 10, labels=False
     )
-    high_reform_red = hh_kcal_filter_red["Gross_up_kcal_max_daily"].quantile(
-        [x / 10 for x in range(11)]
+    hh_kcal_filter_red["high_reform_red"] = pd.qcut(
+        hh_kcal_filter_red["Gross_up_kcal_max_daily"], 10, labels=False
     )
+
+    no_reform_red = hh_kcal_filter_red.groupby("no_reform_red")[
+        "Gross_up_kcal_daily"
+    ].mean()
+    low_reform_red = hh_kcal_filter_red.groupby("low_reform_red")[
+        "Gross_up_kcal_min_daily"
+    ].mean()
+    high_reform_red = hh_kcal_filter_red.groupby("high_reform_red")[
+        "Gross_up_kcal_max_daily"
+    ].mean()
 
     diff_high_red = pd.DataFrame(
         high_reform_red - no_reform_red, columns=["value"]
@@ -155,17 +187,29 @@ if __name__ == "__main__":
     ).reset_index()
     diff_low_red["Reformulation Level"] = "5%"
 
+    diff_high_red.rename(columns={"high_reform_red": "decile"}, inplace=True)
+    diff_low_red.rename(columns={"low_reform_red": "decile"}, inplace=True)
+
     diff_red = pd.concat([diff_high_red, diff_low_red])
+    diff_red["decileQ"] = (diff_red["decile"] + 1) / 10
+
+    logging.info("save decile for reduced")
+    diff_red.to_csv(
+        f"{PROJECT_DIR}/outputs/data/decision_table/decile_reduced.csv",
+        index=False,
+    )
 
     fig1b = (
         alt.Chart(diff_red)
-        .mark_line()
+        .mark_line(point=True)
         .encode(
-            x=alt.X("index", axis=alt.Axis(format="%", title="Percentile")),
+            x=alt.X(
+                "decileQ:O", axis=alt.Axis(format=".0%", title="Decile", tickCount=10)
+            ),
             y=alt.Y(
                 "value",
                 axis=alt.Axis(title="kcal/day"),
-                scale=alt.Scale(domain=[-150, 0]),
+                scale=alt.Scale(domain=[-100, 0]),
             ),
             color=alt.Color(
                 "Reformulation Level",
@@ -200,17 +244,23 @@ if __name__ == "__main__":
     ).reset_index()
     diff_low_avg["Reformulation Level"] = "5%"
 
+    diff_high_avg.rename(columns={"no_reform_avg": "decile"}, inplace=True)
+    diff_low_avg.rename(columns={"no_reform_avg": "decile"}, inplace=True)
+
     diff_avg = pd.concat([diff_high_avg, diff_low_avg])
+    diff_avg["decileQ"] = (diff_avg["decile"] + 1) / 10
 
     fig2a = (
         alt.Chart(diff_avg)
-        .mark_line()
+        .mark_line(point=True)
         .encode(
-            x=alt.X("index", axis=alt.Axis(format="%", title="Percentile")),
+            x=alt.X(
+                "decileQ:O", axis=alt.Axis(format=".0%", title="Decile", tickCount=10)
+            ),
             y=alt.Y(
                 "value",
                 axis=alt.Axis(title="kcal/day"),
-                scale=alt.Scale(domain=[0, 150]),
+                scale=alt.Scale(domain=[0, 100]),
             ),
             color=alt.Color(
                 "Reformulation Level",
@@ -243,17 +293,23 @@ if __name__ == "__main__":
     ).reset_index()
     diff_low_avg["Reformulation Level"] = "5%"
 
+    diff_high_red.rename(columns={"no_reform_red": "decile"}, inplace=True)
+    diff_low_red.rename(columns={"no_reform_red": "decile"}, inplace=True)
+
     diff_red = pd.concat([diff_high_red, diff_low_red])
+    diff_red["decileQ"] = (diff_red["decile"] + 1) / 10
 
     fig2b = (
-        alt.Chart(diff_avg)
-        .mark_line()
+        alt.Chart(diff_red)
+        .mark_line(point=True)
         .encode(
-            x=alt.X("index", axis=alt.Axis(format="%", title="Percentile")),
+            x=alt.X(
+                "decileQ:O", axis=alt.Axis(format=".0%", title="Decile", tickCount=10)
+            ),
             y=alt.Y(
                 "value",
                 axis=alt.Axis(title="kcal/day"),
-                scale=alt.Scale(domain=[0, 150]),
+                scale=alt.Scale(domain=[0, 100]),
             ),
             color=alt.Color(
                 "Reformulation Level",
