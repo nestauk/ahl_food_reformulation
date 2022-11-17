@@ -291,7 +291,7 @@ if __name__ == "__main__":
     diff_low_red = pd.DataFrame(
         no_reform_red - low_reform_red, columns=["value"]
     ).reset_index()
-    diff_low_avg["Reformulation Level"] = "5%"
+    diff_low_red["Reformulation Level"] = "5%"
 
     diff_high_red.rename(columns={"no_reform_red": "decile"}, inplace=True)
     diff_low_red.rename(columns={"no_reform_red": "decile"}, inplace=True)
