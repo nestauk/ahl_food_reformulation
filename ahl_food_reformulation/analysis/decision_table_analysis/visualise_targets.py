@@ -6,14 +6,15 @@ from ahl_food_reformulation.utils.altair_save_utils import (
     google_chrome_driver_setup,
     altair_text_resize,
 )
+from ahl_food_reformulation.utils.io import load_s3_data
+import json
+import numpy as np
 import altair as alt
 import logging
-import json
 import pandas as pd
-import numpy as np
 
 # define cats
-broader_category = "rst_4_market_sector"
+broader_category = "rst_4_market"
 granular_category = "rst_4_extended"
 
 # Define colours
@@ -165,34 +166,60 @@ if __name__ == "__main__":
 
     logging.info("Reading data")
     # read data
-    gran_decision = pd.read_csv(
-        f"{PROJECT_DIR}/outputs/data/decision_table/decision_table_"
-        + granular_category
-        + ".csv"
-    ).rename({"Unnamed: 0": "rst_4_extended"}, axis=1)
-    broad_decision = pd.read_csv(
-        f"{PROJECT_DIR}/outputs/data/decision_table/decision_table_"
+    # gran_decision = pd.read_csv(
+    #     f"{PROJECT_DIR}/outputs/data/decision_table/decision_table_"
+    #     + granular_category
+    #     + ".csv"
+    # ).rename({"Unnamed: 0": "rst_4_extended"}, axis=1)
+    # broad_decision = pd.read_csv(
+    #     f"{PROJECT_DIR}/outputs/data/decision_table/decision_table_"
+    #     + broader_category
+    #     + ".csv"
+    # )
+
+    broad_decision = load_s3_data(
+        "ahl-private-data",
+        "kantar/data_outputs/decision_table/decision_table_"
         + broader_category
-        + ".csv"
+        + ".csv",
     )
+    gran_decision = (
+        load_s3_data(
+            "ahl-private-data",
+            "kantar/data_outputs/decision_table/decision_table_"
+            + granular_category
+            + ".csv",
+        )
+    ).rename({"Unnamed: 0": "rst_4_extended"}, axis=1)
 
     # Get averages
     avg_kcal_cont = (gran_decision["percent_kcal_contrib_weighted"].mean()) / 100
     avg_ed_sales = gran_decision["kcal_100_s"].mean()
 
     # Unique list of chosen cat groups
-    chosen_cats_list = ["", "_sequential"]
+    chosen_cats_list = ["", "_reduced"]
 
     # Set driver for altair
     driver = google_chrome_driver_setup()
 
     for chosen_method in chosen_cats_list:
         # Get chosen categories as dataframe
+
+        # with open(
+        #     f"{PROJECT_DIR}/outputs/reports/detailed_products" + chosen_method + ".json"
+        # ) as f:
+        #     chosen_cats = pd.DataFrame(json.load(f)).melt(
+        #         var_name=broader_category, value_name=granular_category
+        #     )
+
         with open(
             f"{PROJECT_DIR}/outputs/reports/detailed_products" + chosen_method + ".json"
         ) as f:
-            chosen_cats = pd.DataFrame(json.load(f)).melt(
-                var_name=broader_category, value_name=granular_category
+            chosen_cats = (
+                pd.DataFrame.from_dict(json.load(f), orient="index")
+                .transpose()
+                .melt(var_name=broader_category, value_name=granular_category)
+                .dropna()
             )
 
         logging.info("Create tables for: " + chosen_method)
@@ -201,25 +228,25 @@ if __name__ == "__main__":
         gran_decision_sub = gran_decision.copy()
 
         # Unique list of broad cats
-        broad_cats = list(chosen_cats.rst_4_market_sector.drop_duplicates())
+        broad_cats = list(chosen_cats[broader_category].drop_duplicates())
 
         # Broad plot table
         broad_decision_subset["Categories"] = np.where(
-            broad_decision_subset["rst_4_market_sector"].isin(broad_cats),
-            broad_decision_subset["rst_4_market_sector"],
+            broad_decision_subset[broader_category].isin(broad_cats),
+            broad_decision_subset[broader_category],
             "Other categories",
         )
         # Granular plot table
         gran_decision_subset = chosen_cats.merge(
             gran_decision_sub[
                 [
-                    "rst_4_extended",
+                    granular_category,
                     "percent_kcal_contrib_weighted",
                     "percent_kcal_contrib_size_adj_weighted",
                     "kcal_100_s",
                 ]
             ],
-            on="rst_4_extended",
+            on=granular_category,
             how="left",
         )
         gran_decision_subset.columns = [
@@ -237,15 +264,15 @@ if __name__ == "__main__":
             gran_decision_subset["Percent kcal contr - size adj"] / 100
         )
 
-        # Group cats for plot with same values
+        # # Group cats for plot with same values
         broad_decision_clusters = broad_decision_subset.copy()
-        broad_decision_clusters["Categories"] = np.where(
-            broad_decision_clusters["Categories"].isin(
-                ["Ambient Bakery Products", "Chilled Convenience"]
-            ),
-            "Ambient Bakery Products + Chilled Convenience",
-            broad_decision_clusters["Categories"],
-        )
+        # broad_decision_clusters["Categories"] = np.where(
+        #     broad_decision_clusters["Categories"].isin(
+        #         ["Ambient Bakery Products", "Chilled Convenience"]
+        #     ),
+        #     "Ambient Bakery Products + Chilled Convenience",
+        #     broad_decision_clusters["Categories"],
+        # )
 
         logging.info("Create plots")
         # Create plots
