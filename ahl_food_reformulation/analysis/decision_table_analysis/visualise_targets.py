@@ -165,17 +165,6 @@ def facet_bar_perc_ed(
 if __name__ == "__main__":
 
     logging.info("Reading data")
-    # read data
-    # gran_decision = pd.read_csv(
-    #     f"{PROJECT_DIR}/outputs/data/decision_table/decision_table_"
-    #     + granular_category
-    #     + ".csv"
-    # ).rename({"Unnamed: 0": "rst_4_extended"}, axis=1)
-    # broad_decision = pd.read_csv(
-    #     f"{PROJECT_DIR}/outputs/data/decision_table/decision_table_"
-    #     + broader_category
-    #     + ".csv"
-    # )
 
     broad_decision = load_s3_data(
         "ahl-private-data",
