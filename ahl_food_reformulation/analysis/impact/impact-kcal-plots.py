@@ -35,13 +35,11 @@ if __name__ == "__main__":
     # define cats
     broader_category = "rst_4_market"
 
-    with open(f"{PROJECT_DIR}/outputs/reports/detailed_products.json") as f:
+    with open(f"{PROJECT_DIR}/outputs/reports/detailed_products_10.json") as f:
         chosen_cats_average = list((json.load(f)).keys())
 
-    # Removing bread and eggs
-    chosen_cats_red = [
-        i for i in chosen_cats_average if i not in ("Total Bread", "Eggs")
-    ]
+    with open(f"{PROJECT_DIR}/outputs/reports/detailed_products_3.json") as f:
+        chosen_cats_red = list((json.load(f)).keys())
 
     logging.info("Merging data - Averages")
 

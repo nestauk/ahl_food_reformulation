@@ -68,7 +68,7 @@ print(
     + millify((avg_10["demographic_weight"] * avg_10["value"]).sum())
 )
 print("        ")
-print("EGGS AND BREAD REMOVED")
+print("EGGS AND MARGARINE REMOVED")
 print("-------------")
 
 print(
