@@ -148,23 +148,138 @@ logging.info("Plot kmeans representations")
 # %%
 # Picking best performing number of clusters from previous test
 share_clust_num = no_clusters[np.argmax(scores_share)]
-adj_clust_num = no_clusters[np.argmax(scores_adj)]
 
 # %%
 logging.info("Share of kcal")
 # Get kmeans labels
-_, kmeans_labels = cluster.kmeans_score(share_clust_num, umap_share_sub)
-# Plot clusters
-medium.plot_clusters("Share of kcal:", share_clust_num, umap_share_sub, kmeans_labels)
+_, kmeans_labels_share, clusterer = cluster.kmeans_score(
+    share_clust_num, umap_share_sub
+)
 
 # %%
-logging.info("Adjusted share of kcal")
-# Get kmeans labels
-_, kmeans_labels = cluster.kmeans_score(adj_clust_num, umap_adj_sub)
 # Plot clusters
 medium.plot_clusters(
-    "Adjusted share of kcal:", adj_clust_num, umap_adj_sub, kmeans_labels
+    "Share of kcal:", share_clust_num, umap_share_sub, kmeans_labels_share, clusterer
 )
+
+# %% [markdown]
+# ### Looking at the best seperated clusters
+#
+# - Pick out 2-3 very well seperated clusters and compare their share of kcal of categories to the mean
+# - Do the above, more simply for all clusters
+
+# %%
+from sklearn.metrics import silhouette_samples, silhouette_score
+
+# %%
+sample_silhouette_values = silhouette_samples(umap_share_sub, kmeans_labels_share)
+
+means_lst_share = []
+for label in range(share_clust_num):
+    means_lst_share.append(
+        sample_silhouette_values[kmeans_labels_share == label].mean()
+    )
+
+# %%
+clust_s_scores = pd.DataFrame(
+    {"clusters": list(range(share_clust_num)), "scores": means_lst_share}
+)
+
+# %%
+clust_s_scores.sort_values(by="scores", ascending=False).head(10)
+
+# %%
+# Plot results
+fig = plt.figure(figsize=(15, 5))
+sns.barplot(x=list(range(share_clust_num)), y=means_lst_share)
+plt.show()
+
+# %%
+food_cats_labels = kcal_share_subset.copy()
+
+# %%
+food_cats_labels["label"] = list(kmeans_labels_share)
+
+# %%
+food_cats_avg_cl = (
+    (food_cats_labels.groupby(["label"]).mean() - food_cats_labels.mean()).T
+)[:-1]
+
+# %% [markdown]
+# #### What categories is c27 different to the mean?
+
+# %%
+# Buying more calories of...
+food_cats_avg_cl[27].sort_values(ascending=False).head(10)
+
+# %%
+# Buying less calories of...
+food_cats_avg_cl[27].sort_values(ascending=True).head(10)
+
+# %% [markdown]
+# #### What categories is c33 different to the mean?
+
+# %%
+# Buying more calories of...
+food_cats_avg_cl[33].sort_values(ascending=False).head(10)
+
+# %%
+# Buying less calories of...
+food_cats_avg_cl[33].sort_values(ascending=True).head(10)
+
+# %% [markdown]
+# #### What categories is c52 different to the mean?
+
+# %%
+# Buying more calories of...
+food_cats_avg_cl[52].sort_values(ascending=False).head(10)
+
+# %%
+# Buying less calories of...
+food_cats_avg_cl[52].sort_values(ascending=True).head(10)
+
+# %% [markdown]
+# #### What categories is c49 different to the mean?
+
+# %%
+# Buying more calories of...
+food_cats_avg_cl[49].sort_values(ascending=False).head(10)
+
+# %%
+# Buying less calories of...
+food_cats_avg_cl[49].sort_values(ascending=True).head(10)
+
+# %% [markdown]
+# 10 and 4 are two large clusters far from the center (based on visual)...
+
+# %%
+# Buying more calories of...
+food_cats_avg_cl[10].sort_values(ascending=False).head(10)
+
+# %%
+# Buying less calories of...
+food_cats_avg_cl[10].sort_values(ascending=True).head(10)
+
+# %%
+# Buying more calories of...
+food_cats_avg_cl[4].sort_values(ascending=False).head(10)
+
+# %%
+# Buying less calories of...
+food_cats_avg_cl[4].sort_values(ascending=True).head(10)
+
+# %% [markdown]
+# #### Plot....
+
+# %%
+food_cats_labels.mean().sort_values(ascending=False)
+
+# %%
+food_cats_labels.groupby(["label"]).mean().T.head(1)
+
+# %%
+
+# %%
 
 # %% [markdown]
 # ### Deep dive into best performing clusters
@@ -173,79 +288,94 @@ medium.plot_clusters(
 # #### Testing SHAP values on a sample
 
 # %%
+from shap import TreeExplainer, Explanation
+from shap.plots import waterfall
+
+# %%
 # Using share of kcal clusters / transformations
-kmeanModel = KMeans(n_clusters=no_clusters[np.argmax(scores_share)])
-y = kmeanModel.fit(umap_share_sub).labels_
-y = label_binarize(y, classes=list(range(no_clusters[np.argmax(scores_share)])))
+# kmeanModel = KMeans(n_clusters=3)
+# y = kmeanModel.fit(umap_share_sub).labels_
+# y = label_binarize(y, classes=list(range(3)))
+
+# %%
+# K-means labels
+y = kmeans_labels_share
+
+# %%
+# import xgboost
+# clf = xgb.XGBClassifier()
 
 # %%
 clf = RandomForestClassifier()
-clf.fit(kcal_share_subset, y)
-
-# Sample of 10
-kcal_share_sample = pd.concat(
-    [kcal_share_subset.reset_index(), pd.DataFrame(y)], axis=1
-).sample(n=10, random_state=1)
-kcal_share_sample.set_index("Panel Id", inplace=True)
-
-y_test = kcal_share_sample.iloc[:, -50:]
-X_test = kcal_share_sample.iloc[:, :-50]
+clf.fit(kcal_share_subset.head(100), y[:100])
 
 logging.info("Creating SHAP values")
-t0 = time.time()
-shap_values = shap.TreeExplainer(clf).shap_values(X_test)
-print((t1 - t0) / 60, "minutes")
+shap_values = shap.TreeExplainer(clf).shap_values(kcal_share_subset.head(100))
 
 # %%
-X_test.shape
+from shap import Explainer, waterfall_plot
+
+explainer = Explainer(clf)
+sv = explainer.shap_values(kcal_share_subset.head(100))
+
+cls = 9  # class to explain
+sv_cls = sv[cls]
+idx = 99
+
+waterfall_plot(
+    Explanation(
+        sv_cls[idx],
+        explainer.expected_value[cls],
+        feature_names=kcal_share_subset.head(100).columns,
+    )
+)
 
 # %%
-kcal_share_subset.shape
-
-# %% [markdown]
-# #### Testing SHAP values with umap
+explainer = shap.TreeExplainer(clf)
+shap_values = explainer.shap_values(kcal_share_subset.head(100))
 
 # %%
-# Using share of kcal clusters / transformations
-kmeanModel = KMeans(n_clusters=no_clusters[np.argmax(scores_share)])
-y = kmeanModel.fit(umap_share_sub).labels_
-y = label_binarize(y, classes=list(range(no_clusters[np.argmax(scores_share)])))
+# shap.summary_plot(shap_values, kcal_share_subset.head(100).values)
 
 # %%
-clf = RandomForestClassifier()
-clf.fit(umap_share_sub, y)
+# from sklearn.preprocessing import LabelEncoder
+# le = LabelEncoder()
+# y = le.fit_transform(y)
+# model = xgboost.XGBClassifier().fit(kcal_share_subset.head(100), y[:100])
+
+# %%
+explainer = shap.Explainer(model, X)
+shap_values = explainer(X)
+
+shap.plots.beeswarm(shap_values, max_display=12, order=shap.Explanation.abs.mean(0))
+
+# %%
 
 # %%
 shap.initjs()
 explainer = shap.TreeExplainer(clf)
 
 # %%
-logging.info("Creating SHAP values")
-t0 = time.time()
-shap_values = explainer(umap_share_sub).values
-print((t1 - t0) / 60, "minutes")
+sv = explainer(kcal_share_subset.head(100))
+exp = Explanation(
+    sv.values[:, :, 1],
+    sv.base_values[:, 1],
+    data=kcal_share_subset.head(100).values,
+    feature_names=kcal_share_subset.head(100).columns,
+)
+idx = 99
+waterfall(exp[idx])
 
 # %%
-umap_share_sub
+shap_values = explainer.shap_values(kcal_share_subset.head(100))
 
 # %%
-shap.force_plot(explainer.expected_value[1], shap_values[1])
-
-# %%
-# the waterfall_plot shows how we get from shap_values.base_values to model.predict(X)[sample_ind]
-shap.plots._waterfall.waterfall_legacy(explainer.expected_value[0], shap_values[65][1])
-
-# %% [markdown]
-# ### NOTES
-#
-# - Currently cannot get shap values using explainer on whole dataset (very slow). Need to explore alternative option.
-#     - Tried reducing to different broader categories but still very slow / not completing
-#     - Tried with 1,000 sample: failed with the below error (unsure why this is as dfs passed are the same)
-#     - Tried with UMAP components but struggled to interpret the results
-# - Another option could be to use the PCA components and altair plots (suggested in article) to explain the PCA components?
-#     - Issue here is that there is still a gap between PCA and UMAP results that are used in k-means
-
-# %% [markdown]
-# ExplainerError: Additivity check failed in TreeExplainer! Please ensure the data matrix you passed to the explainer is the same shape that the model was trained on. If your data shape is correct then please report this on GitHub. Consider retrying with the feature_perturbation='interventional' option. This check failed because for one of the samples the sum of the SHAP values was -30589659.908800, while the model output was 0.017069. If this difference is acceptable you can set check_additivity=False to disable this check.
+# More classes than clusters?
+shap.summary_plot(
+    shap_values,
+    kcal_share_subset.head(100).values,
+    max_display=30,
+    feature_names=kcal_share_subset.head(100).columns,
+)
 
 # %%

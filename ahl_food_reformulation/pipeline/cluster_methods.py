@@ -61,9 +61,9 @@ def kmeans_score(k: int, X_umap: array):
     Returns:
         silhoutte score
     """
-    kmeans = KMeans(n_clusters=k)
+    kmeans = KMeans(n_clusters=k, random_state=1)
     labels = kmeans.fit_predict(X_umap)
-    return silhouette_score(X_umap, labels), labels
+    return silhouette_score(X_umap, labels), labels, kmeans
 
 
 def kmeans_score_list(no_clusters: list, X_umap: array):
@@ -79,7 +79,7 @@ def kmeans_score_list(no_clusters: list, X_umap: array):
     """
     scores = []
     for k in no_clusters:
-        score, _ = kmeans_score(k, X_umap)
+        score, _, _ = kmeans_score(k, X_umap)
         scores.append(score)
     return scores
 

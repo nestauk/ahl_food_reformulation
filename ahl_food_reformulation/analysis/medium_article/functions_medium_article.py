@@ -1,3 +1,20 @@
+# ---
+# jupyter:
+#   jupytext:
+#     cell_metadata_filter: -all
+#     comment_magics: true
+#     text_representation:
+#       extension: .py
+#       format_name: percent
+#       format_version: '1.3'
+#       jupytext_version: 1.13.2
+#   kernelspec:
+#     display_name: ahl_food_reformulation
+#     language: python
+#     name: ahl_food_reformulation
+# ---
+
+# %%
 # Import libraries and directory
 from array import array
 import numpy as np
@@ -6,7 +23,9 @@ import matplotlib.cm as cm
 from sklearn.metrics import silhouette_samples, silhouette_score
 
 
-def plot_clusters(title: str, n_clusters: int, df: array, cluster_labels: list):
+def plot_clusters(
+    title: str, n_clusters: int, df: array, cluster_labels: list, clusterer
+):
     """
     Plot of clustering based on number of k and labels
     Args:
@@ -68,6 +87,22 @@ def plot_clusters(title: str, n_clusters: int, df: array, cluster_labels: list):
         c=colors,
         edgecolor="k",
     )
+
+    # Labeling the clusters
+    centers = clusterer.cluster_centers_
+    # Draw white circles at cluster centers
+    ax2.scatter(
+        centers[:, 0],
+        centers[:, 1],
+        marker="o",
+        c="white",
+        alpha=1,
+        s=200,
+        edgecolor="k",
+    )
+
+    for i, c in enumerate(centers):
+        ax2.scatter(c[0], c[1], marker="$%d$" % i, alpha=1, s=50, edgecolor="k")
 
     ax2.set_title("The visualization of the clustered data.")
     ax2.set_xlabel("Feature space for the 1st feature")

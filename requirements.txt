@@ -22,3 +22,4 @@ toolz
 fsspec
 s3fs
 shap
+xgboost
