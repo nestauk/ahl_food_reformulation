@@ -13,20 +13,18 @@
     "Ambient Cakes Malt/Fruit Loave",
     "Ambient Cakes Small Tarts"
   ],
-  "Chilled Cakes": [
-    "Chilled Cakes Small Cakes",
-    "Chilled Cakes Small Tarts",
-    "Chilled Cakes Cheesecake",
-    "Chilled Cakes Large Tarts",
-    "Chilled Cakes Large Whole Cake"
+  "Chocolate Confectionery": [
+    "Chocolate Conf Multipack Choco",
+    "Choc Confctnry Block Chocolate",
+    "Choc Confctnry Boxes+Gifting",
+    "Chocolate Confection Bitesize",
+    "Chclte Conf Egg+Nvlty+Seasonal"
   ],
-  "Eggs": ["Eggs Hens Free Range"],
-  "Morning Goods": [
-    "Crumpets/Pikelets",
-    "Hotcross Buns",
-    "Croissants",
-    "Scones",
-    "Morning Goods Pain Au Choc"
+  "Margarine": [
+    "Dairy Spreads",
+    "Pufa/Mufa Margarine/Spread",
+    "Non Pufa Low Fat Spread",
+    "Other Soft Margarine"
   ],
   "Everyday Biscuits": [
     "Everyday Biscuits Digestives",
@@ -35,11 +33,64 @@
     "Everyday Biscuits Ginger",
     "Everyday Biscuits Other Sweet"
   ],
-  "Ambient Condiments": [
-    "Ambient Cndmnt Tartare Sce",
-    "Ambient Cndmnt Cranberry Sce",
-    "Ambient Cndmnt Apple Sce",
-    "Ambient Cndmnt Mint Sce/Jlly",
-    "Ambient Cndmnt Horseradish Sce"
+  "P/P Fresh Meat+Veg+Pastry": [
+    "PP Fsh Mt+Vg Pork Pies",
+    "PP Fsh Mt+Vg Sausage Rolls",
+    "PP Fsh Mt+Vg Hot Pies",
+    "PP Fsh Mt+Vg Pasties",
+    "PP Fsh Mt+Vg Quiches/Flans"
+  ],
+  "Morning Goods": [
+    "Crumpets/Pikelets",
+    "Hotcross Buns",
+    "Croissants",
+    "Scones",
+    "Morning Goods Pain Au Choc"
+  ],
+  "Everyday Treats": [
+    "Everyday Treat Choc Digestives",
+    "Everyday Treats Other Creams",
+    "Everyday Treats Jaffa Cakes",
+    "Everyday Treats Shortbread",
+    "Everyday Treats Cookies"
+  ],
+  "Ambnt Salad Accompanimet": [
+    "Ambnt Salad Accomp Mayonnaise",
+    "Ambient Salad Cream",
+    "Amb Salad Acc Pourable Drssing"
+  ],
+  "Chilled Ready Meals": [
+    "Chilled Ready M Complete Meal",
+    "Chilled Ready Mea Meal Centre",
+    "Chilled Ready Vegetable Accom",
+    "Chilled Ready Burger in a Bun",
+    "Chilled Ready Breaded-Kievs/E"
+  ],
+  "Cooking Oils": [
+    "Cooking Oils Sunflower",
+    "Cooking Oils Vegetable",
+    "Cking Oils Extra Virgin Olive",
+    "Cooking Oils Olive",
+    "Cooking Oils Rapeseed"
+  ],
+  "Crisps": [
+    "Crisps Multi-Pack",
+    "Crisps Family",
+    "Crisps Maxi",
+    "Crisps Standard"
+  ],
+  "Total Milk": [
+    "Milk Semi-Skimmed Pasteurised",
+    "Milk Whole Pasteurised",
+    "Milk Skimmed Pasteurised",
+    "Milk Semi-Skimmed U.H.T.",
+    "Milk Other Type"
+  ],
+  "Chilled Cakes": [
+    "Chilled Cakes Small Cakes",
+    "Chilled Cakes Small Tarts",
+    "Chilled Cakes Cheesecake",
+    "Chilled Cakes Large Tarts",
+    "Chilled Cakes Large Whole Cake"
   ]
 }

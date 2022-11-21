@@ -205,7 +205,7 @@ def make_indicator_bubblechart(
 
 
 def make_recommendations(
-    report_table: pd.DataFrame, report_table_clean: pd.DataFrame, top_reccs: int = 20
+    report_table: pd.DataFrame, report_table_clean: pd.DataFrame, top_reccs: int = 37
 ) -> pd.DataFrame:
     """Creates a table with reformulation recommendations based on different indicators
     and the mean of different indicators"""
@@ -386,7 +386,7 @@ def make_detailed_recommendations(
 
 
 def make_pareto_chart(
-    report_table: pd.DataFrame, report_table_clean: pd.DataFrame, top_reccs: int = 0.50
+    report_table: pd.DataFrame, report_table_clean: pd.DataFrame, top_reccs: int = 0.37
 ):
     """Creates a chart to visualise the cumulative contirbution of selected categories to shopping baskets"""
     report_table_aggregated = (
@@ -421,11 +421,39 @@ def make_pareto_chart(
     sort_order = chart_df["rst_4_market"].tolist()
 
     base = alt.Chart(chart_df).encode(
-        x=alt.X("rst_4_market:O", sort=sort_order, title="Market Category"),
+        x=alt.X(
+            "rst_4_market:O",
+            sort=sort_order,
+            title="Category",
+            axis=alt.Axis(labelAngle=-45),
+        ),
     )
 
-    bars = base.mark_bar(size=20, color=pu.NESTA_COLOURS[0]).encode(
-        y=alt.Y("cross:Q"),
+    bars = base.mark_bar(size=20).encode(
+        y=alt.Y("cross:Q", title="Average Score"),
+        color=alt.Color(
+            "rst_4_market",
+            legend=None,
+            scale=alt.Scale(
+                domain=sort_order,
+                range=[
+                    "lightgrey",
+                    pu.NESTA_COLOURS[1],
+                    pu.NESTA_COLOURS[1],
+                    "lightgrey",
+                    pu.NESTA_COLOURS[1],
+                    pu.NESTA_COLOURS[1],
+                    pu.NESTA_COLOURS[1],
+                    pu.NESTA_COLOURS[1],
+                    pu.NESTA_COLOURS[1],
+                    pu.NESTA_COLOURS[1],
+                    "lightgrey",
+                    pu.NESTA_COLOURS[1],
+                    "lightgrey",
+                    pu.NESTA_COLOURS[1],
+                ],
+            ),
+        ),
     )
 
     # Create the line chart with length encoded along the Y axis
@@ -650,7 +678,7 @@ if __name__ == "__main__":
     )
 
     logging.info("Making high level recommendations")
-    recc_table = make_recommendations(report_table_clean_long, report_table_clean, 20).T
+    recc_table = make_recommendations(report_table_clean_long, report_table_clean, 37).T
 
     logging.info(recc_table.head())
 
@@ -694,7 +722,7 @@ if __name__ == "__main__":
 
     logging.info("pareto chart")
 
-    pareto_chart = make_pareto_chart(report_table_clean_long, report_table_clean, 0.50)
+    pareto_chart = make_pareto_chart(report_table_clean_long, report_table_clean)
 
     save_altair(configure_plots(pareto_chart), "pareto_chart", driver=webdr)
 
@@ -750,10 +778,28 @@ if __name__ == "__main__":
             outfile,
         )
 
+    # select top 10
+
+    drop = ["Total Bread", "Margarine", "Cooking Oils", "Total Milk"]
+    top10 = detailed_reccs[~detailed_reccs.index.isin(drop)]
+
     with open(
-        f"{PROJECT_DIR}/outputs/reports/detailed_products_sequential.json", "w"
+        f"{PROJECT_DIR}/outputs/reports/detailed_products_10.json", "w"
     ) as outfile:
         json.dump(
-            detailed_reccs_sec["Detailed recommendations"].str.split(", ").to_dict(),
+            top10["Detailed recommendations"].str.split(", ").to_dict(),
+            outfile,
+        )
+
+    # select top 3
+
+    keep = ["Ambient Cakes+Pastries", "Chocolate Confectionery", "Everyday Biscuits"]
+    top3 = detailed_reccs[detailed_reccs.index.isin(keep)]
+
+    with open(
+        f"{PROJECT_DIR}/outputs/reports/detailed_products_3.json", "w"
+    ) as outfile:
+        json.dump(
+            top3["Detailed recommendations"].str.split(", ").to_dict(),
             outfile,
         )

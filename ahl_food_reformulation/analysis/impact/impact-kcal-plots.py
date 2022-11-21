@@ -36,15 +36,19 @@ if __name__ == "__main__":
     broader_category = "rst_4_market"
 
     with open(f"{PROJECT_DIR}/outputs/reports/detailed_products_10.json") as f:
+<<<<<<< HEAD
         chosen_cats_average = list((json.load(f)).keys())
 
     with open(f"{PROJECT_DIR}/outputs/reports/detailed_products_3.json") as f:
         chosen_cats_red = list((json.load(f)).keys())
+=======
+        chosen_cats_10 = list((json.load(f)).keys())
 
-    logging.info("Merging data - Averages")
+    logging.info("Merging data - top 10")
+>>>>>>> a44c82a (changes to charts for report)
 
-    purch_recs_comb_scenarios_avg = kcal.make_impact(
-        chosen_cats_average,
+    purch_recs_comb_scenarios = kcal.make_impact(
+        chosen_cats_10,
         val_fields,
         pur_recs,
         prod_codes,
@@ -56,25 +60,7 @@ if __name__ == "__main__":
     )
 
     hh_kcal_filter_avg = kcal.compare_scenarios(
-        panel_weight, purch_recs_comb_scenarios_avg, pan_ind
-    )
-
-    logging.info("Merging data - Reduced categories")
-
-    purch_recs_comb_scenarios_red = kcal.make_impact(
-        chosen_cats_red,
-        val_fields,
-        pur_recs,
-        prod_codes,
-        prod_vals,
-        prod_meta,
-        nut_rec,
-        broader_category,
-        2827,
-    )
-
-    hh_kcal_filter_red = kcal.compare_scenarios(
-        panel_weight, purch_recs_comb_scenarios_red, pan_ind
+        panel_weight, purch_recs_comb_scenarios, pan_ind
     )
 
     driver = google_chrome_driver_setup()
@@ -116,9 +102,9 @@ if __name__ == "__main__":
     diff_avg = pd.concat([diff_high_avg, diff_low_avg])
     diff_avg["decileQ"] = (diff_avg["decile"] + 1) / 10
 
-    logging.info("save decile for average")
+    logging.info("save decile for top 10")
     diff_avg.to_csv(
-        f"{PROJECT_DIR}/outputs/data/decision_table/decile_average.csv",
+        f"{PROJECT_DIR}/outputs/data/decision_table/decile_top_10.csv",
         index=False,
     )
 
@@ -153,81 +139,6 @@ if __name__ == "__main__":
     save_altair(
         altair_text_resize(fig1a).properties(width=250, height=250),
         "cumplot_average_opt1",
-        driver=driver,
-    )
-
-    hh_kcal_filter_red["no_reform_red"] = pd.qcut(
-        hh_kcal_filter_red["Gross_up_kcal_daily"], 10, labels=False
-    )
-    hh_kcal_filter_red["low_reform_red"] = pd.qcut(
-        hh_kcal_filter_red["Gross_up_kcal_min_daily"], 10, labels=False
-    )
-    hh_kcal_filter_red["high_reform_red"] = pd.qcut(
-        hh_kcal_filter_red["Gross_up_kcal_max_daily"], 10, labels=False
-    )
-
-    no_reform_red = hh_kcal_filter_red.groupby("no_reform_red")[
-        "Gross_up_kcal_daily"
-    ].mean()
-    low_reform_red = hh_kcal_filter_red.groupby("low_reform_red")[
-        "Gross_up_kcal_min_daily"
-    ].mean()
-    high_reform_red = hh_kcal_filter_red.groupby("high_reform_red")[
-        "Gross_up_kcal_max_daily"
-    ].mean()
-
-    diff_high_red = pd.DataFrame(
-        high_reform_red - no_reform_red, columns=["value"]
-    ).reset_index()
-    diff_high_red["Reformulation Level"] = "10%"
-    diff_low_red = pd.DataFrame(
-        low_reform_red - no_reform_red, columns=["value"]
-    ).reset_index()
-    diff_low_red["Reformulation Level"] = "5%"
-
-    diff_high_red.rename(columns={"high_reform_red": "decile"}, inplace=True)
-    diff_low_red.rename(columns={"low_reform_red": "decile"}, inplace=True)
-
-    diff_red = pd.concat([diff_high_red, diff_low_red])
-    diff_red["decileQ"] = (diff_red["decile"] + 1) / 10
-
-    logging.info("save decile for reduced")
-    diff_red.to_csv(
-        f"{PROJECT_DIR}/outputs/data/decision_table/decile_reduced.csv",
-        index=False,
-    )
-
-    fig1b = (
-        alt.Chart(diff_red)
-        .mark_line(point=True)
-        .encode(
-            x=alt.X(
-                "decileQ:O", axis=alt.Axis(format=".0%", title="Decile", tickCount=10)
-            ),
-            y=alt.Y(
-                "value",
-                axis=alt.Axis(title="kcal/day"),
-                scale=alt.Scale(domain=[-100, 0]),
-            ),
-            color=alt.Color(
-                "Reformulation Level",
-                scale={"range": list(pu.NESTA_COLOURS[x] for x in [0, 1])},
-            ),
-        )
-    )
-
-    fig1b = configure_plots(
-        fig1b,
-        "",
-        "",
-        16,
-        20,
-        16,
-    )
-
-    save_altair(
-        altair_text_resize(fig1b).properties(width=250, height=250),
-        "cumplot_reduced_opt1",
         driver=driver,
     )
 
@@ -282,55 +193,6 @@ if __name__ == "__main__":
         driver=driver,
     )
 
-    diff_high_red = pd.DataFrame(
-        no_reform_red - high_reform_red, columns=["value"]
-    ).reset_index()
-    diff_high_red["Reformulation Level"] = "10%"
-    diff_low_red = pd.DataFrame(
-        no_reform_red - low_reform_red, columns=["value"]
-    ).reset_index()
-    diff_low_avg["Reformulation Level"] = "5%"
-
-    diff_high_red.rename(columns={"no_reform_red": "decile"}, inplace=True)
-    diff_low_red.rename(columns={"no_reform_red": "decile"}, inplace=True)
-
-    diff_red = pd.concat([diff_high_red, diff_low_red])
-    diff_red["decileQ"] = (diff_red["decile"] + 1) / 10
-
-    fig2b = (
-        alt.Chart(diff_red)
-        .mark_line(point=True)
-        .encode(
-            x=alt.X(
-                "decileQ:O", axis=alt.Axis(format=".0%", title="Decile", tickCount=10)
-            ),
-            y=alt.Y(
-                "value",
-                axis=alt.Axis(title="kcal/day"),
-                scale=alt.Scale(domain=[0, 100]),
-            ),
-            color=alt.Color(
-                "Reformulation Level",
-                scale={"range": list(pu.NESTA_COLOURS[x] for x in [0, 1])},
-            ),
-        )
-    )
-
-    fig2b = configure_plots(
-        fig2b,
-        "",
-        "",
-        16,
-        20,
-        16,
-    )
-
-    save_altair(
-        altair_text_resize(fig2b).properties(width=250, height=250),
-        "cumplot_reduced_opt2",
-        driver=driver,
-    )
-
     logging.info("Option 3 - cumulative count of hh over positive difference")
 
     cum_df_avg = pd.melt(
@@ -377,50 +239,6 @@ if __name__ == "__main__":
         driver=driver,
     )
 
-    cum_df_red = pd.melt(
-        hh_kcal_filter_red,
-        id_vars=["Panel Id", "demographic_weight"],
-        value_vars=["pos_diff_5", "pos_diff_10"],
-    )
-    cum_df_red["Reformulation Level"] = np.where(
-        cum_df_red["variable"] == "pos_diff_5", "5%", "10%"
-    )
-
-    fig3b = (
-        alt.Chart(cum_df_red)
-        .transform_window(
-            cumulative_count="sum(demographic_weight)",
-            sort=[{"field": "value"}],
-            groupby=["Reformulation Level"],
-        )
-        .mark_line()
-        .encode(
-            x=alt.X("value:Q", axis=alt.X(title="kcal/day")),
-            y=alt.Y(
-                "cumulative_count:Q", axis=alt.Axis(title="Cumulative Household Count")
-            ),
-            color=alt.Color(
-                "Reformulation Level",
-                scale={"range": list(pu.NESTA_COLOURS[x] for x in [0, 1])},
-            ),
-        )
-    )
-
-    fig3b = configure_plots(
-        fig3b,
-        "",
-        "",
-        16,
-        20,
-        16,
-    )
-
-    save_altair(
-        altair_text_resize(fig3b).properties(width=250, height=250),
-        "cumulative_positive_red",
-        driver=driver,
-    )
-
     logging.info("Option 4 - cumulative density")
 
     fig4a = (
@@ -457,89 +275,8 @@ if __name__ == "__main__":
         driver=driver,
     )
 
-    fig4b = (
-        alt.Chart(cum_df_red)
-        .transform_density(
-            "value",
-            as_=["value", "density"],
-            cumulative=True,
-            groupby=["Reformulation Level"],
-        )
-        .mark_line()
-        .encode(
-            x=alt.X("value:Q", axis=alt.X(title="kcal/day")),
-            y=alt.Y("density:Q", axis=alt.Axis(title="Cumulative Density")),
-            color=alt.Color(
-                "Reformulation Level",
-                scale={"range": list(pu.NESTA_COLOURS[x] for x in [0, 1])},
-            ),
-        )
-    )
-
-    fig4b = configure_plots(
-        fig4b,
-        "",
-        "",
-        16,
-        20,
-        16,
-    )
-
-    save_altair(
-        altair_text_resize(fig4b).properties(width=250, height=250),
-        "cumulative_density_red",
-        driver=driver,
-    )
-
-    logging.info("Option 5 - Stochastic Dominance")
-    # stochastic dominance
-
-    cum_df_avg["Method"] = "Average"
-    cum_df_red["Method"] = "Reduced categories"
-
-    df = pd.concat([cum_df_avg, cum_df_red])
-
-    fig5 = (
-        alt.Chart(df)
-        .transform_density(
-            "value",
-            as_=["value", "density"],
-            cumulative=True,
-            groupby=["Reformulation Level", "Method"],
-        )
-        .mark_line()
-        .encode(
-            x=alt.X("value:Q", axis=alt.X(title="kcal/day")),
-            y=alt.Y("density:Q", axis=alt.Axis(title="Cumulative Density")),
-            color=alt.Color(
-                "Method",
-                scale={"range": list(pu.NESTA_COLOURS[x] for x in range(0, 2))},
-            ),
-        )
-        .facet(facet="Reformulation Level", columns=2)
-    )
-
-    fig5 = configure_plots(
-        fig5,
-        "",
-        "",
-        16,
-        20,
-        16,
-    )
-
-    save_altair(
-        altair_text_resize(fig5),
-        "stochastic_dominance",
-        driver=driver,
-    )
-
     # Save distribution dfs for avg and seq
     cum_df_avg.to_csv(
-        f"{PROJECT_DIR}/outputs/data/decision_table/distribution_reduction_avg.csv",
-        index=False,
-    )
-    cum_df_red.to_csv(
-        f"{PROJECT_DIR}/outputs/data/decision_table/distribution_reduction_red.csv",
+        f"{PROJECT_DIR}/outputs/data/decision_table/distribution_reduction_top_10.csv",
         index=False,
     )
