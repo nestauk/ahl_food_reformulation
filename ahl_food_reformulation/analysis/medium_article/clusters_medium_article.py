@@ -18,6 +18,10 @@
 # %% [markdown]
 # # Clustering households based on purchasing activity
 
+# %% [markdown]
+# - Add intro to analysis here
+# - Link back to article
+
 # %%
 # Import libraries and directory
 from ahl_food_reformulation import PROJECT_DIR
@@ -39,10 +43,21 @@ import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import label_binarize
 from sklearn.cluster import KMeans
+
 import shap
+from shap import TreeExplainer, Explanation
+from shap.plots import waterfall
+from shap import Explainer, waterfall_plot
 
 # %% [markdown]
 # ### Making household representations
+
+# %% [markdown]
+# - Brief description of:
+#     - Data loaded
+#     - Transformations happening and why
+#         - Kcal share and adjusted share of kcal
+#         - Dimensionality reduction: PCA and UMAP
 
 # %%
 # Get data
@@ -87,6 +102,12 @@ umap_share_sub = cluster.dimension_reduction(kcal_share_subset, 0.97)
 
 # %% [markdown]
 # ### Clustering households
+
+# %% [markdown]
+# - Describe method used and what is being tested:
+#     - Kmeans
+#     - Number of k and representations
+# - Evaluation metric: silhoutte score
 
 # %%
 logging.info("Apply kmeans to representations")
@@ -139,7 +160,13 @@ plt.title(
 plt.show()
 
 # %% [markdown]
+# Results show share of k-cal at k = 60 is the best performing.
+
+# %% [markdown]
 # ### Lets look at the clusters on a 2d map
+
+# %% [markdown]
+# Plotting results. Intuitive description of what you can see.
 
 # %%
 ### Testing different representations using kmeans
@@ -166,7 +193,6 @@ medium.plot_clusters(
 # ### Looking at the best seperated clusters
 #
 # - Pick out 2-3 very well seperated clusters and compare their share of kcal of categories to the mean
-# - Do the above, more simply for all clusters
 
 # %%
 from sklearn.metrics import silhouette_samples, silhouette_score
@@ -269,113 +295,86 @@ food_cats_avg_cl[4].sort_values(ascending=False).head(10)
 food_cats_avg_cl[4].sort_values(ascending=True).head(10)
 
 # %% [markdown]
-# #### Plot....
+# ### Using SHAP to understand the clusters
 
 # %%
-food_cats_labels.mean().sort_values(ascending=False)
-
-# %%
-food_cats_labels.groupby(["label"]).mean().T.head(1)
-
-# %%
-
-# %%
-
-# %% [markdown]
-# ### Deep dive into best performing clusters
-
-# %% [markdown]
-# #### Testing SHAP values on a sample
-
-# %%
-from shap import TreeExplainer, Explanation
-from shap.plots import waterfall
-
-# %%
-# Using share of kcal clusters / transformations
-# kmeanModel = KMeans(n_clusters=3)
-# y = kmeanModel.fit(umap_share_sub).labels_
-# y = label_binarize(y, classes=list(range(3)))
-
-# %%
-# K-means labels
+# K-means labels and kcal share df
 y = kmeans_labels_share
+x = kcal_share_subset.copy()
 
 # %%
-# import xgboost
-# clf = xgb.XGBClassifier()
-
-# %%
+# Train and fit a classifier
 clf = RandomForestClassifier()
-clf.fit(kcal_share_subset.head(100), y[:100])
-
-logging.info("Creating SHAP values")
-shap_values = shap.TreeExplainer(clf).shap_values(kcal_share_subset.head(100))
+# To speed up / test code run with ".head(100)"
+clf.fit(x, y)
 
 # %%
-from shap import Explainer, waterfall_plot
+# Sample size to create SHAP values (for speed)
+sample_size = 100
 
+# %%
+# Creating SHAP values (takes a while to run)
 explainer = Explainer(clf)
-sv = explainer.shap_values(kcal_share_subset.head(100))
+sv_red = explainer.shap_values(x.head(sample_size), check_additivity=False)
 
-cls = 9  # class to explain
-sv_cls = sv[cls]
-idx = 99
+# %%
+# Subset SHAP values by only selection highlighted in previous section
+label_sub = [10, 4, 33, 27, 52, 49]
+sv_cls = [sv_red[i] for i in label_sub]
+expl = Explanation(
+    sv_cls,
+    feature_names=x.head(sample_size).columns,
+)
+
+# %%
+fig, ax = plt.subplots(1, 1)
+fig.legend(loc="upper right")
+
+# Summary plot based on select clusters
+shap.summary_plot(
+    expl,
+    x.head(sample_size).values,
+    max_display=20,
+    feature_names=x.head(sample_size).columns,
+    class_names=["4", "10", "27", "33", "49", "52"],
+)
+
+fig.legend(loc="upper right")
+
+# %%
+# Beeswarm plot of cluster 4
+shap.plots.beeswarm(expl[0])
+
+# %%
+# Slicing by single cluster
+cls = 4  # class to explain
+sv_cls = sv_red[cls]
+
+expl = Explanation(
+    sv_cls,
+    explainer.expected_value[cls],
+    feature_names=x.head(sample_size).columns,
+)
+
+# %%
+# Summary plot of cluster 4
+shap.summary_plot(
+    expl,
+    x.head(sample_size).values,
+    max_display=20,
+    feature_names=x.head(sample_size).columns,
+)
+
+# %%
+# Looking at single cluster AND single observation
+cls = 33  # class to explain
+sv_cls = sv_red[cls]
+idx = 99  # Household / observation
 
 waterfall_plot(
     Explanation(
         sv_cls[idx],
         explainer.expected_value[cls],
-        feature_names=kcal_share_subset.head(100).columns,
+        feature_names=x.head(sample_size).columns,
     )
 )
-
-# %%
-explainer = shap.TreeExplainer(clf)
-shap_values = explainer.shap_values(kcal_share_subset.head(100))
-
-# %%
-# shap.summary_plot(shap_values, kcal_share_subset.head(100).values)
-
-# %%
-# from sklearn.preprocessing import LabelEncoder
-# le = LabelEncoder()
-# y = le.fit_transform(y)
-# model = xgboost.XGBClassifier().fit(kcal_share_subset.head(100), y[:100])
-
-# %%
-explainer = shap.Explainer(model, X)
-shap_values = explainer(X)
-
-shap.plots.beeswarm(shap_values, max_display=12, order=shap.Explanation.abs.mean(0))
-
-# %%
-
-# %%
-shap.initjs()
-explainer = shap.TreeExplainer(clf)
-
-# %%
-sv = explainer(kcal_share_subset.head(100))
-exp = Explanation(
-    sv.values[:, :, 1],
-    sv.base_values[:, 1],
-    data=kcal_share_subset.head(100).values,
-    feature_names=kcal_share_subset.head(100).columns,
-)
-idx = 99
-waterfall(exp[idx])
-
-# %%
-shap_values = explainer.shap_values(kcal_share_subset.head(100))
-
-# %%
-# More classes than clusters?
-shap.summary_plot(
-    shap_values,
-    kcal_share_subset.head(100).values,
-    max_display=30,
-    feature_names=kcal_share_subset.head(100).columns,
-)
-
-# %%
