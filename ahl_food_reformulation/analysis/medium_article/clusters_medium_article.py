@@ -31,6 +31,7 @@ from ahl_food_reformulation.pipeline import cluster_methods as cluster
 from ahl_food_reformulation.analysis.medium_article import (
     functions_medium_article as medium,
 )
+from ahl_food_reformulation.utils.plotting import configure_plots
 import logging
 from pathlib import Path
 from matplotlib import pyplot as plt
@@ -43,6 +44,8 @@ import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import label_binarize
 from sklearn.cluster import KMeans
+from sklearn.metrics import silhouette_samples, silhouette_score
+import altair as alt
 
 import shap
 from shap import TreeExplainer, Explanation
@@ -195,9 +198,6 @@ medium.plot_clusters(
 # - Pick out 2-3 very well seperated clusters and compare their share of kcal of categories to the mean
 
 # %%
-from sklearn.metrics import silhouette_samples, silhouette_score
-
-# %%
 sample_silhouette_values = silhouette_samples(umap_share_sub, kmeans_labels_share)
 
 means_lst_share = []
@@ -215,84 +215,128 @@ clust_s_scores = pd.DataFrame(
 clust_s_scores.sort_values(by="scores", ascending=False).head(10)
 
 # %%
-# Plot results
-fig = plt.figure(figsize=(15, 5))
-sns.barplot(x=list(range(share_clust_num)), y=means_lst_share)
-plt.show()
+source = clust_s_scores.sort_values(by="scores", ascending=False).head(30)
+fig = (
+    alt.Chart(source)
+    .mark_bar(color="#0000FF")
+    .encode(
+        alt.X(
+            "clusters:N", sort=alt.EncodingSortField(field="scores", order="descending")
+        ),
+        y="scores",
+    )
+)
 
 # %%
-food_cats_labels = kcal_share_subset.copy()
+configure_plots(
+    fig,
+    "Top 30 clusters by silhoutte score",
+    "",
+    16,
+    20,
+    16,
+)
 
 # %%
-food_cats_labels["label"] = list(kmeans_labels_share)
+# Difference in household share compared to avg
+purch_recs_comb = transform.make_purch_records(nut_subset, comb_files, ["att_vol"])
+kcal_total = transform.hh_kcal_per_prod(purch_recs_comb, "Energy KCal")
+kcal_total["label"] = list(kmeans_labels_share)
+kcal_total_cl = kcal_total.groupby(["label"]).sum()
+kcal_perc_cat = (kcal_total_cl.div(kcal_total_cl.T.sum(), axis=0)) * 100
+total_per_cat = (kcal_total_cl.sum() / kcal_total_cl.sum().sum()) * 100
 
 # %%
-food_cats_avg_cl = (
-    (food_cats_labels.groupby(["label"]).mean() - food_cats_labels.mean()).T
-)[:-1]
+food_cats_avg_cl = (kcal_perc_cat - total_per_cat).T
+
 
 # %% [markdown]
 # #### What categories is c27 different to the mean?
 
 # %%
-# Buying more calories of...
-food_cats_avg_cl[27].sort_values(ascending=False).head(10)
+def difference_shares_plot(df, clust_num):
+    source = df[[clust_num]].copy()
+    source["Absolute_diff"] = source[clust_num].abs()
+    source = source.sort_values(by="Absolute_diff", ascending=False).head(20)
+    source.reset_index(inplace=True)
+    source.columns = ["Category", "Percent_difference", "Absolute_diff"]
+
+    fig = (
+        alt.Chart(source)
+        .mark_bar()
+        .encode(
+            alt.X(
+                "Category:N",
+                sort=alt.EncodingSortField(field="Absolute_diff", order="descending"),
+            ),
+            y="Percent_difference:Q",
+            color=alt.condition(
+                alt.datum.Percent_difference > 0,
+                alt.value("#0000FF"),  # The positive color
+                alt.value("orange"),  # The negative color
+            ),
+        )
+        .properties(width=600)
+    )
+    return fig
+
 
 # %%
-# Buying less calories of...
-food_cats_avg_cl[27].sort_values(ascending=True).head(10)
+fig = difference_shares_plot(food_cats_avg_cl, 27)
+
+configure_plots(
+    fig,
+    "Cluster 27: Biggest differences in category shares compared to the average",
+    "",
+    16,
+    20,
+    16,
+)
 
 # %% [markdown]
 # #### What categories is c33 different to the mean?
 
 # %%
-# Buying more calories of...
-food_cats_avg_cl[33].sort_values(ascending=False).head(10)
+fig = difference_shares_plot(food_cats_avg_cl, 33)
 
-# %%
-# Buying less calories of...
-food_cats_avg_cl[33].sort_values(ascending=True).head(10)
+configure_plots(
+    fig,
+    "Cluster 33: Biggest differences in category shares compared to the average",
+    "",
+    16,
+    20,
+    16,
+)
 
 # %% [markdown]
 # #### What categories is c52 different to the mean?
 
 # %%
-# Buying more calories of...
-food_cats_avg_cl[52].sort_values(ascending=False).head(10)
+fig = difference_shares_plot(food_cats_avg_cl, 52)
 
-# %%
-# Buying less calories of...
-food_cats_avg_cl[52].sort_values(ascending=True).head(10)
+configure_plots(
+    fig,
+    "Cluster 52: Biggest differences in category shares compared to the average",
+    "",
+    16,
+    20,
+    16,
+)
 
 # %% [markdown]
 # #### What categories is c49 different to the mean?
 
 # %%
-# Buying more calories of...
-food_cats_avg_cl[49].sort_values(ascending=False).head(10)
+fig = difference_shares_plot(food_cats_avg_cl, 49)
 
-# %%
-# Buying less calories of...
-food_cats_avg_cl[49].sort_values(ascending=True).head(10)
-
-# %% [markdown]
-# 10 and 4 are two large clusters far from the center (based on visual)...
-
-# %%
-# Buying more calories of...
-food_cats_avg_cl[10].sort_values(ascending=False).head(10)
-
-# %%
-# Buying less calories of...
-food_cats_avg_cl[10].sort_values(ascending=True).head(10)
-
-# %%
-# Buying more calories of...
-food_cats_avg_cl[4].sort_values(ascending=False).head(10)
-
-# %%
-# Buying less calories of...
-food_cats_avg_cl[4].sort_values(ascending=True).head(10)
+configure_plots(
+    fig,
+    "Cluster 49: Biggest differences in category shares compared to the average",
+    "",
+    16,
+    20,
+    16,
+)
 
 # %% [markdown]
 # ### Using SHAP to understand the clusters
@@ -369,7 +413,7 @@ shap.summary_plot(
 # Looking at single cluster AND single observation
 cls = 33  # class to explain
 sv_cls = sv_red[cls]
-idx = 99  # Household / observation
+idx = 50  # Household / observation
 
 waterfall_plot(
     Explanation(
@@ -378,3 +422,5 @@ waterfall_plot(
         feature_names=x.head(sample_size).columns,
     )
 )
+
+# %%
