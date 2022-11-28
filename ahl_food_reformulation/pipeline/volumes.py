@@ -220,11 +220,19 @@ type_conv = ["A", "B", "C", "D", "E", "F", "G"]
 
 
 pur_rec_unit_update["volume_per_2"] = np.select(condition, volume_per, -1)
-pur_rec_unit_update["volume_up_2"] = (
-    pur_rec_unit_update["volume_per_2"] * pur_rec_unit_update["Quantity"]
-)
-pur_rec_unit_update["reported_volume_up_2"] = "Kilos"
 pur_rec_unit_update["type_conv"] = np.select(condition, type_conv, "Z")
+
+
+# updated volume depending on imputation method
+pur_rec_unit_update["volume_up_2"] = np.where(
+    (pur_rec_unit_update["type_conv"] == "E")
+    | (pur_rec_unit_update["type_conv"] == "F")
+    | (pur_rec_unit_update["type_conv"] == "G"),
+    (pur_rec_unit_update["volume_per_2"] * pur_rec_unit_update["Volume"]),
+    (pur_rec_unit_update["volume_per_2"] * pur_rec_unit_update["Quantity"]),
+)
+
+pur_rec_unit_update["reported_volume_up_2"] = "Kilos"
 
 
 # drops old volume colums and subsitute with new ones

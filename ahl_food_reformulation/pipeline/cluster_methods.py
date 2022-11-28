@@ -302,12 +302,12 @@ def centroids_cluster(
         Df of cluster assignments
     """
     # Kmeans to get labels
-    kmeans = KMeans(n_clusters=k_gran)
+    kmeans = KMeans(n_clusters=k_gran, random_state=1)
     labels = kmeans.fit_predict(umap)
     # Get centroids
     centroids = kmeans.cluster_centers_
     # Kmeans on centroids
-    kmeans = KMeans(n_clusters=k_broad)  # Broader number
+    kmeans = KMeans(n_clusters=k_broad, random_state=1)  # Broader number
     cent_labels = kmeans.fit_predict(centroids)
 
     # Create df of labels to centroid labels
