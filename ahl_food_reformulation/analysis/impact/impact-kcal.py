@@ -1,3 +1,4 @@
+# %%
 # Import libraries
 from ahl_food_reformulation.getters import kantar
 import logging
@@ -7,6 +8,7 @@ from ahl_food_reformulation import PROJECT_DIR
 from ahl_food_reformulation.pipeline import kcal_impact as kcal
 
 
+# %%
 if __name__ == "__main__":
 
     logging.info("Reading data")

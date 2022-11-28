@@ -158,7 +158,7 @@ def kcal_density_table(
         [prod_category, "chosen_unit", "kcal_100g_ml"]
     ]
     df_diversity = nutrient.create_diversity_df(
-        df_prod_ed_reduce, prod_category, 10, sample_size
+        df_prod_ed_reduce, prod_category, 100, sample_size
     )
     num_prods_cat = util_func.number_prods_cat(df_prod_ed, prod_category)
 

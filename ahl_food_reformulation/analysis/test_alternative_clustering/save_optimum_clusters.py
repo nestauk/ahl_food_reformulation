@@ -26,10 +26,19 @@ if __name__ == "__main__":
     scaler = MinMaxScaler()
     # Converted household size
     pan_conv = transform.hh_size_conv(pan_ind)
+
+    # Add volume measurement
+    pur_vol = transform.vol_for_purch(purch_recs_subset, val_fields, prod_mast, uom)
+
     # Purchase and product info combined
     comb_files = transform.combine_files(
-        val_fields, purch_recs_subset, prod_mast, uom, prod_codes, prod_vals, 2907
+        val_fields,
+        pur_vol,
+        prod_codes,
+        prod_vals,
+        2907,
     )
+
     # Household kcal per category adjusted for size - Make representation
     kcal_adj_subset = transform.hh_kcal_volume_converted(
         nut_subset, pan_conv, scaler, comb_files

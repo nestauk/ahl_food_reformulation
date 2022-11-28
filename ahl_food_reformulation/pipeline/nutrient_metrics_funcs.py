@@ -60,7 +60,7 @@ def avg_metric_samples(df: pd.DataFrame, num_runs: int, cat: str, size: int):
     ent_list = []
     var_list = []
     for i in range(num_runs):
-        sample = df.groupby(cat).sample(n=size)
+        sample = df.groupby(cat).sample(random_state=1, n=size)
         ent_list.append(cat_entropy(sample, cat).values)
         var_list.append(cat_variance(sample, cat, "kcal_100g_ml").values)
     return pd.DataFrame(

@@ -42,21 +42,17 @@ def millify(n):
 
 # Read in tables
 diff_avg = pd.read_csv(
-    f"{PROJECT_DIR}/outputs/data/decision_table/distribution_reduction_avg.csv"
-)
-diff_seq = pd.read_csv(
-    f"{PROJECT_DIR}/outputs/data/decision_table/distribution_reduction_red.csv"
+    f"{PROJECT_DIR}/outputs/data/decision_table/distribution_reduction_top_10.csv"
 )
 
 
 # Separate based on reformulation level
 avg_5 = diff_avg[diff_avg["Reformulation Level"] == "5%"].dropna()
 avg_10 = diff_avg[diff_avg["Reformulation Level"] == "10%"].dropna()
-seq_5 = diff_seq[diff_seq["Reformulation Level"] == "5%"].dropna()
-seq_10 = diff_seq[diff_seq["Reformulation Level"] == "10%"].dropna()
+
 
 # calculate total number of calories removed from population
-print("AVERAGE METHOD")
+print("TOP 10 CATEGORIES")
 print("-------------")
 
 print(
@@ -68,7 +64,8 @@ print(
     + millify((avg_10["demographic_weight"] * avg_10["value"]).sum())
 )
 print("        ")
-print("EGGS AND BREAD REMOVED")
+<<<<<<< HEAD
+print("EGGS AND MARGARINE REMOVED")
 print("-------------")
 
 print(
@@ -197,3 +194,5 @@ print(
 # print(16.063286895622916 + 30.666541673483657)
 # print(15.922631436041161 + 30.764463436386382)
 # =============================================================================
+=======
+>>>>>>> a44c82a (changes to charts for report)

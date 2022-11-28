@@ -205,7 +205,7 @@ def make_indicator_bubblechart(
 
 
 def make_recommendations(
-    report_table: pd.DataFrame, report_table_clean: pd.DataFrame, top_reccs: int = 20
+    report_table: pd.DataFrame, report_table_clean: pd.DataFrame, top_reccs: int = 37
 ) -> pd.DataFrame:
     """Creates a table with reformulation recommendations based on different indicators
     and the mean of different indicators"""
@@ -225,21 +225,26 @@ def make_recommendations(
                 "z_score", ascending=False
             )[broad_cat_str]
         )
+    report_table_aggregated["cross"] = np.where(
+        report_table_aggregated["category"] == "Impact on Diets",
+        report_table_aggregated["z_score"] * 0.5,
+        report_table_aggregated["z_score"] * 0.25,
+    )
 
     return pd.DataFrame(top_candidates, index=["Top candidates"]).assign(
         Average=", ".join(
-            report_table_aggregated.groupby(broad_cat_str)["z_score"]
-            .mean()
+            report_table_aggregated.groupby(broad_cat_str)["cross"]
+            .sum()
             .reset_index()
             .merge(
                 report_table_aggregated[[broad_cat_str, "kcal_contribution_share"]],
                 on=broad_cat_str,
             )
             .drop_duplicates()
-            .sort_values("z_score", ascending=False)
+            .sort_values("cross", ascending=False)
             .assign(cum=lambda x: np.cumsum(x["kcal_contribution_share"]))
             .query(f"cum <= @top_reccs")
-            .sort_values("z_score", ascending=False)[broad_cat_str]
+            .sort_values("cross", ascending=False)[broad_cat_str]
             .values
         )
     )
@@ -381,7 +386,7 @@ def make_detailed_recommendations(
 
 
 def make_pareto_chart(
-    report_table: pd.DataFrame, report_table_clean: pd.DataFrame, top_reccs: int = 0.50
+    report_table: pd.DataFrame, report_table_clean: pd.DataFrame, top_reccs: int = 0.37
 ):
     """Creates a chart to visualise the cumulative contirbution of selected categories to shopping baskets"""
     report_table_aggregated = (
@@ -390,19 +395,25 @@ def make_pareto_chart(
         .reset_index(drop=False)
     ).merge(report_table_clean["kcal_contribution_share"], on=broad_cat_str)
 
+    report_table_aggregated["cross"] = np.where(
+        report_table_aggregated["category"] == "Impact on Diets",
+        report_table_aggregated["z_score"] * 0.5,
+        report_table_aggregated["z_score"] * 0.25,
+    )
+
     chart_df = (
-        report_table_aggregated.groupby(broad_cat_str)["z_score"]
-        .mean()
+        report_table_aggregated.groupby(broad_cat_str)["cross"]
+        .sum()
         .reset_index()
         .merge(
             report_table_aggregated[[broad_cat_str, "kcal_contribution_share"]],
             on=broad_cat_str,
         )
         .drop_duplicates()
-        .sort_values("z_score", ascending=False)
+        .sort_values("cross", ascending=False)
         .assign(cum=lambda x: np.cumsum(x["kcal_contribution_share"] / 100))
         .query(f"cum <= @top_reccs")
-        .sort_values("z_score", ascending=False)
+        .sort_values("cross", ascending=False)
     )
 
     chart_df["share"] = chart_df["kcal_contribution_share"] / 100
@@ -410,11 +421,39 @@ def make_pareto_chart(
     sort_order = chart_df["rst_4_market"].tolist()
 
     base = alt.Chart(chart_df).encode(
-        x=alt.X("rst_4_market:O", sort=sort_order, title="Market Category"),
+        x=alt.X(
+            "rst_4_market:O",
+            sort=sort_order,
+            title="Category",
+            axis=alt.Axis(labelAngle=-45),
+        ),
     )
 
-    bars = base.mark_bar(size=20, color=pu.NESTA_COLOURS[0]).encode(
-        y=alt.Y("z_score:Q"),
+    bars = base.mark_bar(size=20).encode(
+        y=alt.Y("cross:Q", title="Average Score"),
+        color=alt.Color(
+            "rst_4_market",
+            legend=None,
+            scale=alt.Scale(
+                domain=sort_order,
+                range=[
+                    "lightgrey",
+                    pu.NESTA_COLOURS[1],
+                    pu.NESTA_COLOURS[1],
+                    "lightgrey",
+                    pu.NESTA_COLOURS[1],
+                    pu.NESTA_COLOURS[1],
+                    pu.NESTA_COLOURS[1],
+                    pu.NESTA_COLOURS[1],
+                    pu.NESTA_COLOURS[1],
+                    pu.NESTA_COLOURS[1],
+                    "lightgrey",
+                    pu.NESTA_COLOURS[1],
+                    "lightgrey",
+                    pu.NESTA_COLOURS[1],
+                ],
+            ),
+        ),
     )
 
     # Create the line chart with length encoded along the Y axis
@@ -435,9 +474,9 @@ def make_pareto_chart(
         dx=-10,  # the dx and dy can be manipulated to position text
         dy=-10,  # relative to the bar
     ).encode(
-        y=alt.Y("z_score:Q", title="Z Score", axis=None),
+        y=alt.Y("cross:Q", title="Average Score", axis=None),
         # we'll use the percentage as the text
-        text=alt.Text("z_score:Q", format=".1f"),
+        text=alt.Text("cross:Q", format=".1f"),
         color=alt.value("#000000"),
     )
     # Mark the Circle marks with the value text
@@ -566,10 +605,17 @@ if __name__ == "__main__":
         .assign(category=lambda df: df["clean_label"].map(var_category_lookup))
     )
 
+    report_table_clean_long["w"] = np.where(
+        report_table_clean_long["category"] == "Feasibility", 0.125, 0.25
+    )
+    report_table_clean_long["cross"] = (
+        report_table_clean_long["z_score"] * report_table_clean_long["w"]
+    )
+
     # Reduce number to top 30 for plot
     reduced_cats = list(
-        report_table_clean_long.groupby(["rst_4_market"])["z_score"]
-        .mean()
+        report_table_clean_long.groupby(["rst_4_market"])["cross"]
+        .sum()
         .sort_values(ascending=False)
         .head(30)
         .index
@@ -585,7 +631,7 @@ if __name__ == "__main__":
             partial(
                 make_indicator_heatmap,
                 axis_order=plotting_order,
-                var_names=["clean_label", broad_cat_str, "z_score"],
+                var_names=["clean_label", broad_cat_str, "cross"],
             ),
             configure_plots,
         )
@@ -598,13 +644,13 @@ if __name__ == "__main__":
 
     logging.info("bubblechart with averaged indicators")
     aggr_bubble_chart = pipe(
-        avg_table_plots.groupby(["category", broad_cat_str])["z_score"]
-        .mean()
+        avg_table_plots.groupby(["category", broad_cat_str])["cross"]
+        .sum()
         .reset_index(drop=False),
         partial(
             make_indicator_bubblechart,
             axis_order=["Impact on Diets", "Feasibility", "Inclusion"],
-            var_names=["category", broad_cat_str, "z_score"],
+            var_names=["category", broad_cat_str, "cross"],
         ),
     ).properties(width=200)
 
@@ -619,7 +665,7 @@ if __name__ == "__main__":
             partial(
                 make_indicator_bubblechart,
                 axis_order=plotting_order,
-                var_names=["clean_label", broad_cat_str, "z_score"],
+                var_names=["clean_label", broad_cat_str, "cross"],
             ),
             configure_plots,
         )
@@ -632,7 +678,7 @@ if __name__ == "__main__":
     )
 
     logging.info("Making high level recommendations")
-    recc_table = make_recommendations(report_table_clean_long, report_table_clean, 20).T
+    recc_table = make_recommendations(report_table_clean_long, report_table_clean, 37).T
 
     logging.info(recc_table.head())
 
@@ -676,7 +722,7 @@ if __name__ == "__main__":
 
     logging.info("pareto chart")
 
-    pareto_chart = make_pareto_chart(report_table_clean_long, report_table_clean, 0.50)
+    pareto_chart = make_pareto_chart(report_table_clean_long, report_table_clean)
 
     save_altair(configure_plots(pareto_chart), "pareto_chart", driver=webdr)
 
@@ -732,10 +778,28 @@ if __name__ == "__main__":
             outfile,
         )
 
+    # select top 10
+
+    drop = ["Total Bread", "Margarine", "Cooking Oils", "Total Milk"]
+    top10 = detailed_reccs[~detailed_reccs.index.isin(drop)]
+
     with open(
-        f"{PROJECT_DIR}/outputs/reports/detailed_products_sequential.json", "w"
+        f"{PROJECT_DIR}/outputs/reports/detailed_products_10.json", "w"
     ) as outfile:
         json.dump(
-            detailed_reccs_sec["Detailed recommendations"].str.split(", ").to_dict(),
+            top10["Detailed recommendations"].str.split(", ").to_dict(),
+            outfile,
+        )
+
+    # select top 3
+
+    keep = ["Ambient Cakes+Pastries", "Chocolate Confectionery", "Everyday Biscuits"]
+    top3 = detailed_reccs[detailed_reccs.index.isin(keep)]
+
+    with open(
+        f"{PROJECT_DIR}/outputs/reports/detailed_products_3.json", "w"
+    ) as outfile:
+        json.dump(
+            top3["Detailed recommendations"].str.split(", ").to_dict(),
             outfile,
         )
