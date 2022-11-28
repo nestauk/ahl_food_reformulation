@@ -26,7 +26,7 @@ if __name__ == "__main__":
     granular_category = "rst_4_extended"
 
     # Unique list of chosen cat groups
-    chosen_cats_list = ["_3"]  # "_10",
+    chosen_cats_list = ["_3", "_10"]
     for chosen_method in chosen_cats_list:
 
         # Get chosen categories as dataframe
