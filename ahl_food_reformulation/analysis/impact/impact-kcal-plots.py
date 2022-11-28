@@ -36,16 +36,9 @@ if __name__ == "__main__":
     broader_category = "rst_4_market"
 
     with open(f"{PROJECT_DIR}/outputs/reports/detailed_products_10.json") as f:
-<<<<<<< HEAD
-        chosen_cats_average = list((json.load(f)).keys())
-
-    with open(f"{PROJECT_DIR}/outputs/reports/detailed_products_3.json") as f:
-        chosen_cats_red = list((json.load(f)).keys())
-=======
         chosen_cats_10 = list((json.load(f)).keys())
 
     logging.info("Merging data - top 10")
->>>>>>> a44c82a (changes to charts for report)
 
     purch_recs_comb_scenarios = kcal.make_impact(
         chosen_cats_10,
