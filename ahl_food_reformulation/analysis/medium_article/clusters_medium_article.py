@@ -98,6 +98,26 @@ kcal_adj_subset = transform.hh_kcal_volume_converted(
 kcal_share_subset = transform.hh_kcal_per_category(nut_subset, scaler, comb_files)
 
 # %%
+comb_files.head(1)
+
+# %%
+nut_subset.head(1)
+
+# %%
+kcal_share_subset.drop(
+    list(kcal_share_subset.filter(regex="Oil")), axis=1, inplace=True
+)
+kcal_share_subset.drop(
+    list(kcal_share_subset.filter(regex="Rice")), axis=1, inplace=True
+)
+kcal_adj_subset.drop(list(kcal_adj_subset.filter(regex="Oil")), axis=1, inplace=True)
+kcal_adj_subset.drop(list(kcal_adj_subset.filter(regex="Rice")), axis=1, inplace=True)
+
+# %%
+# kcal_share_subset.drop(['Cooking Oils Sunflower', 'Cooking Oils Vegetable','Cooking Oils Vegetable','Ambient Rice Bulk Plain Rice', 'Cooking Oils Other Cooking'], inplace=True, axis=1)
+# kcal_adj_subset.drop(['Cooking Oils Sunflower', 'Cooking Oils Vegetable','Cooking Oils Vegetable','Ambient Rice Bulk Plain Rice', 'Cooking Oils Other Cooking'], inplace=True, axis=1)
+
+# %%
 logging.info("Dimensionality reduction")
 # Using PCA and UMAP to reduce dimensions
 umap_adj_sub = cluster.dimension_reduction(kcal_adj_subset, 0.97)
@@ -212,35 +232,15 @@ clust_s_scores = pd.DataFrame(
 )
 
 # %%
-clust_s_scores.sort_values(by="scores", ascending=False).head(10)
-
-# %%
-source = clust_s_scores.sort_values(by="scores", ascending=False).head(30)
-fig = (
-    alt.Chart(source)
-    .mark_bar(color="#0000FF")
-    .encode(
-        alt.X(
-            "clusters:N", sort=alt.EncodingSortField(field="scores", order="descending")
-        ),
-        y="scores",
-    )
-)
-
-# %%
-configure_plots(
-    fig,
-    "Top 30 clusters by silhoutte score",
-    "",
-    16,
-    20,
-    16,
-)
-
-# %%
 # Difference in household share compared to avg
 purch_recs_comb = transform.make_purch_records(nut_subset, comb_files, ["att_vol"])
 kcal_total = transform.hh_kcal_per_prod(purch_recs_comb, "Energy KCal")
+
+# kcal_total.drop(['Cooking Oils Sunflower', 'Cooking Oils Vegetable','Cooking Oils Vegetable','Ambient Rice Bulk Plain Rice', 'Cooking Oils Other Cooking'], inplace=True, axis=1)
+kcal_total.drop(list(kcal_total.filter(regex="Oil")), axis=1, inplace=True)
+kcal_total.drop(list(kcal_total.filter(regex="Rice")), axis=1, inplace=True)
+
+
 kcal_total["label"] = list(kmeans_labels_share)
 kcal_total_cl = kcal_total.groupby(["label"]).sum()
 kcal_perc_cat = (kcal_total_cl.div(kcal_total_cl.T.sum(), axis=0)) * 100
@@ -249,15 +249,76 @@ total_per_cat = (kcal_total_cl.sum() / kcal_total_cl.sum().sum()) * 100
 # %%
 food_cats_avg_cl = (kcal_perc_cat - total_per_cat).T
 
+# %%
+clust_counts = kcal_total.label.value_counts().reset_index()
+clust_counts.columns = ["clusters", "households"]
 
-# %% [markdown]
-# #### What categories is c27 different to the mean?
+# %%
+# clust_counts.sort_values(by='households', ascending=True).head(10)
+
+# %%
+clust_scores_counts = clust_s_scores.merge(clust_counts, on="clusters")
+
+# %%
+clust_scores_counts.head(20)
+
+# %%
+source = clust_scores_counts.sort_values(by="scores", ascending=False).head(30)
+fig = (
+    alt.Chart(source)
+    .mark_bar(color="#0000FF")
+    .encode(
+        alt.Y(
+            "clusters:N", sort=alt.EncodingSortField(field="scores", order="descending")
+        ),
+        x="scores",
+    )
+)
+
+fig2 = (
+    alt.Chart(source)
+    .mark_bar(color="#FDB633")
+    .encode(
+        alt.Y(
+            "clusters:N", sort=alt.EncodingSortField(field="scores", order="descending")
+        ),
+        x="households",
+    )
+)
+
+figures = fig | fig2
+
+# %%
+configure_plots(
+    figures,
+    "Top 30 clusters by silhoutte score",
+    "",
+    16,
+    20,
+    16,
+)
+
+# %%
+top_clust = list(source.clusters)
+
+# %%
+kcal_top = kcal_total[kcal_total.label.isin(top_clust)]
+
+
+# %%
+# kcal_top.groupby(['label'])[['Cooking Oils Sunflower', 'Cooking Oils Vegetable','Cooking Oils Vegetable','Ambient Rice Bulk Plain Rice']].max().to_csv('max_kcal_top30.csv')
+
+# %%
+# avg_kcal_top = kcal_top.groupby(['label'])[['Cooking Oils Sunflower', 'Cooking Oils Vegetable','Cooking Oils Vegetable','Ambient Rice Bulk Plain Rice', 'Cooking Oils Other Cooking']].mean()
+
+# %%
+# max_kcal_top = kcal_top.groupby(['label'])[['Cooking Oils Sunflower', 'Cooking Oils Vegetable','Cooking Oils Vegetable','Ambient Rice Bulk Plain Rice', 'Cooking Oils Other Cooking']].max()
 
 # %%
 def difference_shares_plot(df, clust_num):
     source = df[[clust_num]].copy()
     source["Absolute_diff"] = source[clust_num].abs()
-    source = source.sort_values(by="Absolute_diff", ascending=False).head(20)
+    source = source.sort_values(by="Absolute_diff", ascending=False).head(10)
     source.reset_index(inplace=True)
     source.columns = ["Category", "Percent_difference", "Absolute_diff"]
 
@@ -278,65 +339,58 @@ def difference_shares_plot(df, clust_num):
         )
         .properties(width=600)
     )
-    return fig
+    return fig, source
 
 
 # %%
-fig = difference_shares_plot(food_cats_avg_cl, 27)
+fig, source = difference_shares_plot(food_cats_avg_cl, 12)
 
 configure_plots(
     fig,
-    "Cluster 27: Biggest differences in category shares compared to the average",
+    "Cluster 12: Biggest differences in category shares compared to the average",
     "",
     16,
     20,
     16,
 )
 
-# %% [markdown]
-# #### What categories is c33 different to the mean?
-
 # %%
-fig = difference_shares_plot(food_cats_avg_cl, 33)
+fig, source = difference_shares_plot(food_cats_avg_cl, 21)
 
 configure_plots(
     fig,
-    "Cluster 33: Biggest differences in category shares compared to the average",
+    "Cluster 21: Biggest differences in category shares compared to the average",
     "",
     16,
     20,
     16,
 )
 
-# %% [markdown]
-# #### What categories is c52 different to the mean?
-
 # %%
-fig = difference_shares_plot(food_cats_avg_cl, 52)
+fig, _ = difference_shares_plot(food_cats_avg_cl, 16)
 
 configure_plots(
     fig,
-    "Cluster 52: Biggest differences in category shares compared to the average",
+    "Cluster 16: Biggest differences in category shares compared to the average",
     "",
     16,
     20,
     16,
 )
 
-# %% [markdown]
-# #### What categories is c49 different to the mean?
-
 # %%
-fig = difference_shares_plot(food_cats_avg_cl, 49)
+fig, _ = difference_shares_plot(food_cats_avg_cl, 3)
 
 configure_plots(
     fig,
-    "Cluster 49: Biggest differences in category shares compared to the average",
+    "Cluster 3: Biggest differences in category shares compared to the average",
     "",
     16,
     20,
     16,
 )
+
+# %%
 
 # %% [markdown]
 # ### Using SHAP to understand the clusters
@@ -362,13 +416,20 @@ explainer = Explainer(clf)
 sv_red = explainer.shap_values(x.head(sample_size), check_additivity=False)
 
 # %%
+shap.summary_plot(sv_red, x.head(sample_size), plot_type="bar")
+
+# %%
 # Subset SHAP values by only selection highlighted in previous section
-label_sub = [10, 4, 33, 27, 52, 49]
+# label_sub = [10, 4, 33, 27, 52, 49]
+label_sub = [12]
 sv_cls = [sv_red[i] for i in label_sub]
 expl = Explanation(
-    sv_cls,
+    sv_red,
     feature_names=x.head(sample_size).columns,
 )
+
+# %%
+x.head(sample_size).columns
 
 # %%
 fig, ax = plt.subplots(1, 1)
@@ -378,20 +439,20 @@ fig.legend(loc="upper right")
 shap.summary_plot(
     expl,
     x.head(sample_size).values,
-    max_display=20,
+    max_display=10,
     feature_names=x.head(sample_size).columns,
-    class_names=["4", "10", "27", "33", "49", "52"],
+    # class_names=["12"],
 )
 
 fig.legend(loc="upper right")
 
 # %%
 # Beeswarm plot of cluster 4
-shap.plots.beeswarm(expl[0])
+# shap.plots.beeswarm(expl[0])
 
 # %%
 # Slicing by single cluster
-cls = 4  # class to explain
+cls = 3  # class to explain
 sv_cls = sv_red[cls]
 
 expl = Explanation(
@@ -407,13 +468,23 @@ shap.summary_plot(
     x.head(sample_size).values,
     max_display=20,
     feature_names=x.head(sample_size).columns,
+    plot_type="bar",
+)
+
+# %%
+# Summary plot of cluster 4
+shap.summary_plot(
+    expl,
+    x.head(sample_size).values,
+    max_display=20,
+    feature_names=x.head(sample_size).columns,
 )
 
 # %%
 # Looking at single cluster AND single observation
-cls = 33  # class to explain
+cls = 12  # class to explain
 sv_cls = sv_red[cls]
-idx = 50  # Household / observation
+idx = 0  # Household / observation
 
 waterfall_plot(
     Explanation(
@@ -422,5 +493,7 @@ waterfall_plot(
         feature_names=x.head(sample_size).columns,
     )
 )
+
+# %%
 
 # %%
