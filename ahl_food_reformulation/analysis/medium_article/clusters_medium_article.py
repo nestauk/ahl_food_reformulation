@@ -143,43 +143,51 @@ scores_adj = cluster.kmeans_score_list(no_clusters, umap_adj_sub)
 # %%
 # Plot results
 fig = plt.figure(figsize=(7, 5))
-sns.scatterplot(x=no_clusters, y=scores_share)
-sns.scatterplot(x=no_clusters, y=scores_adj)
-sns.lineplot(x=no_clusters, y=scores_share)
-sns.lineplot(x=no_clusters, y=scores_adj)
 
-fig.legend(
-    labels=["Kcal share", "Kcal adjusted for household size"],
-    bbox_to_anchor=(0.86, 0.35, 0.5, 0.5),
-    fontsize=11,
-)
+sns.scatterplot(x=no_clusters, y=scores_share, color="#0000FF")
+# sns.scatterplot(x=no_clusters, y=scores_adj)
+sns.lineplot(x=no_clusters, y=scores_share, color="#0000FF")
+# sns.lineplot(x=no_clusters, y=scores_adj)
+
+# fig.legend(
+#    labels=["Kcal share", "Kcal adjusted for household size"],
+#    bbox_to_anchor=(0.86, 0.35, 0.5, 0.5),
+#    fontsize=11,
+# )
 
 plt.scatter(
-    x=no_clusters[np.argmax(scores_share)], y=max(scores_share), color="b", alpha=1
+    x=no_clusters[np.argmax(scores_share)],
+    y=max(scores_share),
+    color="#0000FF",
+    alpha=1,
 )
-plt.scatter(
-    x=no_clusters[np.argmax(scores_adj)], y=max(scores_adj), color="orange", alpha=1
-)
+# plt.scatter(
+#    x=no_clusters[np.argmax(scores_adj)], y=max(scores_adj), color="orange", alpha=1
+# )
 
 plt.text(
     (no_clusters[np.argmax(scores_share)] - 1),
-    (max(scores_share) - 0.012),
+    (max(scores_share) - 0.008),
     max(scores_share).round(3),
 )
-plt.text(
-    (no_clusters[np.argmax(scores_adj)] - 4),
-    (max(scores_adj) - 0.012),
-    max(scores_adj).round(3),
-)
+# plt.text(
+#    (no_clusters[np.argmax(scores_adj)] - 4),
+#    (max(scores_adj) - 0.012),
+#    max(scores_adj).round(3),
+# )
 
 
 plt.xlabel("Number of clusters", fontsize=12)
 plt.ylabel("Silhoutte score", fontsize=12)
 plt.title(
-    "Silhoutte scores for adjusted and share of kcal representations",
+    "Silhoutte scores for different numbers of k",
     fontsize=14,
     pad=10,
 )
+
+sns.despine()
+sns.despine(top=True, right=True, left=False, bottom=False)
+
 plt.show()
 
 # %% [markdown]
