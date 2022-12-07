@@ -5,7 +5,6 @@ import pytest
 import pandas as pd
 from ahl_food_reformulation.pipeline import transform_data
 
-
 # Set fixture dfs to use in tests
 @pytest.fixture()
 def df():
@@ -38,15 +37,22 @@ def purchases():
     return purchases
 
 
-# proportion_hh
-def test_proportion_hh(df):
-    """Tests the proportion_hh function using dummy dataset"""
+# hh_total_categories
+def test_hh_total_categories(purchases):
+    """Tests the total_product_hh_purchase function using dummy dataset"""
     # Expected
     df_exp = pd.DataFrame(
-        [[0.5, 0.5], [0.4, 0.6]], index=["hh1", "hh2"], columns=["cat1", "cat2"]
+        [
+            [15.0, 5.0, 0.0],
+            [0.0, 0.0, 0.0],
+            [0.0, 0.0, 1.0],
+        ],
+        columns=["xx1", "xx2", "xx4"],
+        index=["panel_1", "panel_2", "panel_3"],
     )
+    df_exp.index.name = "Panel Id"
     # test the result
-    assert transform_data.proportion_hh(df).equals(df_exp)
+    assert transform_data.hh_total_categories(purchases, "Category_id").equals(df_exp)
 
 
 # total_product_hh_purchase
@@ -73,3 +79,14 @@ def test_total_product_hh_purchase(purchases):
     assert transform_data.total_product_hh_purchase(purchases, ["Category_id"]).equals(
         df_exp
     )
+
+
+# proportion_hh
+def test_proportion_hh(df):
+    """Tests the proportion_hh function using dummy dataset"""
+    # Expected
+    df_exp = pd.DataFrame(
+        [[0.5, 0.5], [0.4, 0.6]], index=["hh1", "hh2"], columns=["cat1", "cat2"]
+    )
+    # test the result
+    assert transform_data.proportion_hh(df).equals(df_exp)
