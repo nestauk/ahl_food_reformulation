@@ -90,3 +90,6 @@ def test_proportion_hh(df):
     )
     # test the result
     assert transform_data.proportion_hh(df).equals(df_exp)
+
+
+# scale_hh
