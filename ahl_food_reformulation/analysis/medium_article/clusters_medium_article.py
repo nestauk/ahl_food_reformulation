@@ -296,7 +296,6 @@ fig2 = (
 
 figures = fig | fig2
 
-# %%
 configure_plots(
     figures,
     "Top 30 clusters by silhoutte score",
@@ -307,20 +306,230 @@ configure_plots(
 )
 
 # %%
+
+# %%
 top_clust = list(source.clusters)
 
 # %%
 kcal_top = kcal_total[kcal_total.label.isin(top_clust)]
 
+# %%
+kcal_share_subset.head(1)
 
 # %%
-# kcal_top.groupby(['label'])[['Cooking Oils Sunflower', 'Cooking Oils Vegetable','Cooking Oils Vegetable','Ambient Rice Bulk Plain Rice']].max().to_csv('max_kcal_top30.csv')
+t_test_kcal_share = kcal_share_subset.copy()
 
 # %%
-# avg_kcal_top = kcal_top.groupby(['label'])[['Cooking Oils Sunflower', 'Cooking Oils Vegetable','Cooking Oils Vegetable','Ambient Rice Bulk Plain Rice', 'Cooking Oils Other Cooking']].mean()
+t_test_kcal_share["label"] = list(kmeans_labels_share)
 
 # %%
-# max_kcal_top = kcal_top.groupby(['label'])[['Cooking Oils Sunflower', 'Cooking Oils Vegetable','Cooking Oils Vegetable','Ambient Rice Bulk Plain Rice', 'Cooking Oils Other Cooking']].max()
+from scipy.stats import ttest_ind
+
+t_tests = []
+for feature in t_test_kcal_share.columns:
+    f = []
+    for i in range(0, 60):
+        data1 = t_test_kcal_share[t_test_kcal_share["label"] == i][feature]
+        data2 = t_test_kcal_share[t_test_kcal_share["label"] != i][feature]
+        # compare samples
+        stat, p = ttest_ind(data1, data2, random_state=1)
+        # interpret
+        f.append(p)
+    t_tests.append(f)
+
+t_tests_df = pd.DataFrame(t_tests).transpose().round(3)
+t_tests_df.columns = t_test_kcal_share.columns
+
+# %%
+t_tests_df_final = t_tests_df.drop(columns=["label"])
+
+# %%
+t_tests_df_final.to_csv("t_tests_final.csv")
+
+# %%
+t_lists = []
+for col in t_tests_df_final.T.columns:
+    col_list = [t_tests_df_final.T[col][t_tests_df_final.T[col] < 0.05]]
+    t_lists.append(col_list)
+
+# %%
+clust_sig = []
+for clust in t_lists:
+    clust_sig.append(len(clust[0]))
+
+# %%
+min(clust_sig)
+
+# %%
+max(clust_sig)
+
+# %%
+clust_scores_counts["significant features"] = clust_sig
+
+# %%
+clust_scores_counts.sort_values(by="scores", ascending=False).tail(20)
+
+# %%
+source = clust_scores_counts.sort_values(by="scores", ascending=False).head(30)
+fig = (
+    alt.Chart(source)
+    .mark_bar(color="#0000FF")
+    .encode(
+        alt.Y(
+            "clusters:N", sort=alt.EncodingSortField(field="scores", order="descending")
+        ),
+        x="scores",
+    )
+)
+
+fig2 = (
+    alt.Chart(source)
+    .mark_bar(color="#FDB633")
+    .encode(
+        alt.Y(
+            "clusters:N", sort=alt.EncodingSortField(field="scores", order="descending")
+        ),
+        x="households",
+    )
+)
+
+fig3 = (
+    alt.Chart(source)
+    .mark_bar(color="#EB003B")
+    .encode(
+        alt.Y(
+            "clusters:N", sort=alt.EncodingSortField(field="scores", order="descending")
+        ),
+        x="significant features",
+    )
+)
+
+figures = fig | fig2 | fig3
+
+configure_plots(
+    figures,
+    "Top 30 clusters by silhoutte score",
+    "",
+    16,
+    20,
+    16,
+)
+
+# %%
+clust_list = []
+
+for col in food_cats_avg_cl.columns:
+    clust_list.append(
+        list(food_cats_avg_cl[col].sort_values(ascending=False).head(1).index)[0]
+    )
+
+# %%
+# Import libraries and directory
+from array import array
+import numpy as np
+from matplotlib import pyplot as plt
+import matplotlib.cm as cm
+from sklearn.metrics import silhouette_samples, silhouette_score
+
+
+def plot_cluster_cats(
+    title: str, n_clusters: int, df: array, cluster_labels: list, clusterer, clust_list
+):
+    """
+    Plot of clustering based on number of k and labels
+    Args:
+        title (str): Description of representation to add to start of plot title
+        no_clusters (int): k
+        df (array): Umap representation of household representations
+        cluster_labels (list): List of assigned labels
+    """
+    fig, ax2 = plt.subplots()
+    fig.set_size_inches(15, 15)
+
+    silhouette_avg = silhouette_score(df, cluster_labels)
+    # Compute the silhouette scores for each sample
+    sample_silhouette_values = silhouette_samples(df, cluster_labels)
+    y_lower = 10
+
+    # 2nd Plot showing the actual clusters formed
+    colors = cm.nipy_spectral(cluster_labels.astype(float) / n_clusters)
+    ax2.scatter(
+        df[:, 0],
+        df[:, 1],
+        marker=".",
+        s=30,
+        lw=0,
+        alpha=0.1,
+        c=colors,
+        edgecolor="k",
+    )
+
+    # Labeling the clusters
+    centers = clusterer.cluster_centers_
+
+    for i, c in enumerate(centers):
+        # ax2.scatter(c[0], c[1], marker="$%d$" % clust_list[i], alpha=1, s=50, edgecolor="k")
+        ax2.annotate(clust_list[i], (c[0], c[1]), fontsize=12)
+
+    ax2.set_title("The visualization of the clustered data.")
+    ax2.set_xlabel("Feature space for the 1st feature")
+    ax2.set_ylabel("Feature space for the 2nd feature")
+
+    plt.suptitle(
+        title + " Silhouette analysis for clustering with n_clusters = %d" % n_clusters,
+        fontsize=14,
+        fontweight="bold",
+    )
+    plt.show()
+
+
+# %%
+plot_cluster_cats(
+    "Share of kcal:",
+    share_clust_num,
+    umap_share_sub,
+    kmeans_labels_share,
+    clusterer,
+    clust_list,
+)
+
+# %%
+centers = clusterer.cluster_centers_
+centers_df = pd.DataFrame(centers)
+centers_df["labels"] = clust_list
+centers_df.columns = ["x", "y", "label"]
+
+# %%
+import altair as alt
+import pandas as pd
+
+source = centers_df
+
+points = (
+    alt.Chart(source)
+    .mark_point()
+    .encode(
+        x=alt.X("x:Q", axis=alt.Axis(grid=False)),
+        y=alt.Y("y:Q", axis=alt.Axis(grid=False)),
+    )
+)
+
+text = points.mark_text(align="left", baseline="middle", dx=7, fontSize=14).encode(
+    text="label"
+)
+
+fig = (points + text).properties(width=900, height=900)
+
+# %%
+configure_plots(
+    fig,
+    "",
+    "",
+    16,
+    20,
+    16,
+)
+
 
 # %%
 def difference_shares_plot(df, clust_num):
@@ -351,6 +560,80 @@ def difference_shares_plot(df, clust_num):
 
 
 # %%
+df = pd.DataFrame()
+for i in range(0, 60):
+    clust = pd.concat([t_lists[i][0], food_cats_avg_cl[i], kcal_perc_cat.T[i]], axis=1)
+    clust.reset_index(inplace=True)
+    clust["cluster"] = i
+    clust.columns = [
+        "category",
+        "pvalue",
+        "difference in share",
+        "avg kcal share",
+        "cluster",
+    ]
+    clust.dropna(inplace=True)
+    df = pd.concat([df, clust])
+
+# %%
+source.sort_values(by="pvalue").head(40)
+
+# %%
+source = df[df.cluster == 7].copy()
+source = source.sort_values(by="pvalue").head(40)
+
+alt.Chart(source).mark_circle().encode(
+    x="difference in share:Q",
+    y="category:N",
+    size=alt.Size("pvalue:Q", scale=alt.Scale(reverse=True)),
+    color=alt.Color("avg kcal share:Q", scale=alt.Scale(scheme="blues")),
+)
+
+# %%
+source
+
+# %%
+source = df[df.cluster == 16].copy()
+source = source.sort_values(by="pvalue").head(40)
+
+alt.Chart(source).mark_circle().encode(
+    x="difference in share:Q",
+    y="category:N",
+    size=alt.Size("pvalue:Q", scale=alt.Scale(reverse=True)),
+    color=alt.Color("avg kcal share:Q", scale=alt.Scale(scheme="reds")),
+)
+
+# %%
+clust_12.head(1)
+
+# %%
+import altair as alt
+import pandas as pd
+
+source = clust_12
+
+points = (
+    alt.Chart(source)
+    .mark_point()
+    .encode(
+        x=alt.X("avg kcal share:Q", axis=alt.Axis(grid=False)),
+        y=alt.Y("pvalue:Q", axis=alt.Axis(grid=False)),
+    )
+)
+
+
+fig = (points).properties(width=900, height=900)
+
+configure_plots(
+    fig,
+    "",
+    "",
+    16,
+    20,
+    16,
+)
+
+# %%
 fig, source = difference_shares_plot(food_cats_avg_cl, 12)
 
 configure_plots(
@@ -361,6 +644,9 @@ configure_plots(
     20,
     16,
 )
+
+# %%
+source
 
 # %%
 fig, source = difference_shares_plot(food_cats_avg_cl, 21)
