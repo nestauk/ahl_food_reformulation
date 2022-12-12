@@ -341,10 +341,16 @@ t_tests_df = pd.DataFrame(t_tests).transpose().round(3)
 t_tests_df.columns = t_test_kcal_share.columns
 
 # %%
-t_tests_df_final = t_tests_df.drop(columns=["label"])
+# t_tests_df_final = t_tests_df.drop(columns=["label"])
 
 # %%
-t_tests_df_final.to_csv("t_tests_final.csv")
+# t_tests_df_final.to_csv("t_tests_final.csv")
+
+# %%
+t_tests_df_final = pd.read_csv("t_tests_final.csv")
+
+# %%
+t_tests_df_final.drop(columns=["Unnamed: 0"], inplace=True)
 
 # %%
 t_lists = []
@@ -500,6 +506,20 @@ centers_df["labels"] = clust_list
 centers_df.columns = ["x", "y", "label"]
 
 # %%
+centers_df["size"] = clust_scores_counts["households"]
+centers_df["score"] = clust_scores_counts["scores"]
+
+# %%
+from sklearn.preprocessing import MinMaxScaler
+
+mms = MinMaxScaler(feature_range=(10, 500))
+
+centers_df[["size_adj"]] = mms.fit_transform(centers_df[["size"]])
+
+# %%
+centers_df.head(5)
+
+# %%
 import altair as alt
 import pandas as pd
 
@@ -511,10 +531,12 @@ points = (
     .encode(
         x=alt.X("x:Q", axis=alt.Axis(grid=False)),
         y=alt.Y("y:Q", axis=alt.Axis(grid=False)),
+        size=alt.Size("size_adj:N", scale=alt.Scale(range=[10, 20])),
+        color=alt.Color("score:Q", scale=alt.Scale(scheme="reds")),
     )
 )
 
-text = points.mark_text(align="left", baseline="middle", dx=7, fontSize=14).encode(
+text = points.mark_text(align="left", baseline="middle", dx=7, angle=5).encode(
     text="label"
 )
 
@@ -576,18 +598,91 @@ for i in range(0, 60):
     df = pd.concat([df, clust])
 
 # %%
-source.sort_values(by="pvalue").head(40)
+source["avg kcal share"].max()
 
 # %%
-source = df[df.cluster == 7].copy()
-source = source.sort_values(by="pvalue").head(40)
+source
 
-alt.Chart(source).mark_circle().encode(
-    x="difference in share:Q",
-    y="category:N",
-    size=alt.Size("pvalue:Q", scale=alt.Scale(reverse=True)),
-    color=alt.Color("avg kcal share:Q", scale=alt.Scale(scheme="blues")),
+# %%
+source = df[df.cluster == 21].copy()
+source["Absolute_diff"] = source["difference in share"].abs()
+source = source.sort_values(by="Absolute_diff", ascending=False).head(20)
+
+fig = (
+    alt.Chart(source)
+    .mark_circle()
+    .encode(
+        x="difference in share:Q",
+        y=alt.Y(
+            "category:N",
+            sort=alt.EncodingSortField(field="difference in share", order="descending"),
+        ),
+        size=alt.Size(
+            "pvalue:Q",
+            scale=alt.Scale(
+                reverse=True,
+                domain=[source["pvalue"].min(), source["pvalue"].max() + 0.003],
+            ),
+        ),
+        color=alt.Color(
+            "avg kcal share:Q",
+            scale=alt.Scale(
+                range=["#e0afbc", "#EB003B"], domain=[0, source["avg kcal share"].max()]
+            ),
+        ),
+    )
 )
+
+configure_plots(
+    fig,
+    "Cluster 21: Biggest differences in category shares compared to the average",
+    "",
+    16,
+    14,
+    14,
+)
+
+# %%
+source = df[df.cluster == 34].copy()
+source["Absolute_diff"] = source["difference in share"].abs()
+source = source.sort_values(by="Absolute_diff", ascending=False).head(20)
+
+fig = (
+    alt.Chart(source)
+    .mark_circle()
+    .encode(
+        x="difference in share:Q",
+        y=alt.Y(
+            "category:N",
+            sort=alt.EncodingSortField(field="difference in share", order="descending"),
+        ),
+        size=alt.Size(
+            "pvalue:Q",
+            scale=alt.Scale(
+                reverse=True,
+                domain=[source["pvalue"].min(), source["pvalue"].max() + 0.003],
+            ),
+        ),
+        color=alt.Color(
+            "avg kcal share:Q",
+            scale=alt.Scale(
+                range=["#dadaf2", "#0000FF"], domain=[0, source["avg kcal share"].max()]
+            ),
+        ),
+    )
+)
+
+configure_plots(
+    fig,
+    "Cluster 34: Biggest differences in category shares compared to the average",
+    "",
+    16,
+    14,
+    14,
+)
+
+# %%
+source.sort_values(by="pvalue").head(40)
 
 # %%
 source
