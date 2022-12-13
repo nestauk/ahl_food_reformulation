@@ -114,10 +114,6 @@ kcal_adj_subset.drop(list(kcal_adj_subset.filter(regex="Oil")), axis=1, inplace=
 kcal_adj_subset.drop(list(kcal_adj_subset.filter(regex="Rice")), axis=1, inplace=True)
 
 # %%
-# kcal_share_subset.drop(['Cooking Oils Sunflower', 'Cooking Oils Vegetable','Cooking Oils Vegetable','Ambient Rice Bulk Plain Rice', 'Cooking Oils Other Cooking'], inplace=True, axis=1)
-# kcal_adj_subset.drop(['Cooking Oils Sunflower', 'Cooking Oils Vegetable','Cooking Oils Vegetable','Ambient Rice Bulk Plain Rice', 'Cooking Oils Other Cooking'], inplace=True, axis=1)
-
-# %%
 logging.info("Dimensionality reduction")
 # Using PCA and UMAP to reduce dimensions
 umap_adj_sub = cluster.dimension_reduction(kcal_adj_subset, 0.97)
@@ -268,9 +264,6 @@ clust_counts.columns = ["clusters", "households"]
 clust_scores_counts = clust_s_scores.merge(clust_counts, on="clusters")
 
 # %%
-clust_scores_counts.head(20)
-
-# %%
 source = clust_scores_counts.sort_values(by="scores", ascending=False).head(30)
 fig = (
     alt.Chart(source)
@@ -314,7 +307,7 @@ top_clust = list(source.clusters)
 kcal_top = kcal_total[kcal_total.label.isin(top_clust)]
 
 # %%
-kcal_share_subset.head(1)
+kcal_share_subset.shape
 
 # %%
 t_test_kcal_share = kcal_share_subset.copy()
@@ -373,7 +366,29 @@ max(clust_sig)
 clust_scores_counts["significant features"] = clust_sig
 
 # %%
-clust_scores_counts.sort_values(by="scores", ascending=False).tail(20)
+clust_scores_counts["significant features"].max()
+
+# %%
+fig = (
+    alt.Chart(clust_scores_counts)
+    .mark_bar(color="#0000FF")
+    .encode(
+        alt.X("significant features:Q", bin=True, title="Significant features"),
+        y=alt.Y("count()", title="Count of clusters"),
+    )
+    .properties(width=300, height=200)
+)
+configure_plots(
+    fig,
+    "Histogram of significant features",
+    "",
+    16,
+    20,
+    16,
+)
+
+# %%
+clust_scores_counts.sort_values(by="scores", ascending=False).tail(10)
 
 # %%
 source = clust_scores_counts.sort_values(by="scores", ascending=False).head(30)
@@ -598,13 +613,17 @@ for i in range(0, 60):
     df = pd.concat([df, clust])
 
 # %%
-source["avg kcal share"].max()
+# source["avg kcal share"].max()
 
 # %%
-source
+# source
 
 # %%
-source = df[df.cluster == 21].copy()
+df["avg kcal share"].max()
+
+# %%
+c_num = 3
+source = df[df.cluster == c_num].copy()
 source["Absolute_diff"] = source["difference in share"].abs()
 source = source.sort_values(by="Absolute_diff", ascending=False).head(20)
 
@@ -612,7 +631,11 @@ fig = (
     alt.Chart(source)
     .mark_circle()
     .encode(
-        x="difference in share:Q",
+        x=alt.X(
+            "difference in share:Q",
+            scale=alt.Scale(domain=[-4, 13]),
+            axis=alt.Axis(tickCount=12),
+        ),
         y=alt.Y(
             "category:N",
             sort=alt.EncodingSortField(field="difference in share", order="descending"),
@@ -621,21 +644,21 @@ fig = (
             "pvalue:Q",
             scale=alt.Scale(
                 reverse=True,
-                domain=[source["pvalue"].min(), source["pvalue"].max() + 0.003],
+                domain=[0, 0.05],
             ),
         ),
         color=alt.Color(
             "avg kcal share:Q",
-            scale=alt.Scale(
-                range=["#e0afbc", "#EB003B"], domain=[0, source["avg kcal share"].max()]
-            ),
+            scale=alt.Scale(range=["#e0afbc", "#EB003B"], domain=[0, 12]),
         ),
     )
 )
 
 configure_plots(
     fig,
-    "Cluster 21: Biggest differences in category shares compared to the average",
+    "Cluster "
+    + str(c_num)
+    + ": Biggest differences in category shares compared to the average",
     "",
     16,
     14,
@@ -643,7 +666,8 @@ configure_plots(
 )
 
 # %%
-source = df[df.cluster == 34].copy()
+c_num = 7
+source = df[df.cluster == c_num].copy()
 source["Absolute_diff"] = source["difference in share"].abs()
 source = source.sort_values(by="Absolute_diff", ascending=False).head(20)
 
@@ -651,7 +675,11 @@ fig = (
     alt.Chart(source)
     .mark_circle()
     .encode(
-        x="difference in share:Q",
+        x=alt.X(
+            "difference in share:Q",
+            scale=alt.Scale(domain=[-4, 13]),
+            axis=alt.Axis(tickCount=12),
+        ),
         y=alt.Y(
             "category:N",
             sort=alt.EncodingSortField(field="difference in share", order="descending"),
@@ -660,21 +688,21 @@ fig = (
             "pvalue:Q",
             scale=alt.Scale(
                 reverse=True,
-                domain=[source["pvalue"].min(), source["pvalue"].max() + 0.003],
+                domain=[0, 0.05],
             ),
         ),
         color=alt.Color(
             "avg kcal share:Q",
-            scale=alt.Scale(
-                range=["#dadaf2", "#0000FF"], domain=[0, source["avg kcal share"].max()]
-            ),
+            scale=alt.Scale(range=["#dadaf2", "#0000FF"], domain=[0, 12]),
         ),
     )
 )
 
 configure_plots(
     fig,
-    "Cluster 34: Biggest differences in category shares compared to the average",
+    "Cluster "
+    + str(c_num)
+    + ": Biggest differences in category shares compared to the average",
     "",
     16,
     14,
