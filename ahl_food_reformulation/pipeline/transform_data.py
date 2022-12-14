@@ -210,7 +210,7 @@ def kcal_contribution(purch_recs: pd.DataFrame):
     )
 
 
-def hh_kcal_per_prod(purch_recs: pd.DataFrame, kcal_col: str):
+def hh_kcal_per_prod(pur_recs: pd.DataFrame, kcal_col: str):
     """
     Unstacks df to show total kcal per product per household then normalises by household (rows)
 
@@ -222,12 +222,29 @@ def hh_kcal_per_prod(purch_recs: pd.DataFrame, kcal_col: str):
         (pd.DateFrame): Kcal totals per product per household
     """
     purch_recs = (
-        purch_recs.set_index(["Panel Id", "att_vol"])[[kcal_col]]
+        pur_recs.set_index(["Panel Id", "att_vol"])[[kcal_col]]
         .unstack(["att_vol"])
         .fillna(0)
     )
     purch_recs.columns = purch_recs.columns.droplevel()
     return purch_recs
+
+
+def hh_kcal_per_prod_red(purch_recs: pd.DataFrame, kcal_col: str):
+    """
+    Unstacks df to show total kcal per product per household then normalises by household (rows)
+
+    Args:
+        purch_recs (pd.DataFrame): Pandas dataframe contains the purchase records of specified data
+        kcal_col (str): Energy Kcal column (weighted or unweighted)
+
+    Returns:
+        (pd.DateFrame): Kcal totals per product per household
+    """
+    prod_kcal = hh_kcal_per_prod(purch_recs, kcal_col)
+    prod_kcal.drop(list(prod_kcal.filter(regex="Oil")), axis=1, inplace=True)
+    prod_kcal.drop(list(prod_kcal.filter(regex="Rice")), axis=1, inplace=True)
+    return prod_kcal
 
 
 def scale_hh(df: pd.DataFrame, scaler: Function):
