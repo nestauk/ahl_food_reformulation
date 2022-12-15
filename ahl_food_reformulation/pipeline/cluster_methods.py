@@ -1,7 +1,5 @@
 # Import libraries and directory
 from array import array
-import string
-from typing import List
 from ahl_food_reformulation import PROJECT_DIR
 import pandas as pd
 import numpy as np
@@ -61,7 +59,7 @@ def kmeans_score(k: int, X_umap: array):
     Returns:
         silhoutte score
     """
-    kmeans = KMeans(n_clusters=k)
+    kmeans = KMeans(n_clusters=k, random_state=2)
     labels = kmeans.fit_predict(X_umap)
     return silhouette_score(X_umap, labels), labels
 
