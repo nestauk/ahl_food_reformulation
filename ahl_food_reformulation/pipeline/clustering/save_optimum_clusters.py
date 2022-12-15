@@ -1,13 +1,17 @@
+# Runs kmeans on different numbers of k on x2 household representations
+# and saves optimum cluster assignments to file
+
 # Import libraries and directory
 from ahl_food_reformulation import PROJECT_DIR
 from ahl_food_reformulation.getters import kantar
-from ahl_food_reformulation.pipeline import transform_data as transform
+from ahl_food_reformulation.pipeline.preprocessing import transform_data as transform
 from ahl_food_reformulation.pipeline import cluster_methods as cluster
 import logging
 from pathlib import Path
 from matplotlib import pyplot as plt
 from sklearn.preprocessing import MinMaxScaler
 import seaborn as sns
+import numpy as np
 
 if __name__ == "__main__":
     # Get data
@@ -29,7 +33,6 @@ if __name__ == "__main__":
 
     # Add volume measurement
     pur_vol = transform.vol_for_purch(purch_recs_subset, val_fields, prod_mast, uom)
-
     # Purchase and product info combined
     comb_files = transform.combine_files(
         val_fields,
@@ -38,7 +41,6 @@ if __name__ == "__main__":
         prod_vals,
         2907,
     )
-
     # Household kcal per category adjusted for size - Make representation
     kcal_adj_subset = transform.hh_kcal_volume_converted(
         nut_subset, pan_conv, scaler, comb_files
@@ -56,6 +58,10 @@ if __name__ == "__main__":
     no_clusters = [10, 20, 30, 40, 50, 60, 70]
     scores_adj = cluster.kmeans_score_list(no_clusters, umap_adj_sub)
     scores_share = cluster.kmeans_score_list(no_clusters, umap_share_sub)
+    adj_k = no_clusters[np.argmax(scores_adj)]
+    share_k = no_clusters[np.argmax(scores_share)]
+    print("[Adjusted share of kcal] Optimum number of k: " + str(adj_k))
+    print("[Share of kcal] Optimum number of k: " + str(share_k))
     # Plot results
     fig = plt.figure(figsize=(7, 5))
     sns.scatterplot(x=no_clusters, y=scores_share)
@@ -75,13 +81,11 @@ if __name__ == "__main__":
         f"{PROJECT_DIR}/outputs/figures/kmeans/silhoutte_scores_k_methods.png",
         bbox_inches="tight",
     )
-    plt.show(block=False)
-
     logging.info("Cluster with centroids with optimum k")
     # Create dfs and save files with cluster assignments
     df_adj_size = cluster.centroids_cluster(
-        umap_adj_sub, 6, 40, kcal_adj_subset, "panel_clusters_adj_size"
+        umap_adj_sub, 6, adj_k, kcal_adj_subset, "panel_clusters_adj_size"
     )
     df_kcal_share = cluster.centroids_cluster(
-        umap_share_sub, 6, 50, kcal_share_subset, "panel_clusters_kcal_share"
+        umap_share_sub, 6, share_k, kcal_share_subset, "panel_clusters_kcal_share"
     )

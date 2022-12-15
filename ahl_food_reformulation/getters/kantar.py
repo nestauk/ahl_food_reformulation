@@ -7,7 +7,7 @@ from typing import Tuple, Dict
 from toolz import pipe
 from ahl_food_reformulation.getters.miscelaneous import postcode_region_lookup
 from ahl_food_reformulation.utils.lookups import product_table
-from ahl_food_reformulation.pipeline.transform_data import (
+from ahl_food_reformulation.pipeline.preprocessing.transform_data import (
     rst_4_market_sector_update,
     rst_4_market_update,
 )
