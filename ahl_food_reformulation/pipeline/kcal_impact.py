@@ -1,4 +1,4 @@
-from ahl_food_reformulation.pipeline import transform_data as transform
+from ahl_food_reformulation.pipeline.preprocessing import transform_data as transform
 from functools import reduce
 import pandas as pd
 
