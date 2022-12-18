@@ -200,8 +200,8 @@ def make_indicator_bubblechart(
             scale=alt.Scale(scheme="redblue", domainMid=0),
             sort="descending",
         ),
-        # size=alt.Size("abs_value", title="Absolute score"),
-        size=alt.Size("cross", title="Absolute score"),
+        size=alt.Size("abs_value", title="Absolute score"),
+        # size=alt.Size("cross", title="Absolute score"),
     )
 
     return heatmap
