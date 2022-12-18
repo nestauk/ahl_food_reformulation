@@ -194,12 +194,14 @@ def make_indicator_bubblechart(
 
     heatmap = base.mark_point(stroke="black", filled=True, strokeWidth=0.5).encode(
         color=alt.Color(
-            var_names[2],
+            # var_names[2],
+            "z_score",
             title="Z-score",
-            scale=alt.Scale(scheme="redblue"),
+            scale=alt.Scale(scheme="redblue", domainMid=0),
             sort="descending",
         ),
-        size=alt.Size("abs_value", title="Absolute score"),
+        # size=alt.Size("abs_value", title="Absolute score"),
+        size=alt.Size("cross", title="Absolute score"),
     )
 
     return heatmap
@@ -645,7 +647,8 @@ if __name__ == "__main__":
 
     logging.info("bubblechart with averaged indicators")
     aggr_bubble_chart = pipe(
-        avg_table_plots.groupby(["category", broad_cat_str])["cross"]
+        # avg_table_plots.groupby(["category", broad_cat_str])["cross"]
+        avg_table_plots.groupby(["category", broad_cat_str])[["cross", "z_score"]]
         .sum()
         .reset_index(drop=False),
         partial(
