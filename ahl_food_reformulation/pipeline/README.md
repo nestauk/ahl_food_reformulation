@@ -1,17 +1,10 @@
 # Processing pipeline
 
-## Robust clustering
+This folder contains all the code used to be able to reproduce the analysis used in the reformulation report. See below for details of each sub-folder and the steps needed to run the code.
 
-`ahl_food_reformulation/pipeline/robust_clustering.py` contains the functions to perform robust / ensemble clustering.
+1. `prototyping`: Contains scripts of analysis that we implemented in the process of this project but were not used in the final report.
+2. `preprocessing`: Contains functions used to pre-process and transform the data into the correct format for the analysis.
+3. `clustering`: Contains the code to produce the clusters used in the report.
+4. `create_report_outputs`: Contains the code to reproduce the metrics table and produce the figures and report documents used in the final report.
 
-Run it like this:
-
-```
-from ahl_food_reformulation.pipeline.robust_clustering import extract_clusters, clustering_params
-
-cluster_df, cluster_lookup = extract_clusters(feature_df, 20, 5, 0.8)
-```
-
-In this case, `feature_df` is a pandas dataframe where the observations (e.g. households) are rows and the features e.g. items in shopping basket are columns. The other parameters are number of PCA components to extract (20), number of iterations to run each clustering algorithm (5) and resolution for community detection in the cluster graph (0.8).
-
-The parameters to tune with multiple runs based on silhouette scores are pca components and community detection (the latter can also help to determine the granularity of the clustering solution that we extract),
+To reproduce the analysis, follow the steps in the `clustering` and then `create_report_outputs` folders.
