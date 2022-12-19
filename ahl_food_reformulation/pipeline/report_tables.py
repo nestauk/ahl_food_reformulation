@@ -1,8 +1,8 @@
 from doctest import OutputChecker
 from ahl_food_reformulation.utils import util_functions as util_func
-from ahl_food_reformulation.pipeline import energy_density as energy
+from ahl_food_reformulation.pipeline.preprocessing import energy_density as energy
 from ahl_food_reformulation.pipeline import nutrient_metrics_funcs as nutrient
-from ahl_food_reformulation.pipeline import transform_data as transform
+from ahl_food_reformulation.pipeline.preprocessing import transform_data as transform
 import pandas as pd
 
 

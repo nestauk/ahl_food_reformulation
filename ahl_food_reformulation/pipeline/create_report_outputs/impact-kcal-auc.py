@@ -1,12 +1,6 @@
 # Read in libraries
 from ahl_food_reformulation import PROJECT_DIR
-from sklearn import metrics
 import pandas as pd
-
-from scipy.integrate import simpson
-from numpy import trapz
-import numpy as np
-
 import math
 
 # define function to simplify reading large numbers

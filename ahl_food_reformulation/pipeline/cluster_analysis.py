@@ -1,5 +1,5 @@
 from ahl_food_reformulation.getters import kantar
-from ahl_food_reformulation.pipeline import transform_data as transform
+from ahl_food_reformulation.pipeline.preprocessing import transform_data as transform
 from ahl_food_reformulation.pipeline import hh_income_class
 import pandas as pd
 
