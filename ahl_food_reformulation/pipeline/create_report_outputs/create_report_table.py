@@ -1,5 +1,5 @@
 # Import libraries
-from ahl_food_reformulation.getters import kantar
+from ahl_food_reformulation.getters import get_data
 from ahl_food_reformulation.pipeline import report_tables as report
 from ahl_food_reformulation.pipeline.cluster_analysis import cluster_table
 import logging
@@ -10,19 +10,19 @@ if __name__ == "__main__":
 
     logging.info("Reading data")
     # read data
-    pur_recs = kantar.purchase_records_updated()
-    nut_recs = kantar.nutrition()
-    prod_meta = kantar.prod_meta_update()
-    prod_meas = kantar.product_measurement()
-    pan_ind = kantar.household_ind()
-    prod_mast = kantar.product_master()
-    val_fields = kantar.val_fields()
-    uom = kantar.uom()
-    prod_codes = kantar.product_codes()
-    prod_vals = kantar.product_values()
-    panel_weight = kantar.panel_weights_year()
-    cl_kcal_share = kantar.cluster_kcal_share()
-    cl_adj_size = kantar.cluster_adj_size()
+    pur_recs = get_data.purchase_records_updated()
+    nut_recs = get_data.nutrition()
+    prod_meta = get_data.prod_meta_update()
+    prod_meas = get_data.product_measurement()
+    pan_ind = get_data.household_ind()
+    prod_mast = get_data.product_master()
+    val_fields = get_data.val_fields()
+    uom = get_data.uom()
+    prod_codes = get_data.product_codes()
+    prod_vals = get_data.product_values()
+    panel_weight = get_data.panel_weights_year()
+    cl_kcal_share = get_data.cluster_kcal_share()
+    cl_adj_size = get_data.cluster_adj_size()
 
     # Defining categories
     # 2827 = market, 2828 = market sector

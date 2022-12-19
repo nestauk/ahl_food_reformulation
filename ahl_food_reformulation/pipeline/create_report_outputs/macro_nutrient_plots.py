@@ -1,5 +1,5 @@
 # Import libraries
-from ahl_food_reformulation.getters import kantar
+from ahl_food_reformulation.getters import get_data
 from ahl_food_reformulation.pipeline import nutrient_metrics_funcs as nutrient
 from ahl_food_reformulation.utils.altair_save_utils import (
     save_altair,
@@ -17,9 +17,9 @@ if __name__ == "__main__":
 
     logging.info("Reading data")
     # Read data
-    nut_recs = kantar.nutrition()
-    pur_recs = kantar.purchase_records_updated()
-    prod_meta = kantar.prod_meta_update()
+    nut_recs = get_data.nutrition()
+    pur_recs = get_data.purchase_records_updated()
+    prod_meta = get_data.prod_meta_update()
 
     # define cats
     broader_category = "rst_4_market"

@@ -1,20 +1,20 @@
-from ahl_food_reformulation.pipeline import transform_data as transform
+from ahl_food_reformulation.pipeline.preprocessing import transform_data as transform
 from ahl_food_reformulation.utils import lookups as lps
 import pandas as pd
 import numpy as np
-from ahl_food_reformulation.getters import kantar
+from ahl_food_reformulation.getters import get_data
 
 
 from ahl_food_reformulation import PROJECT_DIR
 
 
 # read data
-pur_recs = kantar.purchase_records()
-prod_mast = kantar.product_master()
-val_fields = kantar.val_fields()
-uom = kantar.uom()
-prod_meta = kantar.product_metadata()
-prod_meas = kantar.product_measurement()
+pur_recs = get_data.purchase_records()
+prod_mast = get_data.product_master()
+val_fields = get_data.val_fields()
+uom = get_data.uom()
+prod_meta = get_data.product_metadata()
+prod_meas = get_data.product_measurement()
 
 
 # extract gram weight from size field
