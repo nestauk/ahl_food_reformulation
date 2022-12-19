@@ -9,3 +9,11 @@ Run the files in this folder in the following order:
 3. Calulates the reduction in kcal at population level from reformulating the chosen categories and produces visualisations from the results: `impact-kcal-plots.py` and `impact-kcal-auc.py`.
 4. `visualise_targets.py`: Produces additional visualisations used in the report.
 5. `macro_nutrient_plots.py`: Visualises the macro nutrient levels in each of the chosen categories.
+
+## Outputs
+
+- The figures created from running these scripts are saved in:
+  - `outputs/figures/png`
+  - `outputs/figures/svg`
+- Running `make_table_analysis.py` also produces csv and json files that contain details of the recommended categories based on the ranked list of aggregated metrics. These files are saved in:
+  - `outputs/reports`
