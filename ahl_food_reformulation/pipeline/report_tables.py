@@ -1,4 +1,3 @@
-from doctest import OutputChecker
 from ahl_food_reformulation.utils import util_functions as util_func
 from ahl_food_reformulation.pipeline.preprocessing import energy_density as energy
 from ahl_food_reformulation.pipeline import nutrient_metrics_funcs as nutrient

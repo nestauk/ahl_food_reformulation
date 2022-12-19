@@ -9,7 +9,7 @@ from ahl_food_reformulation import PROJECT_DIR
 import pandas as pd
 from ahl_food_reformulation.utils.plotting import configure_plots
 from ahl_food_reformulation.utils import plotting as pu
-from ahl_food_reformulation.getters import kantar
+from ahl_food_reformulation.getters import get_data
 import logging
 import json
 from ahl_food_reformulation.pipeline import kcal_impact as kcal
@@ -22,15 +22,15 @@ if __name__ == "__main__":
 
     logging.info("Reading data")
 
-    pur_recs = kantar.purchase_records_updated()
-    nut_rec = kantar.nutrition()
-    pan_ind = kantar.household_ind()
-    val_fields = kantar.val_fields()
-    uom = kantar.uom()
-    prod_codes = kantar.product_codes()
-    prod_vals = kantar.product_values()
-    panel_weight = kantar.panel_weights_year()
-    prod_meta = kantar.prod_meta_update()
+    pur_recs = get_data.purchase_records_updated()
+    nut_rec = get_data.nutrition()
+    pan_ind = get_data.household_ind()
+    val_fields = get_data.val_fields()
+    uom = get_data.uom()
+    prod_codes = get_data.product_codes()
+    prod_vals = get_data.product_values()
+    panel_weight = get_data.panel_weights_year()
+    prod_meta = get_data.prod_meta_update()
 
     # define cats
     broader_category = "rst_4_market"
