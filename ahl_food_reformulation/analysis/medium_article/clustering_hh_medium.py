@@ -1,3 +1,21 @@
+# -*- coding: utf-8 -*-
+# ---
+# jupyter:
+#   jupytext:
+#     cell_metadata_filter: -all
+#     comment_magics: true
+#     text_representation:
+#       extension: .py
+#       format_name: percent
+#       format_version: '1.3'
+#       jupytext_version: 1.13.2
+#   kernelspec:
+#     display_name: ahl_food_reformulation
+#     language: python
+#     name: ahl_food_reformulation
+# ---
+
+# %%
 # # Clustering households based on purchasing activity
 
 # Import libraries and directory
@@ -224,8 +242,8 @@ t_tests_df_final.to_csv(PROJECT_DIR / "outputs/data/t_tests_features.csv")
 
 # %%
 # Read in t-test results
-# t_tests_df_final = get_data.t_tests()
-# t_tests_df_final.drop(columns=["Unnamed: 0"], inplace=True)
+t_tests_df_final = get_data.t_tests()
+t_tests_df_final.drop(columns=["Unnamed: 0"], inplace=True)
 
 # %%
 # Create lists of significant features per cluster
@@ -294,6 +312,50 @@ df["avg kcal share"].max()
 
 # %%
 c_num = 10
+source = df[df.cluster == c_num].copy()
+source["Absolute_diff"] = source["difference in share"].abs()
+source = source.sort_values(by="Absolute_diff", ascending=False).head(20)
+
+fig = (
+    alt.Chart(source)
+    .mark_circle()
+    .encode(
+        x=alt.X(
+            "difference in share:Q",
+            scale=alt.Scale(domain=[-4, 13]),
+            axis=alt.Axis(tickCount=12),
+        ),
+        y=alt.Y(
+            "category:N",
+            sort=alt.EncodingSortField(field="difference in share", order="descending"),
+        ),
+        size=alt.Size(
+            "pvalue:Q",
+            scale=alt.Scale(
+                reverse=True,
+                domain=[0, 0.05],
+            ),
+        ),
+        color=alt.Color(
+            "avg kcal share:Q",
+            scale=alt.Scale(range=["#e0afbc", "#EB003B"], domain=[0, 12]),
+        ),
+    )
+)
+
+configure_plots(
+    fig,
+    "Cluster "
+    + str(c_num)
+    + ": Biggest differences in category shares compared to the average",
+    "",
+    16,
+    14,
+    14,
+)
+
+# %%
+c_num = 30
 source = df[df.cluster == c_num].copy()
 source["Absolute_diff"] = source["difference in share"].abs()
 source = source.sort_values(by="Absolute_diff", ascending=False).head(20)
