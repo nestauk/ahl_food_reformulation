@@ -92,6 +92,9 @@ if __name__ == "__main__":
             broad_plot_df, gran_plot_df, driver, broad_cats
         )
 
+        # Saving broad df
+        broad_plot_df.to_csv("figure5.csv")
+
         logging.info("Saving plots")
         # Save plots
         save_altair(

@@ -498,7 +498,7 @@ def make_pareto_chart(
         (bars + bar_text + line + points + point_text)
         .resolve_scale(y="independent")
         .properties(width=800, height=400)
-    )
+    ), chart_df
 
 
 def make_bar_chart(detailed_reccs: pd.DataFrame, report_table_detailed: pd.DataFrame):
@@ -659,6 +659,11 @@ if __name__ == "__main__":
         configure_plots(aggr_bubble_chart), "indicator_bubblechart_aggr", driver=webdr
     )
 
+    # Save csv file
+    avg_table_plots.groupby(["category", broad_cat_str])[
+        ["cross", "z_score"]
+    ].sum().reset_index(drop=False).to_csv("figure2.csv")
+
     indicator_bubble_chart = (
         pipe(
             avg_table_plots,
@@ -723,7 +728,10 @@ if __name__ == "__main__":
 
     logging.info("pareto chart")
 
-    pareto_chart = make_pareto_chart(report_table_clean_long, report_table_clean)
+    pareto_chart, pareto_chart_df = make_pareto_chart(
+        report_table_clean_long, report_table_clean
+    )
+    pareto_chart_df.to_csv("figure3.csv")
 
     save_altair(configure_plots(pareto_chart), "pareto_chart", driver=webdr)
 
