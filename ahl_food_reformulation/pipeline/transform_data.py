@@ -146,22 +146,18 @@ def norm_variable(data: pd.Series):
     return (data - np.min(data)) / (np.max(data) - np.min(data))
 
 
-def hh_total_categories(df: pd.DataFrame):
+def hh_total_categories(df: pd.DataFrame, cat_id: str):
     """
     Groups by the household id and category summing the volume.
 
     Args:
         df (pd.DataFrame): Pandas dataframe of purchase records (noramlised by volume measurement)
+        cat_id (str): Name of category column to groupby (eg 'att_vol')
 
     Returns:
         pd.DateFrame: Household totals per food category
     """
-    return (
-        df.groupby(["Panel Id", "att_vol"])["Volume"]
-        .sum()
-        .unstack(["att_vol"])
-        .fillna(0)
-    )
+    return df.groupby(["Panel Id", cat_id])["Volume"].sum().unstack([cat_id]).fillna(0)
 
 
 def make_purch_records(
