@@ -194,9 +194,9 @@ def make_indicator_bubblechart(
 
     heatmap = base.mark_point(stroke="black", filled=True, strokeWidth=0.5).encode(
         color=alt.Color(
-            var_names[2],
+            "z_score",
             title="Z-score",
-            scale=alt.Scale(scheme="redblue"),
+            scale=alt.Scale(scheme="redblue", domainMid=0),
             sort="descending",
         ),
         size=alt.Size("abs_value", title="Absolute score"),
@@ -555,7 +555,7 @@ if __name__ == "__main__":
     report_table_clean = (
         load_s3_data(
             "ahl-private-data",
-            "kantar/data_outputs/decision_table/decision_table_"
+            "in_home/data_outputs/decision_table/decision_table_"
             + broad_cat_str
             + ".csv",
             # + "_reduced.csv",
@@ -732,7 +732,7 @@ if __name__ == "__main__":
     report_table_detailed = pipe(
         load_s3_data(
             "ahl-private-data",
-            "kantar/data_outputs/decision_table/decision_table_"
+            "in_home/data_outputs/decision_table/decision_table_"
             + granular_cat_str
             + ".csv",
             # + "_reduced.csv",

@@ -168,14 +168,14 @@ if __name__ == "__main__":
 
     broad_decision = load_s3_data(
         "ahl-private-data",
-        "kantar/data_outputs/decision_table/decision_table_"
+        "in_home/data_outputs/decision_table/decision_table_"
         + broader_category
         + ".csv",
     )
     gran_decision = (
         load_s3_data(
             "ahl-private-data",
-            "kantar/data_outputs/decision_table/decision_table_"
+            "in_home/data_outputs/decision_table/decision_table_"
             + granular_category
             + ".csv",
         )
