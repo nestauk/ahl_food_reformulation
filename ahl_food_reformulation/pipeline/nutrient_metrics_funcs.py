@@ -1,6 +1,6 @@
 # Import libraries
 from ahl_food_reformulation import PROJECT_DIR
-from ahl_food_reformulation.pipeline import transform_data as transform
+from ahl_food_reformulation.pipeline.preprocessing import transform_data as transform
 from ahl_food_reformulation.utils.plotting import configure_plots
 import altair as alt
 import pandas as pd

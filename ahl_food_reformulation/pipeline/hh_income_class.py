@@ -1,4 +1,4 @@
-from ahl_food_reformulation.getters import kantar
+from ahl_food_reformulation.getters import get_data
 import numpy as np
 import pandas as pd
 import statsmodels.formula.api as smf
@@ -20,7 +20,7 @@ def income_class_share(top: float):
 
     """
     # read demographic file
-    demog_clean = kantar.demog_clean()
+    demog_clean = get_data.demog_clean()
 
     # s ubset to variables needed
     demog_sub = demog_clean[["panel_id", "household_income", "region"]]
@@ -43,7 +43,7 @@ def income_class_share(top: float):
     )
 
     # merge with cluster assignment (share)
-    cl_kcal_share = kantar.cluster_kcal_share()
+    cl_kcal_share = get_data.cluster_kcal_share()
 
     # merge cluatser assignment with demographic file
     demog_share = demog_sub.merge(
@@ -78,7 +78,7 @@ def income_class_adj(top: float):
 
     """
     # read demographic file
-    demog_clean = kantar.demog_clean()
+    demog_clean = get_data.demog_clean()
 
     # s ubset to variables needed
     demog_sub = demog_clean[["panel_id", "household_income", "region"]]
@@ -101,7 +101,7 @@ def income_class_adj(top: float):
     )
 
     # merge with cluster assignment (adj)
-    cl_adj_size = kantar.cluster_adj_size()
+    cl_adj_size = get_data.cluster_adj_size()
 
     # merge cluatser assignment with demographic file
     demog_adj = demog_sub.merge(cl_adj_size, left_on="panel_id", right_on="Panel Id")
