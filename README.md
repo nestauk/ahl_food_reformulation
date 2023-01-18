@@ -34,7 +34,7 @@ We combined our indicators into a single metric of reformulation suitability by 
 <br>
 <br>
 
-<img src="outputs/figures/png/indicator_bubblechart_aggr.png" width="500" height="500" align="left">
+<img src="outputs/figures/png/indicator_bubblechart_aggr.png" width="500" align="left">
 
 <br clear="left"/>
 
@@ -46,7 +46,7 @@ The figure below shows food categories sorted from high to low on the score for 
 <br>
 <br>
 
-<img src="outputs/figures/png/pareto_chart.png" width="500" height="500" align="left">
+<img src="outputs/figures/png/pareto_chart.png" width="500" align="left">
 
 <br clear="left"/>
 
@@ -61,7 +61,7 @@ We then looked at the final categories in a bit more detail including:
 <br>
 <br>
 
-<img src="outputs/figures/png/macro_prop_broad__10.png" width="500" height="500" align="left">
+<img src="outputs/figures/png/macro_prop_broad__10.png" width="500" align="left">
 
 <br clear="left"/>
 
