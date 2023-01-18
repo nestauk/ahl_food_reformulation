@@ -72,7 +72,7 @@ We calculated the potential population impact of reformulating the chosen catego
 <br>
 <br>
 
-<img src="outputs/figures/png/cumplot_average_opt1.png" width="500" height="500" align="left">
+<img src="outputs/figures/png/cumplot_average_opt1.png" width="500" align="left">
 
 <br clear="left"/>
 
