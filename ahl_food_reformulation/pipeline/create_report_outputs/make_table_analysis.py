@@ -645,7 +645,7 @@ if __name__ == "__main__":
 
     logging.info("bubblechart with averaged indicators")
     aggr_bubble_chart = pipe(
-        avg_table_plots.groupby(["category", broad_cat_str])["cross"]
+        avg_table_plots.groupby(["category", broad_cat_str])[["cross", "z_score"]]
         .sum()
         .reset_index(drop=False),
         partial(
