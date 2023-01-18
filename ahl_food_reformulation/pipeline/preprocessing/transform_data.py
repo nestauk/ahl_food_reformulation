@@ -409,3 +409,15 @@ def scale_df(scaler: Function, df: pd.DataFrame):
     array_reshaped = df.to_numpy().reshape(-1, 1)
     scaled = scaler.fit_transform(array_reshaped).reshape(len(df), df.shape[1])
     return pd.DataFrame(scaled, columns=list(df.columns), index=df.index)
+
+
+def hh_total_categories(df: pd.DataFrame, cat_id: str):
+    """
+    Groups by the household id and category summing the volume.
+    Args:
+        df (pd.DataFrame): Pandas dataframe of purchase records (noramlised by volume measurement)
+        cat_id (str): Name of category column to groupby (eg 'att_vol')
+    Returns:
+        pd.DateFrame: Household totals per food category
+    """
+    return df.groupby(["Panel Id", cat_id])["Volume"].sum().unstack([cat_id]).fillna(0)
