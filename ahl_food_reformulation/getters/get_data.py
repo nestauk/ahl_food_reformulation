@@ -1,4 +1,3 @@
-# Returns the files from the kantar dataset
 import pandas as pd
 import re
 import os.path
@@ -222,7 +221,7 @@ def household_demog():
 
 def demog_clean() -> Tuple[pd.DataFrame, Dict]:
     """
-    Reads a cleaned version of the kantar dataset
+    Reads a cleaned version of the demographic dataset
     """
 
     demog = household_demog()

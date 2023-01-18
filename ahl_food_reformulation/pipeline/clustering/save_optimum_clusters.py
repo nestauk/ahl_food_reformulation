@@ -3,7 +3,7 @@
 
 # Import libraries and directory
 from ahl_food_reformulation import PROJECT_DIR
-from ahl_food_reformulation.getters import kantar
+from ahl_food_reformulation.getters import get_data
 from ahl_food_reformulation.pipeline.preprocessing import transform_data as transform
 from ahl_food_reformulation.pipeline import cluster_methods as cluster
 import logging
@@ -16,14 +16,14 @@ import numpy as np
 if __name__ == "__main__":
     # Get data
     logging.info("loading data")
-    purch_recs_subset = kantar.purchase_subsets(202111)
-    nut_subset = kantar.nutrition_subsets(202111)
-    pan_ind = kantar.household_ind()
-    prod_mast = kantar.product_master()
-    val_fields = kantar.val_fields()
-    uom = kantar.uom()
-    prod_codes = kantar.product_codes()
-    prod_vals = kantar.product_values()
+    purch_recs_subset = get_data.purchase_subsets(202111)
+    nut_subset = get_data.nutrition_subsets(202111)
+    pan_ind = get_data.household_ind()
+    prod_mast = get_data.product_master()
+    val_fields = get_data.val_fields()
+    uom = get_data.uom()
+    prod_codes = get_data.product_codes()
+    prod_vals = get_data.product_values()
 
     logging.info("Create representations")
     # Scaler
