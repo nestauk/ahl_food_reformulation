@@ -2,11 +2,11 @@
 
 # Identifying targets for reformulation
 
-**_Repository for hosting the analysis that contributes to the report [insert link]_**
+**_Repository for hosting the analysis that contributes to the report [The future of food: opportunities to improve health through reformulation](https://www.nesta.org.uk/report/the-future-of-food-opportunities-to-improve-health-through-reformulation/)_**
 
 ## Welcome :wave:
 
-This repository contains the code and documentation for a project that uses data on food and drink purchases to identify targets for reformulation. To see the results and findings from this analysis, take a look at the report [insert link here].
+This repository contains the code and documentation for a project that uses data on food and drink purchases to identify targets for reformulation. To see the results and findings from this analysis, take a look at the report [The future of food: opportunities to improve health through reformulation](https://www.nesta.org.uk/report/the-future-of-food-opportunities-to-improve-health-through-reformulation/).
 
 ## Background
 
