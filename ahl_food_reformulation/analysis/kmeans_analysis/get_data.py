@@ -1,19 +1,14 @@
-# %%
-# Returns the files from the kantar dataset
 import pandas as pd
-import re
 import os.path
 from ahl_food_reformulation import PROJECT_DIR
 
 
-# %%
 def purchase_records():
     """Reads all the purchase records"""
 
     return pd.read_csv(f"{PROJECT_DIR}/inputs/data/purchase_records.csv")
 
 
-# %%
 def purchase_subsets(date_period):
     """
       Reads in purchase_records.csv and creates subset of purchase records file by defined month.
@@ -35,7 +30,6 @@ def purchase_subsets(date_period):
         return subset_records
 
 
-# %%
 def nutrition_subsets(date_period):
     """
       Reads in the nutrition.csv and creates subset of by defined month.
@@ -58,7 +52,6 @@ def nutrition_subsets(date_period):
         return subset
 
 
-# %%
 def product_master():
     """Reads in dataset of unique products used by households.
 
@@ -71,7 +64,6 @@ def product_master():
     )
 
 
-# %%
 def val_fields():
     """Reads in dataset of codes to merge product master and uom information
 
@@ -82,7 +74,6 @@ def val_fields():
     return pd.read_csv(PROJECT_DIR / "inputs/data/validation_field.csv")
 
 
-# %%
 def uom():
     """Reads in dataset of product measurement information
 
@@ -97,7 +88,6 @@ def uom():
     )
 
 
-# %%
 def product_codes():
     """Reads in dataset which contains the codes to link products to category information
 
@@ -108,7 +98,6 @@ def product_codes():
     return pd.read_csv(PROJECT_DIR / "inputs/data/product_attribute_coding.csv")
 
 
-# %%
 def product_values():
     """Reads in dataset containing the product category information
 
@@ -121,7 +110,6 @@ def product_values():
     )
 
 
-# %%
 def t_tests():
     """Reads in dataset containing the product category information
 
