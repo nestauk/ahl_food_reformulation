@@ -1,6 +1,6 @@
 # Measuring food and drink purchasing via k-means clustering
 
-The code behind this medium article on 'Measuring food and drink purchasing via k-means clustering.' Unfortunately we are unable to share the dataset used to produce the analysis but we hope visibility of the code gives you some insight into the work and inspiration for your own analysis using k-means clustering.
+The code behind this medium article on '[Measuring food and drink purchasing via k-means clustering](https://medium.com/data-analytics-at-nesta/measuring-food-and-drink-purchasing-via-k-means-clustering-77c21e3140bf).' Unfortunately we are unable to share the dataset used to produce the analysis but we hope visibility of the code gives you some insight into the work and inspiration for your own analysis using k-means clustering.
 
 ### File contents
 
