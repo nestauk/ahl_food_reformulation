@@ -194,7 +194,7 @@ def make_indicator_bubblechart(
 
     heatmap = base.mark_point(stroke="black", filled=True, strokeWidth=0.5).encode(
         color=alt.Color(
-            "z_score",
+            var_names[2],
             title="Z-score",
             scale=alt.Scale(scheme="redblue", domainMid=0),
             sort="descending",
